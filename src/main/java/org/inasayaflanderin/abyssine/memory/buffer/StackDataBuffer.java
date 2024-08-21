@@ -12,9 +12,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
-import java.util.stream.IntStream;
 
-@Log @EqualsAndHashCode @ToString
+@Log @EqualsAndHashCode @ToString @SuppressWarnings("unchecked")
 public class StackDataBuffer<D> implements DataBuffers<D, StackDataBuffer<D>> {
     @Serial
     private static final long serialVersionUID = -472081321054822264L;
@@ -47,31 +46,28 @@ public class StackDataBuffer<D> implements DataBuffers<D, StackDataBuffer<D>> {
     public synchronized void next() {
         if(this.data.isEmpty()) return;
 
-        var maxIndex = this.data.size() - 1;
+        int maxIndex = this.data.size() - 1;
+        this.position &= ~(this.position >> 31); //this.position &= ~((this.position >> 31) ^ (maxIndex >> 31))
+        int sign = ((this.position - maxIndex) >> 31) & 1;
+        this.position = (sign * this.position) + ((1 - sign) * maxIndex);
 
-        this.position = Math.min(Math.max(0, this.position), maxIndex);
-
-        this.buffer.clear();
         try {
             var removedPosition = maxIndex - this.position;
             D datum = data.remove(removedPosition);
 
-            while(datum == null) {
-                this.position = Math.min(Math.max(0, this.position), maxIndex);
-                maxIndex = this.data.size() - 1;
-                removedPosition = maxIndex - this.position;
-                datum = data.remove(removedPosition);
+            if(datum == null) {
+                next();
+                return;
             }
 
-            oos.writeObject(data.remove(datum));
-            oos.flush();
+            oos.writeObject(datum);
+            oos.reset();
             this.buffer = ByteBuffer.wrap(byteOStream.toByteArray());
         } catch(IOException e) {
             log.severe(e.toString());
         }
     }
 
-    @SuppressWarnings("unchecked")
     public D read() {
         byte[] dataArray = new byte[this.buffer.remaining()];
         this.buffer.get(dataArray);
@@ -104,7 +100,6 @@ public class StackDataBuffer<D> implements DataBuffers<D, StackDataBuffer<D>> {
         Collections.reverse(this.data);
     }
 
-    @SuppressWarnings("unchecked")
     public D[] toArray() {
         return (D[]) this.data.toArray();
     }
@@ -142,6 +137,6 @@ public class StackDataBuffer<D> implements DataBuffers<D, StackDataBuffer<D>> {
 
     @SafeVarargs
     public synchronized final void write(D... newData) {
-        IntStream.range(0, newData.length).forEach(i -> write(newData[i]));
+        for(D datum : newData) write(datum);
     }
 }

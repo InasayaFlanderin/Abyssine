@@ -33,6 +33,12 @@ public class ForceInBoundTest {
         return (sign & temp) | (~sign & max);
     }
 
+    private int tTestTarget(int position, int max) {
+        int temp = position & ~(position >> 31);
+        int sign = ((temp - max) >> 31) & 1;
+        return (sign * temp) + ((1 - sign) * max);
+    }
+
     @BeforeAll
     public static void prepareTest() {
         for (int i = 0; i < 25000000; i++) {
@@ -67,6 +73,16 @@ public class ForceInBoundTest {
         assertArrayEquals(eResult, aResult);
     }
 
+    @Test
+    public void thirdTest() {
+        for (int i = 0; i < 25000000; i++) {
+            eResult[i] = expected(fPrepareTest[i], sPrepareTest[i]);
+            aResult[i] = tTestTarget(fPrepareTest[i], sPrepareTest[i]);
+        }
+
+        assertArrayEquals(eResult, aResult);
+    }
+
     @Benchmark @BenchmarkMode(Mode.AverageTime) @OutputTimeUnit(TimeUnit.NANOSECONDS) @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.MICROSECONDS) @Measurement(iterations = 50000, time = 1, timeUnit = TimeUnit.MICROSECONDS) @Fork(1)
     /*
     * Benchmark                           Mode    Cnt  Score   Error  Units
@@ -92,5 +108,14 @@ public class ForceInBoundTest {
     * */
     public void secondTargetBenchmark() {
         sTestTarget(fPrepareBenchmark, sPrepareBenchmark);
+    }
+
+    @Benchmark @BenchmarkMode(Mode.AverageTime) @OutputTimeUnit(TimeUnit.NANOSECONDS) @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.MICROSECONDS) @Measurement(iterations = 50000, time = 1, timeUnit = TimeUnit.MICROSECONDS) @Fork(1)
+    /*
+     * Benchmark                               Mode    Cnt  Score   Error  Units
+     * ForceInBoundTest.secondTargetBenchmark  avg  50000  2.822 ± 0.221  ns/op
+     * */
+    public void thirdTargetBenchmark() {
+        tTestTarget(fPrepareBenchmark, sPrepareBenchmark);
     }
 }

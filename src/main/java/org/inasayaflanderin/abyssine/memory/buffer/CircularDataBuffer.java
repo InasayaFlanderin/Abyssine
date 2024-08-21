@@ -10,9 +10,8 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.stream.IntStream;
 
-@Log @EqualsAndHashCode @ToString
+@Log @EqualsAndHashCode @ToString @SuppressWarnings("unchecked")
 public class CircularDataBuffer<D> implements DataBuffers<D, CircularDataBuffer<D>> {
     @Serial
     private static final long serialVersionUID = 5119552828850176735L;
@@ -58,14 +57,17 @@ public class CircularDataBuffer<D> implements DataBuffers<D, CircularDataBuffer<
     public synchronized void next() {
         if(!this.hasRemaining()) return;
 
-        this.position = Math.min(Math.max(0, this.position), this.data.length - 1);
+        int maxIndex = this.data.length - 1;
+        this.position &= ~(this.position >> 31); //this.position &= ~((this.position >> 31) ^ (maxIndex >> 31))
+        int sign = ((this.position - maxIndex) >> 31) & 1;
+        this.position = (sign * this.position) + ((1 - sign) * maxIndex);
 
         while(this.data[this.position] == null) this.position = (this.position + 1) % this.data.length;
 
         this.buffer.clear();
         try {
             oos.writeObject(data[this.position]);
-            oos.flush();
+            oos.reset();
             this.buffer = ByteBuffer.wrap(byteOStream.toByteArray());
             this.data[this.position] = null;
         } catch(IOException e) {
@@ -75,8 +77,6 @@ public class CircularDataBuffer<D> implements DataBuffers<D, CircularDataBuffer<
         this.position = (this.position + 1) % this.data.length;
     }
 
-
-    @SuppressWarnings("unchecked")
     public D read() {
         byte[] dataArray = new byte[this.buffer.remaining()];
         this.buffer.get(dataArray);
@@ -102,11 +102,17 @@ public class CircularDataBuffer<D> implements DataBuffers<D, CircularDataBuffer<
 
     @SafeVarargs
     public synchronized final void write(D... newData) {
-        IntStream.range(0, newData.length).forEach(i -> write(newData[i]));
+        for(D datum : newData) write(datum);
     }
 
     public synchronized void flip() {
-        this.data = IntStream.range(0, this.data.length).mapToObj(i -> this.data[this.data.length - 1 - i]).toArray();
+        Object[] newData = new Object[this.data.length];
+
+        for (int i = 0; i < this.data.length; i++) {
+            newData[i] = this.data[this.data.length - 1 - i];
+        }
+
+        this.data = newData;
     }
 
     public synchronized void clear() {
@@ -116,7 +122,6 @@ public class CircularDataBuffer<D> implements DataBuffers<D, CircularDataBuffer<
         this.markedPosition = -1;
     }
 
-    @SuppressWarnings("unchecked")
     public D[] toArray() {
         return (D[]) this.data;
     }
@@ -125,16 +130,22 @@ public class CircularDataBuffer<D> implements DataBuffers<D, CircularDataBuffer<
         this.markedPosition = this.position;
     }
 
-    @SuppressWarnings("unchecked")
     public CircularDataBuffer<D> slice(int start, int end) {
-        return new CircularDataBuffer<>((D[]) IntStream.range(start, end).mapToObj(i -> this.data[i] != null ? this.data[i] : null).toArray());
+        var initialStart = Math.max(0, start);
+        var initialEnd = Math.min(end, this.data.length);
+        Object[] newData = new Object[initialEnd - initialStart];
+
+        for(int i = initialStart; i < initialEnd; i++) {
+            newData[i - initialStart] = this.data[start] != null ? this.data : null;
+        }
+
+        return new CircularDataBuffer<>((D[]) newData);
     }
 
     public synchronized void reset() {
         this.position = this.markedPosition;
     }
 
-    @SuppressWarnings("unchecked")
     public CircularDataBuffer<D> duplicate() {
         CircularDataBuffer<D> newBuffer = new CircularDataBuffer<>(this.read());
         newBuffer.clear();
@@ -148,11 +159,17 @@ public class CircularDataBuffer<D> implements DataBuffers<D, CircularDataBuffer<
     }
 
     public int remain() {
-        return (int) IntStream.range(0, this.data.length).filter(i -> this.data[i] != null).count();
+        int count = 0;
+
+        for(Object datum : data) if(datum != null) count++;
+
+        return count;
     }
 
     public boolean hasRemaining() {
-        return IntStream.range(0, this.data.length).anyMatch(i -> this.data[i] != null);
+        for(Object datum : data) if(datum != null) return true;
+
+        return false;
     }
 
     public synchronized void limit(int newLimit) {
@@ -175,7 +192,9 @@ public class CircularDataBuffer<D> implements DataBuffers<D, CircularDataBuffer<
             this.position = Math.max(ensurePosition, 0);
             this.markedPosition = ensureMark >= 0 ? ensureMark : -1;
         } else {
-            IntStream.range(0, newLimit).forEach(i -> newData[i] = i < this.data.length ? this.data[i] : null);
+            for(int i = 0; i < newLimit; i++) {
+                newData[i] = i < this.data.length ? this.data[i] : null;
+            }
         }
 
         this.data = newData;
