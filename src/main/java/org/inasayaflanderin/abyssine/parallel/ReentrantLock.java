@@ -1,7 +1,6 @@
 package org.inasayaflanderin.abyssine.parallel;
 
 import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 import org.inasayaflanderin.abyssine.config.AbyssineConfigurations;
 import org.inasayaflanderin.abyssine.exceptions.AbyssineException;
@@ -94,7 +93,6 @@ public class ReentrantLock implements Lock, Serializable {
         private static final long serialVersionUID = 8859732343203211526L;
         @Getter
         private final String name;
-        @Setter
         private int maximumLock;
 
         Synchronizer(String name, int maximumLock) {
@@ -104,7 +102,7 @@ public class ReentrantLock implements Lock, Serializable {
 
         public boolean tryAcquire(final int acquires) {
             if(acquires <= 0) throw new IllegalArgumentException("Acquire zero or negative number of lock");
-            if(acquires > maximumLock) throw new AbyssineException("Acquiring more than maximum");
+            if(acquires > this.maximumLock) throw new AbyssineException("Acquiring more than maximum");
 
             final var currentThread = Thread.currentThread();
             final var currentState = getState();
@@ -157,6 +155,12 @@ public class ReentrantLock implements Lock, Serializable {
 
         public int getHoldCount() {
             return isHeldExclusively() ? getState() : 0;
+        }
+
+        public void setMaximumLock(int numLock) {
+            if(numLock > getState()) throw new AbyssineException("Cannot change locks capacity at runtime when new locks capacity is less then current hold locks");
+
+            this.maximumLock = numLock;
         }
     }
 }
