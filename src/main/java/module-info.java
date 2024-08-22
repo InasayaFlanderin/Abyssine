@@ -12,4 +12,5 @@ module Abyssine {
     exports org.inasayaflanderin.abyssine.memory.cache;
     exports org.inasayaflanderin.abyssine.parallel;
     exports org.inasayaflanderin.abyssine.primitives;
+    exports org.inasayaflanderin.abyssine.diagnostic;
 }

@@ -3,6 +3,7 @@ package org.inasayaflanderin.abyssine.parallel;
 import lombok.Getter;
 import lombok.ToString;
 import org.inasayaflanderin.abyssine.config.AbyssineConfigurations;
+import org.inasayaflanderin.abyssine.diagnostic.SystemCollector;
 import org.inasayaflanderin.abyssine.exceptions.AbyssineException;
 
 import java.io.Serial;
@@ -96,7 +97,7 @@ public class ReentrantLock implements Lock, Serializable {
         private int maximumLock;
 
         Synchronizer(String name, int maximumLock) {
-            this.name = AbyssineConfigurations.getConfiguration().getSystemCollector().getSystemIdentity(name) + "[" + name + "]";
+            this.name = SystemCollector.getSystemIdentity(name) + "[" + name + "]";
             this.maximumLock = maximumLock;
         }
 
@@ -126,7 +127,7 @@ public class ReentrantLock implements Lock, Serializable {
         }
 
         public boolean tryRelease(final int releases) {
-            if(getExclusiveOwnerThread() == Thread.currentThread()) throw new IllegalMonitorStateException();
+            if(getExclusiveOwnerThread() != Thread.currentThread()) throw new IllegalMonitorStateException();
             if(releases <= 0) throw new IllegalArgumentException("Release zero or negative lock");
             if(releases > getState()) throw new AbyssineException("Release more than current lock");
 
