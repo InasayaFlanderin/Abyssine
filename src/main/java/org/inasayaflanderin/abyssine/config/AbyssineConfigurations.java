@@ -10,14 +10,13 @@ import java.io.Serializable;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 
+@Getter
 @Log
 public class AbyssineConfigurations implements Serializable {
     @Serial
     private static final long serialVersionUID = -2859598628762108235L;
     private static AbyssineConfigurations configurations;
-    @Getter
     private final Recording systemRecorder;
-    @Getter
     private final ThreadMXBean threadRecorder;
 
     private AbyssineConfigurations() {

@@ -19,7 +19,7 @@ public class AbyssineProperties {
     }
 
     private AbyssineProperties() {
-        propertyLock = new ReentrantLock("Property Lock");
+        propertyLock = new ReentrantLock("Property lock");
         propertyLock.lock();
         try {
             propertiesContent = new Properties();
@@ -68,7 +68,7 @@ public class AbyssineProperties {
     }
 
     private void loadDefaultProperties() {
-
+        addProperty("cpu_load_computation_internal", 1000L, PropertiesType.GLOBAL);
     }
 
     public void forEach(BiConsumer<? super Object, ? super Object> action) {

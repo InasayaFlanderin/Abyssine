@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.java.Log;
+import org.inasayaflanderin.abyssine.parallel.ReentrantLock;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -25,8 +26,13 @@ public class CircularDataBuffer<D> implements DataBuffers<D, CircularDataBuffer<
     private int position;
     @EqualsAndHashCode.Exclude private int markedPosition;
     @EqualsAndHashCode.Exclude private int writerController;
+    private final ReentrantLock writeLock;
+    private final ReentrantLock positionLock;
 
     public CircularDataBuffer(Collection<D> c) {
+        this.writeLock = new ReentrantLock("Circular data buffer write lock");
+        this.positionLock = new ReentrantLock("Circular data buffer position lock");
+
         try {
             oos = new ObjectOutputStream(byteOStream);
         } catch(IOException e) {
@@ -54,27 +60,32 @@ public class CircularDataBuffer<D> implements DataBuffers<D, CircularDataBuffer<
         this(Arrays.asList(data));
     }
 
-    public synchronized void next() {
-        if(!this.hasRemaining()) return;
-
-        int maxIndex = this.data.length - 1;
-        this.position &= ~(this.position >> 31); //this.position &= ~((this.position >> 31) ^ (maxIndex >> 31))
-        int sign = ((this.position - maxIndex) >> 31) & 1;
-        this.position = (sign * this.position) + ((1 - sign) * maxIndex);
-
-        while(this.data[this.position] == null) this.position = (this.position + 1) % this.data.length;
-
-        this.buffer.clear();
+    public void next() {
+        this.writeLock.lock();
+        this.positionLock.lock();
         try {
+            if (!this.hasRemaining()) return;
+
+            int maxIndex = this.data.length - 1;
+            this.position &= ~(this.position >> 31); //this.position &= ~((this.position >> 31) ^ (maxIndex >> 31))
+            int sign = ((this.position - maxIndex) >> 31) & 1;
+            this.position = (sign * this.position) + ((1 - sign) * maxIndex);
+
+            while (this.data[this.position] == null) this.position = (this.position + 1) % this.data.length;
+
+            this.buffer.clear();
             oos.writeObject(data[this.position]);
             oos.reset();
             this.buffer = ByteBuffer.wrap(byteOStream.toByteArray());
             this.data[this.position] = null;
+
+            this.position = (this.position + 1) % this.data.length;
         } catch(IOException e) {
             log.severe(e.toString());
+        } finally {
+            this.writeLock.unlock();
+            this.positionLock.unlock();
         }
-
-        this.position = (this.position + 1) % this.data.length;
     }
 
     public D read() {
@@ -91,43 +102,75 @@ public class CircularDataBuffer<D> implements DataBuffers<D, CircularDataBuffer<
         }
     }
 
-    public synchronized void write(D datum) {
-        this.data[this.writerController] = datum;
-        this.writerController = (this.writerController + 1) % this.data.length;
+    public void write(D datum) {
+        this.writeLock.lock();
+        try {
+            this.data[this.writerController] = datum;
+            this.writerController = (this.writerController + 1) % this.data.length;
+        } finally {
+            this.writeLock.unlock();
+        }
     }
 
-    public synchronized void write(Collection<D> newData) {
-        newData.forEach(this::write);
+    public void write(Collection<D> newData) {
+        this.writeLock.lock();
+        try {
+            newData.forEach(this::write);
+        } finally {
+            this.writeLock.unlock();
+        }
     }
 
     @SafeVarargs
-    public synchronized final void write(D... newData) {
-        for(D datum : newData) write(datum);
-    }
-
-    public synchronized void flip() {
-        Object[] newData = new Object[this.data.length];
-
-        for (int i = 0; i < this.data.length; i++) {
-            newData[i] = this.data[this.data.length - 1 - i];
+    public final void write(D... newData) {
+        this.writeLock.lock();
+        try {
+            for (D datum : newData) write(datum);
+        } finally {
+            this.writeLock.unlock();
         }
-
-        this.data = newData;
     }
 
-    public synchronized void clear() {
-        Arrays.fill(this.data, null);
-        this.writerController = 0;
-        this.position = 0;
-        this.markedPosition = -1;
+    public void flip() {
+        this.writeLock.lock();
+        try {
+            Object[] newData = new Object[this.data.length];
+
+            for (int i = 0; i < this.data.length; i++) {
+                newData[i] = this.data[this.data.length - 1 - i];
+            }
+
+            this.data = newData;
+        } finally {
+            this.writeLock.unlock();
+        }
+    }
+
+    public void clear() {
+        this.writeLock.lock();
+        this.positionLock.lock();
+        try {
+            Arrays.fill(this.data, null);
+            this.writerController = 0;
+            this.position = 0;
+            this.markedPosition = -1;
+        } finally {
+            this.writeLock.unlock();
+            this.positionLock.unlock();
+        }
     }
 
     public D[] toArray() {
         return (D[]) this.data;
     }
 
-    public synchronized void mark() {
-        this.markedPosition = this.position;
+    public void mark() {
+        this.positionLock.lock();
+        try {
+            this.markedPosition = this.position;
+        } finally {
+            this.positionLock.unlock();
+        }
     }
 
     public CircularDataBuffer<D> slice(int start, int end) {
@@ -142,8 +185,13 @@ public class CircularDataBuffer<D> implements DataBuffers<D, CircularDataBuffer<
         return new CircularDataBuffer<>((D[]) newData);
     }
 
-    public synchronized void reset() {
-        this.position = this.markedPosition;
+    public void reset() {
+        this.positionLock.lock();
+        try {
+            this.position = this.markedPosition;
+        } finally {
+            this.positionLock.unlock();
+        }
     }
 
     public CircularDataBuffer<D> duplicate() {
@@ -172,31 +220,45 @@ public class CircularDataBuffer<D> implements DataBuffers<D, CircularDataBuffer<
         return false;
     }
 
-    public synchronized void limit(int newLimit) {
-        Object[] newData = new Object[newLimit];
+    public void limit(int newLimit) {
+        this.writeLock.lock();
+        this.positionLock.lock();
+        try {
+            Object[] newData = new Object[newLimit];
 
-        if(newLimit == this.data.length) {
-            return;
-        } else if(newLimit < this.data.length) {
-            this.writerController--;
-            var ensurePosition = -1;
-            var ensureMark = -1;
-            for(int i = newLimit - 1; i >= 0; i--) {
-                if(this.writerController < 0) this.writerController = this.data.length - 1;
-                newData[i] = this.data[this.writerController];
-                if(this.writerController == this.position) ensurePosition = i;
-                if(this.writerController == this.markedPosition) ensureMark = i;
+            if (newLimit == this.data.length) {
+                return;
+            } else if (newLimit < this.data.length) {
+                this.writerController--;
+                var ensurePosition = -1;
+                var ensureMark = -1;
+                for (int i = newLimit - 1; i >= 0; i--) {
+                    if (this.writerController < 0) this.writerController = this.data.length - 1;
+                    newData[i] = this.data[this.writerController];
+                    if (this.writerController == this.position) ensurePosition = i;
+                    if (this.writerController == this.markedPosition) ensureMark = i;
+                }
+
+                this.writerController = 0;
+                this.position = Math.max(ensurePosition, 0);
+                this.markedPosition = ensureMark >= 0 ? ensureMark : -1;
+            } else {
+                for (int i = 0; i < newLimit; i++) {
+                    newData[i] = i < this.data.length ? this.data[i] : null;
+                }
             }
 
-            this.writerController = 0;
-            this.position = Math.max(ensurePosition, 0);
-            this.markedPosition = ensureMark >= 0 ? ensureMark : -1;
-        } else {
-            for(int i = 0; i < newLimit; i++) {
-                newData[i] = i < this.data.length ? this.data[i] : null;
-            }
+            this.data = newData;
+        } finally {
+            this.positionLock.unlock();
+            this.writeLock.unlock();
         }
+    }
 
-        this.data = newData;
+    public void setFair(boolean fair) {
+        synchronized(this) {
+            this.writeLock.setFair(fair);
+            this.positionLock.setFair(fair);
+        }
     }
 }

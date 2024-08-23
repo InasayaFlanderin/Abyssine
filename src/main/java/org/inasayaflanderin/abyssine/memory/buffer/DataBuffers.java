@@ -25,4 +25,5 @@ public interface DataBuffers<D, C extends DataBuffers<D, C>> extends Serializabl
     int getPosition();
     int remain();
     boolean hasRemaining();
+    void setFair(boolean fair);
 }

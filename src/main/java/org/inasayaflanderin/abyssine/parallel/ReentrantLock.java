@@ -1,6 +1,7 @@
 package org.inasayaflanderin.abyssine.parallel;
 
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import org.inasayaflanderin.abyssine.config.AbyssineConfigurations;
 import org.inasayaflanderin.abyssine.diagnostic.SystemCollector;
@@ -23,20 +24,36 @@ public class ReentrantLock implements Lock, Serializable {
     private final Synchronizer sync;
 
     public ReentrantLock() {
-        this(null, null);
+        this(null, null, false);
     }
 
     public ReentrantLock(String name) {
-        this(name, null);
+        this(name, null, false);
 
     }
 
     public ReentrantLock(Integer maximumLock) {
-        this(null, maximumLock);
+        this(null, maximumLock, false);
+    }
+
+    public ReentrantLock(Boolean fair) {
+        this(null, null, fair);
     }
 
     public ReentrantLock(String name, Integer maximumLock) {
-        this.sync = new Synchronizer(name == null ? "ReentrantLock" + (++numberOfNull): name, maximumLock == null ? Integer.MAX_VALUE : maximumLock);
+        this(name, maximumLock, false);
+    }
+
+    public ReentrantLock(String name, Boolean fair) {
+        this(name, null, fair);
+    }
+
+    public ReentrantLock(Integer maximumLock, Boolean fair) {
+        this(null, maximumLock, fair);
+    }
+
+    public ReentrantLock(String name, Integer maximumLock, Boolean fair) {
+        this.sync = new Synchronizer(name == null ? "ReentrantLock" + (++numberOfNull): name, maximumLock == null ? Integer.MAX_VALUE : maximumLock, fair != null && fair);
         this.name = sync.getName();
     }
 
@@ -88,6 +105,14 @@ public class ReentrantLock implements Lock, Serializable {
         sync.setMaximumLock(numLock);
     }
 
+    public boolean isFair() {
+        return sync.isFair();
+    }
+
+    public void setFair(Boolean fair) {
+        sync.setFair(fair != null && fair);
+    }
+
     @ToString
     private static class Synchronizer extends AbstractQueuedSynchronizer {
         @Serial
@@ -95,10 +120,12 @@ public class ReentrantLock implements Lock, Serializable {
         @Getter
         private final String name;
         private int maximumLock;
+        @Getter @Setter private boolean fair;
 
-        Synchronizer(String name, int maximumLock) {
+        Synchronizer(String name, int maximumLock, boolean fair) {
             this.name = SystemCollector.getSystemIdentity(name) + "[" + name + "]";
             this.maximumLock = maximumLock;
+            this.fair = fair;
         }
 
         public boolean tryAcquire(final int acquires) {
@@ -109,10 +136,11 @@ public class ReentrantLock implements Lock, Serializable {
             final var currentState = getState();
 
             if(currentState == 0) {
-                if(compareAndSetState(0, acquires)) {
-                    setExclusiveOwnerThread(currentThread);
-                    return true;
-                }
+                if(!fair || hasQueuedPredecessors())
+                    if(compareAndSetState(0, acquires)) {
+                        setExclusiveOwnerThread(currentThread);
+                        return true;
+                    }
             } else if(getExclusiveOwnerThread() == currentThread) {
                 var newState = currentState + acquires;
 
