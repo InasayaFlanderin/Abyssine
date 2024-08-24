@@ -4,6 +4,7 @@ module Abyssine {
     requires java.compiler;
     requires jdk.jfr;
     requires java.management;
+    requires jdk.management;
 
     exports org.inasayaflanderin.abyssine;
     exports org.inasayaflanderin.abyssine.config;

@@ -1,14 +1,16 @@
 package org.inasayaflanderin.abyssine.config;
 
-import jdk.jfr.Recording;
+import com.sun.management.OperatingSystemMXBean;
+import com.sun.management.ThreadMXBean;
 import lombok.Getter;
 import lombok.extern.java.Log;
+import org.inasayaflanderin.abyssine.diagnostic.CPUCollector;
 import org.inasayaflanderin.abyssine.diagnostic.SystemCollector;
 
+import javax.management.MBeanServer;
 import java.io.Serial;
 import java.io.Serializable;
 import java.lang.management.ManagementFactory;
-import java.lang.management.ThreadMXBean;
 
 @Getter
 @Log
@@ -16,12 +18,14 @@ public class AbyssineConfigurations implements Serializable {
     @Serial
     private static final long serialVersionUID = -2859598628762108235L;
     private static AbyssineConfigurations configurations;
-    private final Recording systemRecorder;
+    private final OperatingSystemMXBean systemRecorder;
     private final ThreadMXBean threadRecorder;
+    private final MBeanServer MBServer;
 
     private AbyssineConfigurations() {
-        systemRecorder = new Recording();
-        threadRecorder = ManagementFactory.getThreadMXBean();
+        this.systemRecorder = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+        this.threadRecorder = (ThreadMXBean) ManagementFactory.getThreadMXBean();
+        this.MBServer = ManagementFactory.getPlatformMBeanServer();
     }
 
     public static AbyssineConfigurations getConfigurations() {
@@ -40,5 +44,9 @@ public class AbyssineConfigurations implements Serializable {
 
     public SystemCollector getSystemCollector() {
         return SystemCollector.getSystemCollector();
+    }
+
+    public CPUCollector getCPUCollector() {
+        return CPUCollector.getCpuCollector();
     }
 }

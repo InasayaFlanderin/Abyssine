@@ -1,7 +1,5 @@
 package org.inasayaflanderin.abyssine.config;
 
-import org.inasayaflanderin.abyssine.diagnostic.SystemCollector;
-
 public class PropertiesTest {
     public static void main(String[] args) {
         AbyssineConfigurations.getConfigurations().getSystemCollector();
