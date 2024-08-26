@@ -4,7 +4,6 @@ import lombok.Getter;
 import lombok.extern.java.Log;
 import org.inasayaflanderin.abyssine.config.AbyssineConfigurations;
 import org.inasayaflanderin.abyssine.config.AbyssineProperties;
-import org.inasayaflanderin.abyssine.primitives.Pair;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
@@ -46,7 +45,7 @@ public class SystemCollector {
             log.severe(e.toString());
         }
 
-        var OSName = (String) ((Pair<AbyssineProperties.PropertiesType, ?>) properties.getProperty("os")).getSecond();
+        var OSName = (String)  properties.getProperty("os");
 
         if(OSName.startsWith("Linux") || OSName.startsWith("SunOS") || OSName.startsWith("Solaris") || OSName.startsWith("FreeBSD") || OSName.startsWith("OpenBSD")) this.OSType = 0;
         else if(OSName.startsWith("Mac") || OSName.startsWith("Darwin")) this.OSType = 1;

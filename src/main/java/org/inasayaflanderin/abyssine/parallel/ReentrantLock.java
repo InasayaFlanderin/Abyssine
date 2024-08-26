@@ -3,7 +3,6 @@ package org.inasayaflanderin.abyssine.parallel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.inasayaflanderin.abyssine.config.AbyssineConfigurations;
 import org.inasayaflanderin.abyssine.diagnostic.SystemCollector;
 import org.inasayaflanderin.abyssine.exceptions.AbyssineException;
 

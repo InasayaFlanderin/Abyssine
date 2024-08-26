@@ -7,7 +7,6 @@ import lombok.Setter;
 import lombok.extern.java.Log;
 import org.inasayaflanderin.abyssine.config.AbyssineConfigurations;
 import org.inasayaflanderin.abyssine.config.AbyssineProperties;
-import org.inasayaflanderin.abyssine.primitives.Pair;
 
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -40,12 +39,11 @@ public class CPUCollector implements Runnable {
         CPUCollectorThread.start();
     }
 
-    @SuppressWarnings("unchecked")
     private CPUCollector() {
         this.sRecorder = AbyssineConfigurations.getConfigurations().getSystemRecorder();
         this.properties = AbyssineConfigurations.getConfigurations().getProperties();
         this.tRecorder = AbyssineConfigurations.getConfigurations().getThreadRecorder();
-        this.interval = (long) ((Pair<AbyssineProperties.PropertiesType, ?>) properties.getProperty("cpu_load_computation_internal")).getSecond();
+        this.interval = (long) properties.getProperty("cpu_load_computation_internal");
     }
 
     public static CPUCollector getCpuCollector() {
@@ -66,7 +64,6 @@ public class CPUCollector implements Runnable {
         return tRecorder.isThreadCpuTimeEnabled();
     }
 
-    @SuppressWarnings("unchecked")
     public void run() {
         try {
             var timeSleep = 0L;
@@ -84,7 +81,7 @@ public class CPUCollector implements Runnable {
 
                 var cpuTime = recordTime / 1000000;
                 totalUserCPUTime.set(cpuTime);
-                userCPULoad.set(Double.doubleToLongBits((double) (cpuTime - oldCPUTime) / (double) (timeSleep * (int) ((Pair<AbyssineProperties.PropertiesType, ?>) properties.getProperty("system_available_processors")).getSecond())));
+                userCPULoad.set(Double.doubleToLongBits((double) (cpuTime - oldCPUTime) / (double) (timeSleep * (int) properties.getProperty("system_available_processors"))));
                 totalJVMCPUTime.set(sRecorder.getProcessCpuTime());
                 JVMCPULoad.set(Double.doubleToLongBits(sRecorder.getProcessCpuLoad()));
                 systemCPULoad.set(Double.doubleToLongBits(sRecorder.getCpuLoad()));

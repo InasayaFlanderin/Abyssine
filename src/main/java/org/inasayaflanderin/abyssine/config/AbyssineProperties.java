@@ -67,8 +67,18 @@ public class AbyssineProperties {
         return ((Pair<PropertiesType, ? super Object>) propertiesContent.get(key)).getSecond();
     }
 
+    @SuppressWarnings("unchecked")
+    public PropertiesType getVisibility(@NonNull String key) {
+        return ((Pair<PropertiesType, ? super Object>) propertiesContent.get(key)).getFirst();
+    }
+
     private void loadDefaultProperties() {
+        propertyLock.lock();
+        try {
         addProperty("cpu_load_computation_internal", 1000L, PropertiesType.GLOBAL);
+        } finally {
+            propertyLock.unlock();
+        }
     }
 
     public void forEach(BiConsumer<? super Object, ? super Object> action) {
