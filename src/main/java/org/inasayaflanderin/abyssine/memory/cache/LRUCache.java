@@ -1,18 +1,16 @@
 package org.inasayaflanderin.abyssine.memory.cache;
 
-import lombok.extern.java.Log;
 import org.inasayaflanderin.abyssine.primitives.Quad;
 
 import java.io.Serial;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 
-@Log
 public class LRUCache<K, D> implements Caches<K, D, LRUCache<K, D>> {
     @Serial
     private static final long serialVersionUID = -1699712688221614501L;
-    private Quad<K, D, Integer, Integer>[] data;
-    private int cacheSize;
+    private final Quad<K, D, Integer, Integer>[] data;
+    private final int cacheSize;
     private int size;
     private int evictedPosition;
     private int lastItemPosition;
@@ -123,31 +121,11 @@ public class LRUCache<K, D> implements Caches<K, D, LRUCache<K, D>> {
         return null;
     }
 
-    @SuppressWarnings("unchecked")
-    public void limit(int newLimit) {
-        var newCapacity = calculatedDataSize(newLimit);
-        if(newCapacity == this.data.length) return;
-        else if(newCapacity < this.data.length) {
-            var newData = (Quad<K, D, Integer, Integer>[]) Array.newInstance(Quad.class, newCapacity);
-
-            System.arraycopy(this.data, 0, newData, 0, newData.length);
-            if(this.size > newCapacity) this.size = newCapacity;
-
-            this.data = newData;
-        } else {
-            var newData = (Quad<K, D, Integer, Integer>[]) Array.newInstance(Quad.class, newCapacity);
-
-            for (int i = 0; i < newData.length; i++) newData[i] = i < this.data.length ? this.data[i] : null;
-
-            this.data = newData;
-        }
-
-        this.cacheSize = newLimit;
-    }
-
     public void clear() {
         Arrays.fill(this.data, null);
         this.size = 0;
+        this.evictedPosition = -1;
+        this.lastItemPosition = -1;
     }
 
     private int calculatedDataSize(int initialCapacity) {
