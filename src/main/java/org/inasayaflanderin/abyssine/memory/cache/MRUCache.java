@@ -87,6 +87,7 @@ public class MRUCache<K, D> implements Caches<K, D, LRUCache<K, D>> {
            this.data[position] = this.data[position].withThird(this.data[evictedPosition].getThird());
            this.data[this.data[position].getThird()] = this.data[this.data[position].getThird()].withFourth(position);
            this.data[evictedPosition] = null;
+           this.size--;
         }
     }
 
