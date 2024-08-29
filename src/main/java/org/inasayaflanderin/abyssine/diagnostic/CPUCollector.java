@@ -16,7 +16,7 @@ public class CPUCollector implements Runnable {
     private final OperatingSystemMXBean sRecorder;
     private final AbyssineProperties properties;
     private static ThreadMXBean tRecorder;
-    private final long interval;
+    private long interval;
     private final AtomicLong totalUserCPUTime = new AtomicLong(0);
     private final AtomicLong userCPULoad = new AtomicLong(0);
     private final AtomicLong totalJVMCPUTime = new AtomicLong(0);
@@ -43,7 +43,6 @@ public class CPUCollector implements Runnable {
         this.sRecorder = AbyssineConfigurations.getConfigurations().getSystemRecorder();
         this.properties = AbyssineConfigurations.getConfigurations().getProperties();
         this.tRecorder = AbyssineConfigurations.getConfigurations().getThreadRecorder();
-        this.interval = (long) properties.getProperty("cpu_load_computation_internal");
     }
 
     public static CPUCollector getCpuCollector() {
@@ -66,6 +65,7 @@ public class CPUCollector implements Runnable {
 
     public void run() {
         try {
+            this.interval = (long) properties.getProperty("cpu_load_computation_internal");
             var timeSleep = 0L;
             Thread.sleep(interval);
             while(!stopped) {

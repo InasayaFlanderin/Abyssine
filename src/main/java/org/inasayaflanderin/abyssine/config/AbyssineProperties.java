@@ -5,6 +5,7 @@ import org.inasayaflanderin.abyssine.exceptions.AbyssineException;
 import org.inasayaflanderin.abyssine.parallel.ReentrantLock;
 import org.inasayaflanderin.abyssine.primitives.Pair;
 
+import java.util.Objects;
 import java.util.Properties;
 import java.util.function.BiConsumer;
 
@@ -41,6 +42,19 @@ public class AbyssineProperties {
 
     public boolean containsProperty(@NonNull String key) {
         return propertiesContent.containsKey(key.toLowerCase());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AbyssineProperties that = (AbyssineProperties) o;
+        return Objects.equals(propertiesContent, that.propertiesContent) && Objects.equals(propertyLock, that.propertyLock);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(propertiesContent);
     }
 
     public void addProperty(@NonNull String key, @NonNull Object value, @NonNull PropertiesType type) {

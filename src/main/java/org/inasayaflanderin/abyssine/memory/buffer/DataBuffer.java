@@ -1,6 +1,5 @@
 package org.inasayaflanderin.abyssine.memory.buffer;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -8,31 +7,17 @@ import lombok.extern.java.Log;
 import org.inasayaflanderin.abyssine.parallel.ReentrantLock;
 
 import java.io.*;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedList;
+import java.util.*;
 
-@Log @EqualsAndHashCode @ToString @SuppressWarnings("unchecked")
+@Log @ToString @SuppressWarnings("unchecked")
 public class DataBuffer<D> implements DataBuffers<D, DataBuffer<D>> {
     @Serial
     private static final long serialVersionUID = -3668388205802965444L;
     private final LinkedList<D> data;
-    @EqualsAndHashCode.Exclude
-    @Getter
-    private transient ByteBuffer buffer;
-    @EqualsAndHashCode.Exclude
-    @ToString.Exclude
-    private static final ByteArrayOutputStream byteOStream = new ByteArrayOutputStream();
-    @EqualsAndHashCode.Exclude
-    @ToString.Exclude
-    private static ObjectOutputStream oos;
-    @EqualsAndHashCode.Exclude
+    private transient D currentDatum;
     @Getter
     @Setter
     private int position;
-    @EqualsAndHashCode.Exclude
     private int markedPosition;
     private final ReentrantLock writeLock;
     private final ReentrantLock positionLock;
@@ -42,16 +27,10 @@ public class DataBuffer<D> implements DataBuffers<D, DataBuffer<D>> {
         this.positionLock = new ReentrantLock("Data buffer position lock");
 
         this.data = new LinkedList<>(c);
-        try {
-            oos = new ObjectOutputStream(byteOStream);
-            oos.writeObject(data.removeFirst());
-            oos.flush();
-            this.buffer = ByteBuffer.wrap(byteOStream.toByteArray());
-        } catch (IOException e) {
-            log.severe(e.toString());
-        }
+        this.currentDatum = data.removeFirst();
         this.position = 0;
     }
+
     @SafeVarargs
     public DataBuffer(D... data) {
         this(Arrays.asList(data));
@@ -74,11 +53,7 @@ public class DataBuffer<D> implements DataBuffers<D, DataBuffer<D>> {
                 return;
             }
 
-            oos.writeObject(datum);
-            oos.reset();
-            this.buffer = ByteBuffer.wrap(byteOStream.toByteArray());
-        }catch(IOException e) {
-            log.severe(e.toString());
+            this.currentDatum = datum;
         } finally {
             this.writeLock.unlock();
             this.positionLock.unlock();
@@ -86,17 +61,7 @@ public class DataBuffer<D> implements DataBuffers<D, DataBuffer<D>> {
     }
 
     public D read() {
-        byte[] dataArray = new byte[this.buffer.remaining()];
-        this.buffer.get(dataArray);
-
-        try {
-            var byteIStream = new ByteArrayInputStream(dataArray);
-            var ois = new ObjectInputStream(byteIStream);
-            return (D) ois.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            log.severe(e.toString());
-            return null;
-        }
+        return this.currentDatum;
     }
 
     public void write(D datum) {
@@ -199,5 +164,18 @@ public class DataBuffer<D> implements DataBuffers<D, DataBuffer<D>> {
             this.writeLock.setFair(fair);
             this.positionLock.setFair(fair);
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DataBuffer<?> that = (DataBuffer<?>) o;
+        return Objects.equals(data, that.data) && Objects.equals(writeLock, that.writeLock) && Objects.equals(positionLock, that.positionLock);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(data);
     }
 }

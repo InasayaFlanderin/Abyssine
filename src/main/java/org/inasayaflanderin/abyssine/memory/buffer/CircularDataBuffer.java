@@ -8,37 +8,27 @@ import lombok.extern.java.Log;
 import org.inasayaflanderin.abyssine.parallel.ReentrantLock;
 
 import java.io.*;
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Objects;
 
-@Log @EqualsAndHashCode @ToString @SuppressWarnings("unchecked")
+@Log @ToString @SuppressWarnings("unchecked")
 public class CircularDataBuffer<D> implements DataBuffers<D, CircularDataBuffer<D>> {
     @Serial
     private static final long serialVersionUID = 5119552828850176735L;
 
     private Object[] data;
-    @EqualsAndHashCode.Exclude @Getter
-    private transient ByteBuffer buffer;
-    @EqualsAndHashCode.Exclude @ToString.Exclude private static final ByteArrayOutputStream byteOStream = new ByteArrayOutputStream();
-    @EqualsAndHashCode.Exclude @ToString.Exclude private static ObjectOutputStream oos;
-    @EqualsAndHashCode.Exclude @Getter @Setter
+    private transient D currentDatum;
+    @Getter @Setter
     private int position;
-    @EqualsAndHashCode.Exclude private int markedPosition;
-    @EqualsAndHashCode.Exclude private int writerController;
+    private int markedPosition;
+    private int writerController;
     private final ReentrantLock writeLock;
     private final ReentrantLock positionLock;
 
     public CircularDataBuffer(Collection<D> c) {
         this.writeLock = new ReentrantLock("Circular data buffer write lock");
         this.positionLock = new ReentrantLock("Circular data buffer position lock");
-
-        try {
-            oos = new ObjectOutputStream(byteOStream);
-        } catch(IOException e) {
-            log.severe(e.toString());
-        }
-
         this.data = new Object[c.size() + (10 - c.size() % 10)];
         this.writerController = this.position = 0;
         this.markedPosition = -1;
@@ -73,15 +63,10 @@ public class CircularDataBuffer<D> implements DataBuffers<D, CircularDataBuffer<
 
             while (this.data[this.position] == null) this.position = (this.position + 1) % this.data.length;
 
-            this.buffer.clear();
-            oos.writeObject(data[this.position]);
-            oos.reset();
-            this.buffer = ByteBuffer.wrap(byteOStream.toByteArray());
+            this.currentDatum = (D) this.data[this.position];
             this.data[this.position] = null;
 
             this.position = (this.position + 1) % this.data.length;
-        } catch(IOException e) {
-            log.severe(e.toString());
         } finally {
             this.writeLock.unlock();
             this.positionLock.unlock();
@@ -89,17 +74,7 @@ public class CircularDataBuffer<D> implements DataBuffers<D, CircularDataBuffer<
     }
 
     public D read() {
-        byte[] dataArray = new byte[this.buffer.remaining()];
-        this.buffer.get(dataArray);
-
-        try {
-            var byteIStream = new ByteArrayInputStream(dataArray);
-            var ois = new ObjectInputStream(byteIStream);
-            return (D) ois.readObject();
-        } catch(IOException | ClassNotFoundException e) {
-            log.severe(e.toString());
-            return null;
-        }
+        return this.currentDatum;
     }
 
     public void write(D datum) {
@@ -260,5 +235,18 @@ public class CircularDataBuffer<D> implements DataBuffers<D, CircularDataBuffer<
             this.writeLock.setFair(fair);
             this.positionLock.setFair(fair);
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CircularDataBuffer<?> that = (CircularDataBuffer<?>) o;
+        return Objects.deepEquals(data, that.data) && Objects.equals(writeLock, that.writeLock) && Objects.equals(positionLock, that.positionLock);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(data);
     }
 }

@@ -1,6 +1,5 @@
 package org.inasayaflanderin.abyssine.memory.buffer;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -8,22 +7,34 @@ import lombok.extern.java.Log;
 import org.inasayaflanderin.abyssine.parallel.ReentrantLock;
 
 import java.io.*;
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 
-@Log @EqualsAndHashCode @ToString @SuppressWarnings("unchecked")
+@Log @ToString @SuppressWarnings("unchecked")
 public class StackDataBuffer<D> implements DataBuffers<D, StackDataBuffer<D>> {
     @Serial
     private static final long serialVersionUID = -472081321054822264L;
     private final LinkedList<D> data;
-    @EqualsAndHashCode.Exclude @Getter private transient ByteBuffer buffer;
-    @EqualsAndHashCode.Exclude @ToString.Exclude private static final ByteArrayOutputStream byteOStream = new ByteArrayOutputStream();
-    @EqualsAndHashCode.Exclude @ToString.Exclude private static ObjectOutputStream oos;
-    @EqualsAndHashCode.Exclude @Getter @Setter private int position;
-    @EqualsAndHashCode.Exclude private int markedPosition;
+    private transient D currentDatum;
+    @Getter @Setter private int position;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        StackDataBuffer<?> that = (StackDataBuffer<?>) o;
+        return data.equals(that.data) && writeLock.equals(that.writeLock) && positionLock.equals(that.positionLock);
+    }
+
+    @Override
+    public int hashCode() {
+        return data.hashCode();
+    }
+
+    private int markedPosition;
     private final ReentrantLock writeLock;
     private final ReentrantLock positionLock;
 
@@ -31,14 +42,7 @@ public class StackDataBuffer<D> implements DataBuffers<D, StackDataBuffer<D>> {
         this.writeLock = new ReentrantLock("Stack data buffer write lock");
         this.positionLock = new ReentrantLock("Stack data buffer position lock");
         this.data = new LinkedList<>(c);
-        try {
-            oos = new ObjectOutputStream(byteOStream);
-            oos.writeObject(data.removeLast());
-            oos.flush();
-            this.buffer = ByteBuffer.wrap(byteOStream.toByteArray());
-        } catch(IOException e) {
-            log.severe(e.toString());
-        }
+        this.currentDatum = this.data.removeLast();
         this.position = 0;
         this.markedPosition = -1;
     }
@@ -67,11 +71,7 @@ public class StackDataBuffer<D> implements DataBuffers<D, StackDataBuffer<D>> {
                 return;
             }
 
-            oos.writeObject(datum);
-            oos.reset();
-            this.buffer = ByteBuffer.wrap(byteOStream.toByteArray());
-        } catch(IOException e) {
-            log.severe(e.toString());
+            this.currentDatum = datum;
         } finally {
             this.writeLock.unlock();
             this.positionLock.unlock();
@@ -79,17 +79,7 @@ public class StackDataBuffer<D> implements DataBuffers<D, StackDataBuffer<D>> {
     }
 
     public D read() {
-        byte[] dataArray = new byte[this.buffer.remaining()];
-        this.buffer.get(dataArray);
-
-        try {
-            var byteIStream = new ByteArrayInputStream(dataArray);
-            var ois = new ObjectInputStream(byteIStream);
-            return (D) ois.readObject();
-        } catch(IOException | ClassNotFoundException e) {
-            log.severe(e.toString());
-            return null;
-        }
+        return this.currentDatum;
     }
 
     public void write(D datum) {

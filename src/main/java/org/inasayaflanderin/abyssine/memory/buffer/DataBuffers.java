@@ -21,7 +21,6 @@ public interface DataBuffers<D, C extends DataBuffers<D, C>> extends Serializabl
     int hashCode();
     boolean equals(Object obj);
     String toString();
-    ByteBuffer getBuffer();
     int getPosition();
     int remain();
     boolean hasRemaining();
