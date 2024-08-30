@@ -93,27 +93,24 @@ public class MRUCache<K, D> implements Caches<K, D, LRUCache<K, D>> {
 
     public D read(K key) {
         var position = hash(key);
+
+        while(this.data[position] == null) position = (position + 1) % this.data.length;
+
         var originalPosition = position;
 
-        if(this.data[position] == null) return null;
-        if(this.data[position].getFirst().equals(key)) return this.data[position].getSecond();
-
-        while(this.data[position].getFourth() != -1) {
+        do {
             if(this.data[position].getFirst().equals(key)) return this.data[position].getSecond();
 
             position = this.data[position].getFourth();
-        }
+        } while(position != -1);
 
-        if(this.data[position].getFirst().equals(key)) return this.data[position].getSecond();
         position = originalPosition;
 
-        while(this.data[position].getThird() != -1) {
+        do {
             if(this.data[position].getFirst().equals(key)) return this.data[position].getSecond();
 
             position = this.data[position].getThird();
-        }
-
-        if(this.data[position].getFirst().equals(key)) return this.data[position].getSecond();
+        } while(position != -1);
 
         return null;
     }
