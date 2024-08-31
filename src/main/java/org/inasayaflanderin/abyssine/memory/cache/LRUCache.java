@@ -6,7 +6,7 @@ import java.io.Serial;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 
-public class LRUCache<K, D> implements Caches<K, D, LRUCache<K, D>> {
+public class LRUCache<K, D> implements Caches<K, D> {
     @Serial
     private static final long serialVersionUID = -1699712688221614501L;
     private final Quad<K, D, Integer, Integer>[] data;
@@ -35,7 +35,7 @@ public class LRUCache<K, D> implements Caches<K, D, LRUCache<K, D>> {
         var searchNext = false;
         var searchPrevious = false;
         while(this.data[position] != null) {
-            if(this.data[position].equals(key)) {
+            if(this.data[position].getFirst().equals(key)) {
                 this.data[position] = this.data[position].withSecond(datum);
                 return;
             }
