@@ -102,15 +102,7 @@ public class ARCache<K, D> extends AbstractCache<K, D> {
 
             while (this.size >= this.cacheSize) {
                 if (this.recentlyGarbageCollection.size() > this.frequencyGarbageCollection.size()) {
-                    var evictedPosition = this.data[this.frequencyLastItemPosition].getThird();
-                    var currentSearchPosition = evictedPosition;
-
-                    do {
-                        if (this.data[currentSearchPosition].getFifth() <= this.data[evictedPosition].getFifth())
-                            evictedPosition = currentSearchPosition;
-
-                        currentSearchPosition = this.data[currentSearchPosition].getThird();
-                    } while (currentSearchPosition != -1);
+                    var evictedPosition = getEvictedPosition();
 
                     this.frequencyGarbageCollection.add(key);
                     remove(evictedPosition);
@@ -130,6 +122,19 @@ public class ARCache<K, D> extends AbstractCache<K, D> {
         } finally {
             lock.unlock();
         }
+    }
+
+    private int getEvictedPosition() {
+        var evictedPosition = this.data[this.frequencyLastItemPosition].getThird();
+        var currentSearchPosition = evictedPosition;
+
+        do {
+            if (this.data[currentSearchPosition].getFifth() <= this.data[evictedPosition].getFifth())
+                evictedPosition = currentSearchPosition;
+
+            currentSearchPosition = this.data[currentSearchPosition].getThird();
+        } while (currentSearchPosition != -1);
+        return evictedPosition;
     }
 
     public D read(K key) {
