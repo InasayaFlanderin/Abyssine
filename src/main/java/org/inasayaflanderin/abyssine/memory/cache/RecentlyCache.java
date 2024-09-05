@@ -25,9 +25,14 @@ public abstract class RecentlyCache<K, D> extends AbstractCache<K, D> {
     }
 
     public void clear() {
-        Arrays.fill(this.data, null);
-        this.size = 0;
-        this.lastItemPosition = -1;
+        this.lock.lock();
+        try {
+            Arrays.fill(this.data, null);
+            this.size = 0;
+            this.lastItemPosition = -1;
+        } finally {
+            this.lock.unlock();
+        }
     }
 
     public int indexOf(K key) {
@@ -57,59 +62,80 @@ public abstract class RecentlyCache<K, D> extends AbstractCache<K, D> {
     }
 
     public D read(K key) {
-        var position = indexOf(key);
+        this.lock.lock();
+        try {
+            var position = indexOf(key);
 
-        if(position >= 0) {
-            callMove(position);
-            return this.data[position].getSecond();
+            if (position >= 0) {
+                callMove(position);
+                return this.data[position].getSecond();
+            }
+
+            return null;
+        } finally {
+            this.lock.unlock();
         }
-
-        return null;
     }
 
     public int write(K key, D datum) {
-        if(this.size > this.cacheSize) throw new IllegalStateException("Current number of item is larger than cache's capacity");
+        this.lock.lock();
+        try {
+            if (this.size > this.cacheSize)
+                throw new IllegalStateException("Current number of item is larger than cache's capacity");
 
-        var position = indexOf(key);
-        if(position >= 0) {
-            callMove(position);
-            this.data[position] = this.data[position].withSecond(datum);
+            var position = indexOf(key);
+            if (position >= 0) {
+                callMove(position);
+                this.data[position] = this.data[position].withSecond(datum);
+                return position;
+            } else {
+                position = hash(key, this.data.length);
+
+                while (this.data[position] != null) position = (position + 1) & (this.data.length - 1);
+            }
+
+            this.data[position] = new Quad<>(key, datum, this.lastItemPosition, -1);
+            this.data[this.lastItemPosition] = this.data[this.lastItemPosition].withFourth(position);
+            this.lastItemPosition = position;
+            this.size++;
+
+
+            while (this.size >= cacheSize) {
+                evict(position);
+            }
+
             return position;
-        } else {
-            position = hash(key, this.data.length);
-
-            while(this.data[position] != null) position = (position + 1) & (this.data.length - 1);
+        } finally {
+            this.lock.unlock();
         }
-
-        this.data[position] = new Quad<>(key, datum, this.lastItemPosition, -1);
-        this.data[this.lastItemPosition] = this.data[this.lastItemPosition].withFourth(position);
-        this.lastItemPosition = position;
-        this.size++;
-
-
-        while(this.size >= cacheSize) {
-            evict(position);
-        }
-
-        return position;
     }
 
     public void remove(int index) {
-        if(this.data[index] == null) return;
+        this.lock.lock();
+        try {
+            if (this.data[index] == null) return;
 
-        var previous = this.data[index].getThird();
-        var next = this.data[index].getFourth();
+            var previous = this.data[index].getThird();
+            var next = this.data[index].getFourth();
 
-        if(index == this.lastItemPosition) this.lastItemPosition = previous;
+            if (index == this.lastItemPosition) this.lastItemPosition = previous;
 
-        this.data[previous] = this.data[previous].withFourth(next);
-        this.data[next] = this.data[next].withThird(previous);
-        this.data[index] = null;
-        size--;
+            this.data[previous] = this.data[previous].withFourth(next);
+            this.data[next] = this.data[next].withThird(previous);
+            this.data[index] = null;
+            size--;
+        } finally {
+            this.lock.unlock();
+        }
     }
 
     public void remove(K key) {
-        remove(indexOf(key));
+        this.lock.lock();
+        try {
+            remove(indexOf(key));
+        } finally {
+            this.lock.unlock();
+        }
     }
 
     protected abstract void callMove(int position);

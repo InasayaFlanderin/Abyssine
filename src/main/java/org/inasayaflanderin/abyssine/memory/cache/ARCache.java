@@ -46,143 +46,171 @@ public class ARCache<K, D> extends AbstractCache<K, D> {
     }
 
     public int write(K key, D data) {
-        if(this.size > this.cacheSize) throw new IllegalStateException("Current number of item is larger than cache's capacity");
+        this.lock.lock();
+        try {
+            if (this.size > this.cacheSize)
+                throw new IllegalStateException("Current number of item is larger than cache's capacity");
 
-        var position = indexOf(key);
-        if(position < 0) {
-            if(recentlyGarbageCollection.contains(key)) {
-                this.equalizer += this.factor;
-                this.recentlyGarbageCollection.remove(key);
-            }
+            var position = indexOf(key);
+            if (position < 0) {
+                if (recentlyGarbageCollection.contains(key)) {
+                    this.equalizer += this.factor;
+                    this.recentlyGarbageCollection.remove(key);
+                }
 
-            if(frequencyGarbageCollection.contains(key)) {
-                this.equalizer -= this.factor;
-                this.frequencyGarbageCollection.remove(key);
-            }
+                if (frequencyGarbageCollection.contains(key)) {
+                    this.equalizer -= this.factor;
+                    this.frequencyGarbageCollection.remove(key);
+                }
 
-            position = hash(key, this.equalizer);
+                position = hash(key, this.equalizer);
 
-            while(this.data[position] != null) position = (position + 1) & (this.equalizer - 1);
-        } else if(position < this.equalizer) {
-            Quin<K, D, Integer, Integer, Long> datum = this.data[position].withSecond(data);
-            var newFrequency = datum.getFifth() + 1;
-            this.totalFrequency++;
-
-            if(newFrequency > totalFrequency / this.size) {
-                remove(position);
-
-                if(position == this.evictedPosition) this.evictedPosition = datum.getFourth();
-                if(position == this.recentlyLastItemPosition) this.recentlyLastItemPosition = datum.getThird();
-
-                var newPosition = hash(key, this.data.length - this.equalizer) + this.equalizer;
-                this.data[newPosition] = datum.withFifth(newFrequency).withThird(frequencyLastItemPosition).withFourth(-1);
-                this.size++;
-                this.frequencyLastItemPosition = newPosition;
-
-                return newPosition;
-            } else {
-                this.data[position] = datum.withFifth(newFrequency);
-                callMove(position);
-
-                return position;
-            }
-        } else {
-            this.data[position] = this.data[position].withSecond(data).withFifth(this.data[position].getFifth() + 1);
-
-            return position;
-        }
-
-        this.data[position] = new Quin<>(key, data, this.recentlyLastItemPosition, -1, 0L);
-        this.data[this.recentlyLastItemPosition] = this.data[this.recentlyLastItemPosition].withFourth(position);
-        this.recentlyLastItemPosition = position;
-        this.size++;
-
-        while(this.size >= this.cacheSize) {
-            if(this.recentlyGarbageCollection.size() > this.frequencyGarbageCollection.size()) {
-                var evictedPosition = this.data[this.frequencyLastItemPosition].getThird();
-                var currentSearchPosition = evictedPosition;
-
-                do {
-                    if(this.data[currentSearchPosition].getFifth() <= this.data[evictedPosition].getFifth()) evictedPosition = currentSearchPosition;
-
-                    currentSearchPosition = this.data[currentSearchPosition].getThird();
-                } while(currentSearchPosition != -1);
-
-                this.frequencyGarbageCollection.add(key);
-                remove(evictedPosition);
-            } else {
-                this.recentlyGarbageCollection.add(key);
-                remove(this.evictedPosition);
-            }
-        }
-
-        while(this.recentlyGarbageCollection.size() + this.frequencyGarbageCollection.size() >= this.data.length) {
-            if(this.recentlyGarbageCollection.size() > this.frequencyGarbageCollection.size()) this.recentlyGarbageCollection.removeFirst();
-            else this.frequencyGarbageCollection.removeFirst();
-        }
-
-        return position;
-    }
-
-    public D read(K key) {
-        var position = indexOf(key);
-
-        if(position >= 0) {
-            if(position < this.equalizer) {
-                Quin<K, D, Integer, Integer, Long> datum = this.data[position];
+                while (this.data[position] != null) position = (position + 1) & (this.equalizer - 1);
+            } else if (position < this.equalizer) {
+                Quin<K, D, Integer, Integer, Long> datum = this.data[position].withSecond(data);
                 var newFrequency = datum.getFifth() + 1;
                 this.totalFrequency++;
 
-                if(newFrequency > totalFrequency / this.size) {
+                if (newFrequency > totalFrequency / this.size) {
                     remove(position);
 
-                    if(position == this.evictedPosition) this.evictedPosition = datum.getFourth();
-                    if(position == this.recentlyLastItemPosition) this.recentlyLastItemPosition = datum.getThird();
+                    if (position == this.evictedPosition) this.evictedPosition = datum.getFourth();
+                    if (position == this.recentlyLastItemPosition) this.recentlyLastItemPosition = datum.getThird();
 
                     var newPosition = hash(key, this.data.length - this.equalizer) + this.equalizer;
                     this.data[newPosition] = datum.withFifth(newFrequency).withThird(frequencyLastItemPosition).withFourth(-1);
                     this.size++;
                     this.frequencyLastItemPosition = newPosition;
+
+                    return newPosition;
                 } else {
                     this.data[position] = datum.withFifth(newFrequency);
                     callMove(position);
+
+                    return position;
+                }
+            } else {
+                this.data[position] = this.data[position].withSecond(data).withFifth(this.data[position].getFifth() + 1);
+
+                return position;
+            }
+
+            this.data[position] = new Quin<>(key, data, this.recentlyLastItemPosition, -1, 0L);
+            this.data[this.recentlyLastItemPosition] = this.data[this.recentlyLastItemPosition].withFourth(position);
+            this.recentlyLastItemPosition = position;
+            this.size++;
+
+            while (this.size >= this.cacheSize) {
+                if (this.recentlyGarbageCollection.size() > this.frequencyGarbageCollection.size()) {
+                    var evictedPosition = this.data[this.frequencyLastItemPosition].getThird();
+                    var currentSearchPosition = evictedPosition;
+
+                    do {
+                        if (this.data[currentSearchPosition].getFifth() <= this.data[evictedPosition].getFifth())
+                            evictedPosition = currentSearchPosition;
+
+                        currentSearchPosition = this.data[currentSearchPosition].getThird();
+                    } while (currentSearchPosition != -1);
+
+                    this.frequencyGarbageCollection.add(key);
+                    remove(evictedPosition);
+                } else {
+                    this.recentlyGarbageCollection.add(key);
+                    remove(this.evictedPosition);
                 }
             }
 
-            return this.data[position].getSecond();
-        }
+            while (this.recentlyGarbageCollection.size() + this.frequencyGarbageCollection.size() >= this.data.length) {
+                if (2 * this.recentlyGarbageCollection.size() > this.frequencyGarbageCollection.size() * 3)
+                    this.recentlyGarbageCollection.removeFirst();
+                else this.frequencyGarbageCollection.removeFirst();
+            }
 
-        return null;
+            return position;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public D read(K key) {
+        this.lock.lock();
+        try {
+            var position = indexOf(key);
+
+            if (position >= 0) {
+                if (position < this.equalizer) {
+                    Quin<K, D, Integer, Integer, Long> datum = this.data[position];
+                    var newFrequency = datum.getFifth() + 1;
+                    this.totalFrequency++;
+
+                    if (newFrequency > totalFrequency / this.size) {
+                        remove(position);
+
+                        if (position == this.evictedPosition) this.evictedPosition = datum.getFourth();
+                        if (position == this.recentlyLastItemPosition) this.recentlyLastItemPosition = datum.getThird();
+
+                        var newPosition = hash(key, this.data.length - this.equalizer) + this.equalizer;
+                        this.data[newPosition] = datum.withFifth(newFrequency).withThird(frequencyLastItemPosition).withFourth(-1);
+                        this.size++;
+                        this.frequencyLastItemPosition = newPosition;
+                    } else {
+                        this.data[position] = datum.withFifth(newFrequency);
+                        callMove(position);
+                    }
+                }
+
+                return this.data[position].getSecond();
+            }
+
+            return null;
+        } finally {
+            lock.unlock();
+        }
     }
 
     public void remove(int index) {
-        if(this.data[index] == null) return;
+        this.lock.lock();
+        try {
+            if (this.data[index] == null) return;
 
-        var previous = this.data[index].getThird();
-        var next = this.data[index].getFourth();
+            var previous = this.data[index].getThird();
+            var next = this.data[index].getFourth();
 
-        if(index == this.evictedPosition) this.evictedPosition = next;
-        if(index == this.frequencyLastItemPosition) this.frequencyLastItemPosition = previous;
-        if(index == this.recentlyLastItemPosition) this.recentlyLastItemPosition = previous;
+            if (index == this.evictedPosition) this.evictedPosition = next;
+            if (index == this.frequencyLastItemPosition) this.frequencyLastItemPosition = previous;
+            if (index == this.recentlyLastItemPosition) this.recentlyLastItemPosition = previous;
 
-        this.totalFrequency -= this.data[index].getFifth();
-        this.data[previous] = this.data[previous].withFourth(next);
-        this.data[next] = this.data[next].withThird(previous);
-        this.data[index] = null;
-        size--;
+            this.totalFrequency -= this.data[index].getFifth();
+            this.data[previous] = this.data[previous].withFourth(next);
+            this.data[next] = this.data[next].withThird(previous);
+            this.data[index] = null;
+            size--;
+        } finally {
+            this.lock.unlock();
+        }
     }
 
     public void remove(K key) {
-        remove(indexOf(key));
+        this.lock.lock();
+        try {
+            remove(indexOf(key));
+        } finally {
+            this.lock.unlock();
+        }
     }
 
     public void clear() {
-        Arrays.fill(this.data, null);
-        this.size = 0;
-        this.equalizer = this.data.length / 2;
-        this.evictedPosition = -1;
-        this.recentlyLastItemPosition = -1;
-        this.frequencyLastItemPosition = -1;
+        this.lock.lock();
+        try {
+            Arrays.fill(this.data, null);
+            this.size = 0;
+            this.equalizer = this.data.length / 2;
+            this.evictedPosition = -1;
+            this.recentlyLastItemPosition = -1;
+            this.frequencyLastItemPosition = -1;
+        } finally {
+            this.lock.unlock();
+        }
     }
 
     private int indexOfSearch(K key, int length, int startPoint) {
@@ -217,16 +245,21 @@ public class ARCache<K, D> extends AbstractCache<K, D> {
     }
 
     protected void callMove(int position) {
-        int previous = this.data[position].getThird();
-        int next = this.data[position].getFourth();
+        this.lock.lock();
+        try {
+            int previous = this.data[position].getThird();
+            int next = this.data[position].getFourth();
 
-        if(previous != -1) this.data[previous] = this.data[previous].withFourth(next);
-        else evictedPosition = next;
-        if(next != -1) this.data[next] = this.data[previous].withThird(previous);
+            if (previous != -1) this.data[previous] = this.data[previous].withFourth(next);
+            else evictedPosition = next;
+            if (next != -1) this.data[next] = this.data[previous].withThird(previous);
 
-        this.data[this.recentlyLastItemPosition] = this.data[this.recentlyLastItemPosition].withFourth(position);
-        this.data[position] = this.data[position].withThird(this.recentlyLastItemPosition);
+            this.data[this.recentlyLastItemPosition] = this.data[this.recentlyLastItemPosition].withFourth(position);
+            this.data[position] = this.data[position].withThird(this.recentlyLastItemPosition);
 
-        this.recentlyLastItemPosition = position;
+            this.recentlyLastItemPosition = position;
+        } finally {
+            this.lock.unlock();
+        }
     }
 }

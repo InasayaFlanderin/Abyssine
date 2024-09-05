@@ -10,4 +10,5 @@ public interface Caches<K, D> extends Serializable {
     int indexOf(K key);
     void remove(int index);
     void remove(K key);
+    void setFair(boolean fair);
 }
