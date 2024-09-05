@@ -30,18 +30,17 @@ public abstract class FrequencyCache<K, D> extends AbstractCache<K, D> {
         this.lastItemPosition = -1;
     }
 
-    public D read(K key) {
+    public int indexOf(K key) {
+        if(this.size == 0) return -1;
+
         var position = hash(key, this.data.length);
 
-        while(this.data[position] == null) position = (position + 1) % this.data.length;
+        while(this.data[position] == null) position = (position + 1) & (this.data.length - 1);
 
         var originalPosition = position;
 
         do {
-            if(this.data[position].getFirst().equals(key)) {
-                this.data[position] = this.data[position].withFifth(this.data[position].getFifth() + 1);
-                return this.data[position].getSecond();
-            }
+            if(this.data[position].getFirst().equals(key)) return position;
 
             position = this.data[position].getFourth();
         } while(position != -1);
@@ -49,13 +48,40 @@ public abstract class FrequencyCache<K, D> extends AbstractCache<K, D> {
         position = originalPosition;
 
         do {
-            if(this.data[position].getFirst().equals(key)) {
-                this.data[position] = this.data[position].withFifth(this.data[position].getFifth() + 1);
-                return this.data[position].getSecond();
-            }
+            if(this.data[position].getFirst().equals(key)) return position;
 
             position = this.data[position].getThird();
         } while(position != -1);
+
+        return -1;
+    }
+
+    public void remove(int index) {
+        if(this.data[index] == null) return;
+
+        var previous = this.data[index].getThird();
+        var next = this.data[index].getFourth();
+
+        if(index == this.lastItemPosition) this.lastItemPosition = previous;
+
+        this.data[previous] = this.data[previous].withFourth(next);
+        this.data[next] = this.data[next].withThird(previous);
+        this.data[index] = null;
+        size--;
+    }
+
+    public void remove(K key) {
+        remove(indexOf(key));
+    }
+
+    public D read(K key) {
+        var position = indexOf(key);
+
+        if(position >= 0) {
+            this.data[position] = this.data[position].withFifth(this.data[position].getFifth() + 1);
+
+            return this.data[position].getSecond();
+        }
 
         return null;
     }
@@ -63,59 +89,18 @@ public abstract class FrequencyCache<K, D> extends AbstractCache<K, D> {
     public int write(K key, D datum) {
         if(this.size > this.cacheSize) throw new IllegalStateException("Current number of item is larger than cache's capacity");
 
-        var position = hash(key, this.data.length);
-        var originalPosition = position;
-        var haveNotSearchNext = true;
-        var searchNext = false;
-        var searchPrevious = false;
-        while(this.data[position] != null) {
-            if(this.data[position].getFirst().equals(key)) {
-                this.data[position] = this.data[position].withSecond(datum);
-                this.data[position] = this.data[position].withFifth(this.data[position].getFifth() + 1);
-                return position;
-            }
+        var position = indexOf(key);
+        if(position >= 0) {
+            this.data[position] = this.data[position].withSecond(datum).withFifth(this.data[position].getFifth() + 1);
+            return position;
+        } else {
+            position = hash(key, this.data.length);
 
-            if(haveNotSearchNext) {
-                if(this.data[position].getFourth() != -1) searchNext = true;
-                haveNotSearchNext = false;
-
-                if(!searchNext) {
-                    if(this.data[position].getThird() != -1) {
-                        searchPrevious = true;
-                        position = this.data[position].getThird();
-                        continue;
-                    }
-                }
-            }
-
-            if(searchNext) {
-                position = this.data[position].getFourth();
-
-                if(this.data[position].getFourth() == -1) {
-                    searchNext = false;
-
-                    if(this.data[originalPosition].getThird() != -1) {
-                        searchPrevious = true;
-                        position = this.data[originalPosition].getThird();
-                    } else {
-                        while(this.data[position] != null) position = (position + 1) % this.data.length;
-                        break;
-                    }
-                }
-            } else if(searchPrevious) {
-                if(this.data[position].getThird() == -1) {
-                    while(this.data[position] != null) position = (position + 1) % this.data.length;
-                    break;
-                }
-                else position = this.data[position].getThird();
-            } else {
-                position = (position + 1) % this.data.length;
-                break;
-            }
+            while(this.data[position] != null) position = (position + 1) & (this.data.length - 1);
         }
 
-        this.data[position] = new Quin<>(key, datum, lastItemPosition, -1, 0L);
-        this.data[lastItemPosition] = this.data[lastItemPosition].withFourth(position);
+        this.data[position] = new Quin<>(key, datum, this.lastItemPosition, -1, 0L);
+        this.data[lastItemPosition] = this.data[this.lastItemPosition].withFourth(position);
         this.lastItemPosition = position;
         this.size++;
 

@@ -25,9 +25,9 @@ public class MRUCache<K, D> extends RecentlyCache<K, D> {
         if(previous != -1) this.data[previous] = this.data[previous].withFourth(next);
         if(next != -1) this.data[next] = this.data[previous].withThird(previous);
 
-        this.data[lastItemPosition] = this.data[lastItemPosition].withFourth(position);
-        this.data[position] = this.data[position].withThird(lastItemPosition);
+        this.data[this.lastItemPosition] = this.data[this.lastItemPosition].withFourth(position);
+        this.data[position] = this.data[position].withThird(this.lastItemPosition).withFourth(-1);
 
-        lastItemPosition = position;
+        this.lastItemPosition = position;
     }
 }

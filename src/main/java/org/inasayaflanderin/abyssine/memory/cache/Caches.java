@@ -7,4 +7,7 @@ public interface Caches<K, D> extends Serializable {
     int write(K key, D datum);
     boolean contains(K key);
     void clear();
+    int indexOf(K key);
+    void remove(int index);
+    void remove(K key);
 }
