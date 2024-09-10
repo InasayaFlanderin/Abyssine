@@ -23,7 +23,7 @@ public class ARCache<K, D> extends AbstractCache<K, D> {
     private int frequencyLastItemPosition;
 
     @SuppressWarnings("unchecked")
-    public ARCache(int initialCapacity) {
+    ARCache(int initialCapacity) {
         if (initialCapacity < 1) throw new IllegalArgumentException("Expected capacity is less than 0");
 
         this.cacheSize = initialCapacity;

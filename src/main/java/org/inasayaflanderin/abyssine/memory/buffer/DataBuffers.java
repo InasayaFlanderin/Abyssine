@@ -25,4 +25,28 @@ public interface DataBuffers<D, C extends DataBuffers<D, C>> extends Serializabl
     int remain();
     boolean hasRemaining();
     void setFair(boolean fair);
+
+    static <D> DataBuffers<D, ? extends DataBuffers<D, ?>> createDataBuffer(Collection<D> c) {
+        return new DataBuffer<>(c);
+    }
+
+    static <D> DataBuffers<D, ? extends DataBuffers<D, ?>> createDataBuffer(D... data) {
+        return new DataBuffer<>(data);
+    }
+
+    static <D> DataBuffers<D, ? extends DataBuffers<D, ?>> createStackDataBuffer(Collection<D> c) {
+        return new StackDataBuffer<>(c);
+    }
+
+    static <D> DataBuffers<D, ? extends DataBuffers<D, ?>> createStackDataBuffer(D... data) {
+        return new StackDataBuffer<>(data);
+    }
+
+    static <D> DataBuffers<D, ? extends DataBuffers<D, ?>> createCircularDataBuffer(Collection<D> c) {
+        return new CircularDataBuffer<>(c);
+    }
+
+    static <D> DataBuffers<D, ? extends DataBuffers<D, ?>> createCircularDataBuffer(D... data) {
+        return new CircularDataBuffer<>(data);
+    }
 }

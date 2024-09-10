@@ -1,13 +1,16 @@
 package org.inasayaflanderin.abyssine.memory.cache;
 
+import lombok.ToString;
+
 import java.io.Serial;
 
+@ToString(callSuper = true)
 public class LRUCache<K, D> extends RecentlyCache<K, D> {
     @Serial
     private static final long serialVersionUID = -1699712688221614501L;
-    private int evictedPosition;
+    @ToString.Exclude private int evictedPosition;
 
-    public LRUCache(int initialCapacity) {
+    LRUCache(int initialCapacity) {
         super(initialCapacity);
         this.evictedPosition = -1;
     }

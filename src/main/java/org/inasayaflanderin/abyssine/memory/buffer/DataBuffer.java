@@ -22,7 +22,7 @@ public class DataBuffer<D> implements DataBuffers<D, DataBuffer<D>> {
     private final ReentrantLock writeLock;
     private final ReentrantLock positionLock;
 
-    public DataBuffer(Collection<D> c) {
+    DataBuffer(Collection<D> c) {
         this.writeLock = new ReentrantLock("Data buffer write lock");
         this.positionLock = new ReentrantLock("Data buffer position lock");
 
@@ -32,7 +32,7 @@ public class DataBuffer<D> implements DataBuffers<D, DataBuffer<D>> {
     }
 
     @SafeVarargs
-    public DataBuffer(D... data) {
+    DataBuffer(D... data) {
         this(Arrays.asList(data));
     }
 

@@ -1,6 +1,5 @@
 package org.inasayaflanderin.abyssine.memory.buffer;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -26,7 +25,7 @@ public class CircularDataBuffer<D> implements DataBuffers<D, CircularDataBuffer<
     private final ReentrantLock writeLock;
     private final ReentrantLock positionLock;
 
-    public CircularDataBuffer(Collection<D> c) {
+    CircularDataBuffer(Collection<D> c) {
         this.writeLock = new ReentrantLock("Circular data buffer write lock");
         this.positionLock = new ReentrantLock("Circular data buffer position lock");
         this.data = new Object[c.size() + (10 - c.size() & 9)];
@@ -46,7 +45,7 @@ public class CircularDataBuffer<D> implements DataBuffers<D, CircularDataBuffer<
     }
 
     @SafeVarargs
-    public CircularDataBuffer(D... data) {
+    CircularDataBuffer(D... data) {
         this(Arrays.asList(data));
     }
 

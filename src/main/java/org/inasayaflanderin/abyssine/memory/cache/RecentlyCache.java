@@ -1,21 +1,38 @@
 package org.inasayaflanderin.abyssine.memory.cache;
 
+import lombok.ToString;
 import org.inasayaflanderin.abyssine.primitives.Quad;
 
 import java.io.Serial;
 import java.lang.reflect.Array;
 import java.util.Arrays;
+import java.util.Objects;
 
+@ToString
 public abstract class RecentlyCache<K, D> extends AbstractCache<K, D> {
     @Serial
     private static final long serialVersionUID = -6051303595305349806L;
     protected final Quad<K, D, Integer, Integer>[] data;
     protected final int cacheSize;
-    protected int size;
-    protected int lastItemPosition;
+    @ToString.Exclude protected int size;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        RecentlyCache<?, ?> that = (RecentlyCache<?, ?>) o;
+        return cacheSize == that.cacheSize && size == that.size && Objects.deepEquals(data, that.data);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(Arrays.hashCode(data), cacheSize);
+    }
+
+    @ToString.Exclude protected int lastItemPosition;
 
     @SuppressWarnings("unchecked")
-    public RecentlyCache(int initialCapacity) {
+    RecentlyCache(int initialCapacity) {
         if (initialCapacity < 1) throw new IllegalArgumentException("Expected capacity is less than 0");
 
         this.cacheSize = initialCapacity;

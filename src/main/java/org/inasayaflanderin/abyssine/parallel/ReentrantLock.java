@@ -8,6 +8,7 @@ import org.inasayaflanderin.abyssine.exceptions.AbyssineException;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.AbstractQueuedSynchronizer;
 import java.util.concurrent.locks.Condition;
@@ -190,5 +191,18 @@ public class ReentrantLock implements Lock, Serializable {
 
             this.maximumLock = numLock;
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ReentrantLock that = (ReentrantLock) o;
+        return Objects.equals(name, that.name) && Objects.equals(sync, that.sync);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, sync);
     }
 }
