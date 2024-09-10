@@ -6,6 +6,7 @@ import java.io.Serial;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.Objects;
 
 public class ARCache<K, D> extends AbstractCache<K, D> {
     @Serial
@@ -23,7 +24,7 @@ public class ARCache<K, D> extends AbstractCache<K, D> {
     private int frequencyLastItemPosition;
 
     @SuppressWarnings("unchecked")
-    public ARCache(int initialCapacity) {
+    ARCache(int initialCapacity) {
         if (initialCapacity < 1) throw new IllegalArgumentException("Expected capacity is less than 0");
 
         this.cacheSize = initialCapacity;
@@ -65,7 +66,7 @@ public class ARCache<K, D> extends AbstractCache<K, D> {
 
                 position = hash(key, this.equalizer);
 
-                while (this.data[position] != null) position = (position + 1) & (this.equalizer - 1);
+                while (this.data[position] != null) position = (position + 1) % this.equalizer;
             } else if (position < this.equalizer) {
                 Quin<K, D, Integer, Integer, Long> datum = this.data[position].withSecond(data);
                 var newFrequency = datum.getFifth() + 1;
@@ -225,7 +226,7 @@ public class ARCache<K, D> extends AbstractCache<K, D> {
         var originalPosition = position;
 
         while(this.data[position] == null) {
-            position = startPoint + (position + 1) & (length - 1);
+            position = startPoint + (position + 1) % length;
 
             if(position == originalPosition) return -1;
         }
@@ -266,5 +267,18 @@ public class ARCache<K, D> extends AbstractCache<K, D> {
         } finally {
             this.lock.unlock();
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ARCache<?, ?> arCache = (ARCache<?, ?>) o;
+        return cacheSize == arCache.cacheSize && Objects.deepEquals(data, arCache.data) && Objects.equals(recentlyGarbageCollection, arCache.recentlyGarbageCollection) && Objects.equals(frequencyGarbageCollection, arCache.frequencyGarbageCollection);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(Arrays.hashCode(data), recentlyGarbageCollection, frequencyGarbageCollection, cacheSize);
     }
 }

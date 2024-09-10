@@ -7,7 +7,6 @@ module Abyssine {
     requires jdk.management;
 
     exports org.inasayaflanderin.abyssine;
-    exports org.inasayaflanderin.abyssine.config;
     exports org.inasayaflanderin.abyssine.math.number;
     exports org.inasayaflanderin.abyssine.memory.buffer;
     exports org.inasayaflanderin.abyssine.memory.cache;

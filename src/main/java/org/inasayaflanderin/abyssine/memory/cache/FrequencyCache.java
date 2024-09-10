@@ -1,21 +1,24 @@
 package org.inasayaflanderin.abyssine.memory.cache;
 
+import lombok.ToString;
 import org.inasayaflanderin.abyssine.primitives.Quin;
 
 import java.io.Serial;
 import java.lang.reflect.Array;
 import java.util.Arrays;
+import java.util.Objects;
 
+@ToString
 public abstract class FrequencyCache<K, D> extends AbstractCache<K, D> {
     @Serial
     private static final long serialVersionUID = -5811213831195193861L;
     protected final Quin<K, D, Integer, Integer, Long>[] data;
     protected final int cacheSize;
-    protected int size;
-    protected int lastItemPosition;
+    @ToString.Exclude protected int size;
+    @ToString.Exclude protected int lastItemPosition;
 
     @SuppressWarnings("unchecked")
-    protected FrequencyCache(int initialCapacity) {
+    FrequencyCache(int initialCapacity) {
         if (initialCapacity < 1) throw new IllegalArgumentException("Expected capacity is less than 0");
 
         this.cacheSize = initialCapacity;
@@ -40,7 +43,7 @@ public abstract class FrequencyCache<K, D> extends AbstractCache<K, D> {
 
         var position = hash(key, this.data.length);
 
-        while(this.data[position] == null) position = (position + 1) & (this.data.length - 1);
+        while(this.data[position] == null) position = (position + 1) % this.data.length;
 
         var originalPosition = position;
 
@@ -119,7 +122,7 @@ public abstract class FrequencyCache<K, D> extends AbstractCache<K, D> {
             } else {
                 position = hash(key, this.data.length);
 
-                while (this.data[position] != null) position = (position + 1) & (this.data.length - 1);
+                while (this.data[position] != null) position = (position + 1) % this.data.length;
             }
 
             this.data[position] = new Quin<>(key, datum, this.lastItemPosition, -1, 0L);
@@ -152,4 +155,17 @@ public abstract class FrequencyCache<K, D> extends AbstractCache<K, D> {
     }
 
     protected abstract boolean evictCompare(int evicted, int current);
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FrequencyCache<?, ?> that = (FrequencyCache<?, ?>) o;
+        return cacheSize == that.cacheSize && size == that.size && Objects.deepEquals(data, that.data);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(Arrays.hashCode(data), cacheSize);
+    }
 }

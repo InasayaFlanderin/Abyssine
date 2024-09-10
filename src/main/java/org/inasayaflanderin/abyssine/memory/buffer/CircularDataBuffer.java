@@ -1,6 +1,5 @@
 package org.inasayaflanderin.abyssine.memory.buffer;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -26,17 +25,17 @@ public class CircularDataBuffer<D> implements DataBuffers<D, CircularDataBuffer<
     private final ReentrantLock writeLock;
     private final ReentrantLock positionLock;
 
-    public CircularDataBuffer(Collection<D> c) {
+    CircularDataBuffer(Collection<D> c) {
         this.writeLock = new ReentrantLock("Circular data buffer write lock");
         this.positionLock = new ReentrantLock("Circular data buffer position lock");
-        this.data = new Object[c.size() + (10 - c.size() & 9)];
+        this.data = new Object[c.size() + (10 - c.size() % 10)];
         this.writerController = this.position = 0;
         this.markedPosition = -1;
         this.write(c);
 
         var writerControllerMark = this.writerController;
 
-        for(; this.writerController != 0; this.writerController = (this.writerController + 1) & (this.data.length - 1)) {
+        for(; this.writerController != 0; this.writerController = (this.writerController + 1) % this.data.length) {
             this.data[this.writerController] = null;
         }
 
@@ -46,7 +45,7 @@ public class CircularDataBuffer<D> implements DataBuffers<D, CircularDataBuffer<
     }
 
     @SafeVarargs
-    public CircularDataBuffer(D... data) {
+    CircularDataBuffer(D... data) {
         this(Arrays.asList(data));
     }
 
@@ -61,12 +60,12 @@ public class CircularDataBuffer<D> implements DataBuffers<D, CircularDataBuffer<
             int sign = ((this.position - maxIndex) >> 31) & 1;
             this.position = (sign * this.position) + ((1 - sign) * maxIndex);
 
-            while (this.data[this.position] == null) this.position = (this.position + 1) & (this.data.length - 1);
+            while (this.data[this.position] == null) this.position = (this.position + 1) % this.data.length;
 
             this.currentDatum = (D) this.data[this.position];
             this.data[this.position] = null;
 
-            this.position = (this.position + 1) & (this.data.length - 1);
+            this.position = (this.position + 1) % this.data.length;
         } finally {
             this.writeLock.unlock();
             this.positionLock.unlock();
@@ -81,7 +80,7 @@ public class CircularDataBuffer<D> implements DataBuffers<D, CircularDataBuffer<
         this.writeLock.lock();
         try {
             this.data[this.writerController] = datum;
-            this.writerController = (this.writerController + 1) & (this.data.length - 1);
+            this.writerController = (this.writerController + 1) % this.data.length;
         } finally {
             this.writeLock.unlock();
         }
@@ -154,7 +153,7 @@ public class CircularDataBuffer<D> implements DataBuffers<D, CircularDataBuffer<
         Object[] newData = new Object[initialEnd - initialStart];
 
         for(int i = initialStart; i < initialEnd; i++) {
-            newData[i - initialStart] = this.data[start] != null ? this.data : null;
+            newData[i - initialStart] = this.data[i] != null ? this.data : null;
         }
 
         return new CircularDataBuffer<>((D[]) newData);

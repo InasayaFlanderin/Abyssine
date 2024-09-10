@@ -5,16 +5,12 @@ import com.sun.management.ThreadMXBean;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.java.Log;
-import org.inasayaflanderin.abyssine.config.AbyssineConfigurations;
-import org.inasayaflanderin.abyssine.config.AbyssineProperties;
 
 import java.util.concurrent.atomic.AtomicLong;
 
 @Log
 public class CPUCollector implements Runnable {
-    private static CPUCollector CPUc;
     private final OperatingSystemMXBean sRecorder;
-    private final AbyssineProperties properties;
     private static ThreadMXBean tRecorder;
     private long interval;
     private final AtomicLong totalUserCPUTime = new AtomicLong(0);
@@ -26,8 +22,8 @@ public class CPUCollector implements Runnable {
     private boolean stopped = false;
 
     static {
-        final Thread CPUCollectorThread = Thread.ofVirtual().name("CPU Collector Thread").unstarted(getCpuCollector());
-        if(getCpuCollector().isThreadCPUTimeSupported()) {
+        final Thread CPUCollectorThread = Thread.ofVirtual().name("CPU Collector Thread").unstarted(AbyssineConfigurations.getCpuCollector());
+        if(AbyssineConfigurations.getCpuCollector().isThreadCPUTimeSupported()) {
             try {
                 tRecorder.setThreadCpuTimeEnabled(true);
                 log.info("Thread CPU time enabled");
@@ -39,20 +35,9 @@ public class CPUCollector implements Runnable {
         CPUCollectorThread.start();
     }
 
-    private CPUCollector() {
+    CPUCollector() {
         this.sRecorder = AbyssineConfigurations.getConfigurations().getSystemRecorder();
-        this.properties = AbyssineConfigurations.getConfigurations().getProperties();
-        this.tRecorder = AbyssineConfigurations.getConfigurations().getThreadRecorder();
-    }
-
-    public static CPUCollector getCpuCollector() {
-        if(CPUc == null) {
-            synchronized(CPUCollector.class) {
-                CPUc = new CPUCollector();
-            }
-        }
-
-        return CPUc;
+        tRecorder = AbyssineConfigurations.getConfigurations().getThreadRecorder();
     }
 
     public boolean isThreadCPUTimeSupported() {
@@ -65,7 +50,7 @@ public class CPUCollector implements Runnable {
 
     public void run() {
         try {
-            this.interval = (long) properties.getProperty("cpu_load_computation_internal");
+            this.interval = AbyssineConfigurations.getCPUInterval();
             var timeSleep = 0L;
             Thread.sleep(interval);
             while(!stopped) {
@@ -81,7 +66,7 @@ public class CPUCollector implements Runnable {
 
                 var cpuTime = recordTime / 1000000;
                 totalUserCPUTime.set(cpuTime);
-                userCPULoad.set(Double.doubleToLongBits((double) (cpuTime - oldCPUTime) / (double) (timeSleep * (int) properties.getProperty("system_available_processors"))));
+                userCPULoad.set(Double.doubleToLongBits((double) (cpuTime - oldCPUTime) / (double) (timeSleep * AbyssineConfigurations.getSystemCollector().getSystemAvailableProcessors())));
                 totalJVMCPUTime.set(sRecorder.getProcessCpuTime());
                 JVMCPULoad.set(Double.doubleToLongBits(sRecorder.getProcessCpuLoad()));
                 systemCPULoad.set(Double.doubleToLongBits(sRecorder.getCpuLoad()));

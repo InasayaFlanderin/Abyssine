@@ -1,26 +1,34 @@
-package org.inasayaflanderin.abyssine.config;
+package org.inasayaflanderin.abyssine.diagnostic;
 
 import com.sun.management.OperatingSystemMXBean;
 import com.sun.management.ThreadMXBean;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.java.Log;
-import org.inasayaflanderin.abyssine.diagnostic.CPUCollector;
-import org.inasayaflanderin.abyssine.diagnostic.SystemCollector;
 
 import javax.management.MBeanServer;
 import java.io.Serial;
 import java.io.Serializable;
 import java.lang.management.ManagementFactory;
+import java.util.LinkedList;
 
-@Getter
 @Log
 public class AbyssineConfigurations implements Serializable {
     @Serial
     private static final long serialVersionUID = -2859598628762108235L;
+    private static SystemCollector systemCollector;
+    private static CPUCollector CPUc;
     private static AbyssineConfigurations configurations;
+    @Getter
     private final OperatingSystemMXBean systemRecorder;
+    @Getter
     private final ThreadMXBean threadRecorder;
+    @Getter
     private final MBeanServer MBServer;
+    @Getter @Setter
+    private static long CPUInterval = 1000L;
+    @Getter
+    private static LinkedList<String> serverList = new LinkedList<>();
 
     private AbyssineConfigurations() {
         this.systemRecorder = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
@@ -38,15 +46,23 @@ public class AbyssineConfigurations implements Serializable {
         return configurations;
     }
 
-    public AbyssineProperties getProperties() {
-        return AbyssineProperties.getProperties();
+    public static SystemCollector getSystemCollector() {
+        if(systemCollector == null) {
+            synchronized(SystemCollector.class) {
+                systemCollector = new SystemCollector();
+            }
+        }
+
+        return systemCollector;
     }
 
-    public SystemCollector getSystemCollector() {
-        return SystemCollector.getSystemCollector();
-    }
+    public static CPUCollector getCpuCollector() {
+        if(CPUc == null) {
+            synchronized(CPUCollector.class) {
+                CPUc = new CPUCollector();
+            }
+        }
 
-    public CPUCollector getCPUCollector() {
-        return CPUCollector.getCpuCollector();
+        return CPUc;
     }
 }

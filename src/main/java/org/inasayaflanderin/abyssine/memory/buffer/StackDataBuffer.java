@@ -38,7 +38,7 @@ public class StackDataBuffer<D> implements DataBuffers<D, StackDataBuffer<D>> {
     private final ReentrantLock writeLock;
     private final ReentrantLock positionLock;
 
-    public StackDataBuffer(Collection<? extends D> c) {
+    StackDataBuffer(Collection<? extends D> c) {
         this.writeLock = new ReentrantLock("Stack data buffer write lock");
         this.positionLock = new ReentrantLock("Stack data buffer position lock");
         this.data = new LinkedList<>(c);
@@ -48,7 +48,7 @@ public class StackDataBuffer<D> implements DataBuffers<D, StackDataBuffer<D>> {
     }
 
     @SafeVarargs
-    public StackDataBuffer(D... data) {
+    StackDataBuffer(D... data) {
         this(Arrays.asList(data));
     }
 

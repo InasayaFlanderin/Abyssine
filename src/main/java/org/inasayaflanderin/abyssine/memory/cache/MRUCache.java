@@ -1,12 +1,15 @@
 package org.inasayaflanderin.abyssine.memory.cache;
 
+import lombok.ToString;
+
 import java.io.Serial;
 
+@ToString(callSuper = true)
 public class MRUCache<K, D> extends RecentlyCache<K, D> {
     @Serial
     private static final long serialVersionUID = -1699712688221614501L;
 
-    public MRUCache(int initialCapacity) {
+    MRUCache(int initialCapacity) {
         super(initialCapacity);
     }
 
