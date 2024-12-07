@@ -5,10 +5,6 @@ import org.inasayaflanderin.abyssine.miscellaneous.rng.RandomGenerators;
 import java.util.Arrays;
 import java.util.List;
 
-/*
-* Fisher-Yates algorithm used for shuffling array
-* Require a PRNG
-* */
 public class Shuffle {
     public static <T> void normalShuffle(T[] array, RandomGenerators rng) {
         normalShuffle(Arrays.asList(array), rng);

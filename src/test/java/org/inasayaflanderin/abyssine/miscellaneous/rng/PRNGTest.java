@@ -13,7 +13,7 @@ class PRNGTest {
                 //Square
                 new MS(),
                 //LCG
-                new LCG(234532423, 28312, 98123)
+                new LCG(2345324232376875686L, 28312, 98123)
         );
     }
 
