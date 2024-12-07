@@ -3,7 +3,7 @@ package org.inasayaflanderin.abyssine.miscellaneous.rng;
 import lombok.Getter;
 
 import java.io.Serial;
-import java.math.BigInteger;
+import java.math.BigDecimal;
 
 @Getter
 public class MECG extends LCG {
@@ -20,7 +20,7 @@ public class MECG extends LCG {
         this.power = power;
     }
 
-    public MECG(long seed, double multiplier, double increment, double modulus, int power) {
+    public MECG(double seed, double multiplier, double increment, double modulus, int power) {
         super(seed, multiplier, increment, modulus);
 
         if(power <= 0) throw new IllegalArgumentException("Power must be larger than 0");
@@ -29,12 +29,14 @@ public class MECG extends LCG {
     }
 
     public double next() {
-        var seed = BigInteger.valueOf(this.getSeed());
+        var seed = BigDecimal.valueOf(this.getSeed());
         var localPow = this.power;
 
         while(localPow != 0) {
-            if(localPow < Integer.MAX_VALUE) seed = seed.pow((int) localPow);
-            else {
+            if(localPow < Integer.MAX_VALUE) {
+                seed = seed.pow((int) localPow);
+                localPow = 0;
+            } else {
                 seed = seed.pow(Integer.MAX_VALUE);
                 localPow -= Integer.MAX_VALUE;
             }

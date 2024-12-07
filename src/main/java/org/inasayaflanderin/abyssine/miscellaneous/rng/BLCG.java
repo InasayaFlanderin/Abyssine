@@ -1,22 +1,38 @@
 package org.inasayaflanderin.abyssine.miscellaneous.rng;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.io.Serial;
 
-public class BLCG extends LCG {
+@Getter @Setter
+public class BLCG implements RandomGenerators {
     @Serial
     private static final long serialVersionUID = -241714643502130085L;
 
-    public BLCG(double multiplier, double increment, double modulus) {
-        super(multiplier, increment, modulus);
+    private long seed;
+    private long multiplier;
+    private long increment;
+    private long modulus;
+
+    public BLCG(long multiplier, long increment, long modulus) {
+        this(System.currentTimeMillis(), multiplier, increment, modulus);
     }
 
-    public BLCG(long seed, double multiplier, double increment, double modulus) {
-        super(seed, multiplier, increment, modulus);
+    public BLCG(long seed, long multiplier, long increment, long modulus) {
+        this.seed = seed;
+        this.multiplier = multiplier;
+        this.increment = increment;
+        this.modulus = modulus;
     }
 
     public double next() {
-        this.setSeed(Math.abs((long) (this.getMultiplier() * this.getSeed() + this.getIncrement()) ^ (long) this.getModulus()));
+        this.seed = Math.abs(this.multiplier * this.seed + this.increment) ^ this.modulus;
 
-        return (double) this.getSeed() / this.getModulus();
+        if(this.seed == Long.MAX_VALUE) this.seed = Math.abs(System.currentTimeMillis());
+
+        this.seed %= this.modulus;
+
+        return (double) this.seed / this.modulus;
     }
 }

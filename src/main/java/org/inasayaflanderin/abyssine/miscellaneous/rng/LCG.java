@@ -10,7 +10,7 @@ public class LCG implements RandomGenerators {
     @Serial
     private static final long serialVersionUID = -4606388376591216708L;
 
-    private long seed;
+    private double seed;
     private double multiplier;
     private double increment;
     private double modulus;
@@ -19,7 +19,7 @@ public class LCG implements RandomGenerators {
         this(System.currentTimeMillis(), multiplier, increment, modulus);
     }
 
-    public LCG(long seed, double multiplier, double increment, double modulus) {
+    public LCG(double seed, double multiplier, double increment, double modulus) {
         this.seed = seed;
         this.multiplier = multiplier;
         this.increment = increment;
@@ -27,8 +27,12 @@ public class LCG implements RandomGenerators {
     }
 
     public double next() {
-        this.seed = (long) Math.abs((this.multiplier * this.seed + this.increment) % this.modulus);
+        this.seed = Math.abs(this.multiplier * this.seed + this.increment);
 
-        return (double) this.seed / this.modulus;
+        if(Double.isInfinite(this.seed)) this.seed = Math.abs(System.currentTimeMillis());
+
+        this.seed %= this.modulus;
+
+        return this.seed / this.modulus;
     }
  }

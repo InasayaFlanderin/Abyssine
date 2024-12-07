@@ -4,6 +4,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.List;
+import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -15,11 +16,11 @@ class PRNGTest {
                 new MSWS(),
                 new Square(100),
                 //LCG
-                new LCG(2345324232376875686L, 28312, 98123),
+                new LCG(23453242323768756868297340987234792384D, 28312, 981233824925234920384239848523892375928309230957D),
                 new MCG(9324234234239L, 23034989),
                 new ACG(923423023402384L, 923417),
-                new MECG(91981291842213L, 9123123, 9123124, 10232134),
-                new BLCG(923234234423L, 92342123423L, 9239768323L)
+                new MECG(91981291842213L, 9123123, 912312482934L, 5),
+                new BLCG(923234234423L, 92342123423L, 389295897593L)
         );
     }
 
