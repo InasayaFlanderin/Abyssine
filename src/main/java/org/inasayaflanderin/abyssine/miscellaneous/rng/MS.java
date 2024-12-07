@@ -22,11 +22,11 @@ public class MS implements RandomGenerators {
 
     public double next() {
         this.seed *= this.seed;
-        String sResult = Long.toString(this.seed);
-        int index = (sResult.length() - 15) / 2;
-        this.seed = sResult.length() <= 15 ? Math.abs(this.seed) : Long.parseLong(sResult.substring(index, index + 15));
+        this.seed = (this.seed >> 32) | (this.seed << 32);
 
-        if(this.seed == 0 || this.seed == 1) this.seed = System.currentTimeMillis(); // prevent seed fail
+        if(this.seed == 0 || this.seed == 1) this.seed = System.currentTimeMillis();
+
+        this.seed = Math.abs(this.seed);
 
         return (double) this.seed / (this.seed % 10 == 0 ? this.seed : Math.pow(10, Math.ceil(Math.log10(this.seed))));
     }

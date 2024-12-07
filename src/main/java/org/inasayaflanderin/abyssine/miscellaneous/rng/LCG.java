@@ -28,6 +28,7 @@ public class LCG implements RandomGenerators {
 
     public double next() {
         this.seed = (long) Math.abs((this.multiplier * this.seed + this.increment) % this.modulus);
+
         return (double) this.seed / this.modulus;
     }
  }
