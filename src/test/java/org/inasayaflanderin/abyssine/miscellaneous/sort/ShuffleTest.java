@@ -18,18 +18,18 @@ class ShuffleTest {
     }
 
     @Test
-    void normalShuffle() {
+    void normalShuffleArray() {
     }
 
     @Test
-    void testNormalShuffle() {
+    void normalShuffleList() {
     }
 
     @Test
-    void FYShuffle() {
+    void FYShuffleArray() {
     }
 
     @Test
-    void testFYShuffle() {
+    void FYShuffleList() {
     }
 }

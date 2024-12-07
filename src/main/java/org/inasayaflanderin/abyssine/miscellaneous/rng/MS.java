@@ -3,8 +3,13 @@ package org.inasayaflanderin.abyssine.miscellaneous.rng;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.Serial;
+
+@Getter @Setter
 public class MS implements RandomGenerators {
-    @Getter @Setter
+    @Serial
+    private static final long serialVersionUID = 9174087803386901937L;
+
     private long seed;
 
     public MS() {
@@ -12,14 +17,14 @@ public class MS implements RandomGenerators {
     }
 
     public MS(long seed) {
-        this.seed = Math.abs(seed);
+        this.seed = seed;
     }
 
     public double next() {
         this.seed *= this.seed;
         String sResult = Long.toString(this.seed);
         int index = (sResult.length() - 15) / 2;
-        this.seed = sResult.length() <= 15 ? this.seed : Long.parseLong(sResult.substring(index, index + 15));
+        this.seed = sResult.length() <= 15 ? Math.abs(this.seed) : Long.parseLong(sResult.substring(index, index + 15));
 
         if(this.seed == 0 || this.seed == 1) this.seed = System.currentTimeMillis(); // prevent seed fail
 
