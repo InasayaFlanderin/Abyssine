@@ -25,7 +25,9 @@ class PRNGTest {
                 new LMWC(9302489322434L,84124312,1324885,23),
                 new LMWCC(3942234324234L, 9832423, 89234832, 34),
                 new MWC(9234234234L, 9234234234L, 234234L),
-                new MWCC(9324234324L, 823478923, 9234234)
+                new MWCC(9324234324L, 823478923, 9234234),
+                new ALFG(24, 35),
+                new MLFG(44, 17)
         );
     }
 
@@ -37,7 +39,7 @@ class PRNGTest {
                     double f = rng.next();
                     double s = rng.next();
 
-                    assertTrue(f != s, rng.getClass().getSimpleName() + "generate same number");
+                    assertTrue(f != s, rng.getClass().getSimpleName() + " generate same number");
                 },
 
                 () -> {
@@ -49,7 +51,7 @@ class PRNGTest {
                         if(r < 0 || r > 1) satisfied = false;
                     }
 
-                    assertTrue(satisfied, rng.getClass().getSimpleName() + "generate out of bound [0, 1]");
+                    assertTrue(satisfied, rng.getClass().getSimpleName() + " generate out of bound [0, 1]");
                 }
         );
     }

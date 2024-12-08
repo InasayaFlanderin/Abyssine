@@ -53,4 +53,11 @@ public class LMWC extends LCG {
 
         for (int i = 0; i < lag; i++) this.lagQueue.add(super.next());
     }
+
+    public void setSeed(double seed) {
+        super.setSeed(seed);
+
+        this.lagQueue.clear();
+        for (int i = 0; i < lag; i++) this.lagQueue.add(super.next());
+    }
 }
