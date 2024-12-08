@@ -1,6 +1,11 @@
 package org.inasayaflanderin.abyssine.miscellaneous.rng;
 
+import java.io.Serial;
+
 public class PCG extends LCG {
+    @Serial
+    private static final long serialVersionUID = -9126076085543741127L;
+
     public PCG(double multiplier, double increment, double modulus) {
         super(multiplier, increment, Math.pow(2, modulus));
 
