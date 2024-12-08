@@ -29,7 +29,7 @@ public class LMWC extends LCG {
         setSeed(lagQueue.remove());
 
         var result = super.next();
-        this.lagQueue.add(result);
+        this.lagQueue.add(result * getModulus());
 
         setIncrement(result);
 
