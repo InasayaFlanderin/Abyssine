@@ -16,7 +16,7 @@ public class LMWCC extends LMWC {
     }
 
     public double next() {
-        var result = (1 - getModulus()) - super.next() * getModulus();
+        var result = getModulus() - super.next() * getModulus();
         result %= getModulus();
 
         lagQueue.set(getLag() - 1, result);
