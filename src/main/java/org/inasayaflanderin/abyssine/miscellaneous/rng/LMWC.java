@@ -4,13 +4,12 @@ import lombok.Getter;
 
 import java.io.Serial;
 import java.util.LinkedList;
-import java.util.Queue;
 
 public class LMWC extends LCG {
     @Serial
     private static final long serialVersionUID = -2418898204426034523L;
 
-    private Queue<Double> lagQueue;
+    protected LinkedList<Double> lagQueue;
     @Getter
     private int lag;
 
@@ -41,7 +40,7 @@ public class LMWC extends LCG {
         this.lag = lag;
 
         while(this.lagQueue.size() < lag) this.lagQueue.add(super.next());
-        while(this.lagQueue.size() > lag) this.lagQueue.remove();
+        while(this.lagQueue.size() > lag) this.lagQueue.removeFirst();
     }
 
     private void initialLag(int lag) {
