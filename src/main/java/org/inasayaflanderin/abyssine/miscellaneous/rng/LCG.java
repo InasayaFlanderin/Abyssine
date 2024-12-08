@@ -20,6 +20,8 @@ public class LCG implements RandomGenerators {
     }
 
     public LCG(double seed, double multiplier, double increment, double modulus) {
+        if(modulus <= 0) throw new IllegalArgumentException("Modulus must be larger than 0");
+
         this.seed = seed;
         this.multiplier = multiplier;
         this.increment = increment;

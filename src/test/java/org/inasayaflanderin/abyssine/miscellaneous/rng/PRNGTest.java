@@ -20,7 +20,8 @@ class PRNGTest {
                 new MCG(9324234234239L, 23034989),
                 new ACG(923423023402384L, 923417),
                 new MECG(91981291842213L, 9123123, 912312482934L, 5),
-                new BLCG(923234234423L, 92342123423L, 389295897593L)
+                new BLCG(923234234423L, 92342123423L, 389295897593L),
+                new ICG(910284904124L, 9123809213L, 91248124124L)
         );
     }
 
@@ -38,7 +39,7 @@ class PRNGTest {
                 () -> {
                     boolean satisfied = true;
 
-                    for(int i = 0; i < 1000; i++) {
+                    for(int i = 0; i < 1000000; i++) {
                         double r = rng.next();
 
                         if(r < 0 || r > 1) satisfied = false;

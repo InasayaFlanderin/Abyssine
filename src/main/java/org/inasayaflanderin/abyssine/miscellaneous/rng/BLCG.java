@@ -20,6 +20,8 @@ public class BLCG implements RandomGenerators {
     }
 
     public BLCG(long seed, long multiplier, long increment, long modulus) {
+        if(modulus <= 0) throw new IllegalArgumentException("Modulus must be larger than 0");
+
         this.seed = seed;
         this.multiplier = multiplier;
         this.increment = increment;
