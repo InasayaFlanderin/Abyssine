@@ -20,7 +20,8 @@ public class LMWCC extends LMWC {
         result %= getModulus();
 
         lagQueue.set(getLag() - 1, result);
+        setIncrement(result / getModulus());
 
-        return super.next();
+        return result;
     }
 }
