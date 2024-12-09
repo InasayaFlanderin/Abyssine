@@ -26,8 +26,10 @@ class PRNGTest {
                 new LMWCC(3942234324234L, 9832423, 89234832, 34),
                 new MWC(9234234234L, 9234234234L, 234234L),
                 new MWCC(9324234324L, 823478923, 9234234),
+                //LFG
                 new ALFG(24, 35),
-                new MLFG(44, 17)
+                new MLFG(44, 17),
+                new LFSR()
         );
     }
 
