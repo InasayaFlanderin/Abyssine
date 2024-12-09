@@ -12,7 +12,8 @@ public abstract class LFG implements RandomGenerators {
 
     protected BiFunction<Double, Double, Double> add = Double::sum;
     protected BiFunction<Double, Double, Double> multiply = (a, b) -> a * b;
-    LinkedList<Double> lagQueue;
+    protected BiFunction<Double, Double, Double> subtract = (a, b) -> a - b;
+    protected LinkedList<Double> lagQueue;
     @Getter
     private double seed;
     @Getter
@@ -40,17 +41,21 @@ public abstract class LFG implements RandomGenerators {
 
     public abstract double next();
 
-    protected double next(BiFunction<Double, Double, Double> operator) {
+    protected double calculate(BiFunction<Double, Double, Double> operator) {
         double result = Math.abs(operator.apply(this.lagQueue.get(this.lagQueue.size() - this.firstLagged), this.lagQueue.get(this.lagQueue.size() - this.secondLagged)));
 
         if(Double.isInfinite(result)) {
             setSeed(System.currentTimeMillis());
 
-            return next(operator);
+            return calculate(operator);
         }
 
         this.lagQueue.add(result);
 
+        return result;
+    }
+
+    protected double normalize(double result) {
         return result / (result % 10 == 0 ? result : Math.pow(10, Math.ceil(Math.log10(result))));
     }
 

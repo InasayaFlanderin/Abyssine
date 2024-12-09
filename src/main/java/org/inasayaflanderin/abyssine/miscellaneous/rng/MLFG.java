@@ -15,6 +15,6 @@ public class MLFG extends LFG {
     }
 
     public double next() {
-        return super.next(multiply);
+        return super.normalize(super.calculate(multiply));
     }
 }

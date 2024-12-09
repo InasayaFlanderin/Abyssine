@@ -29,7 +29,10 @@ class PRNGTest {
                 //LFG
                 new ALFG(24, 35),
                 new MLFG(44, 17),
-                new LFSR()
+                new LFSR(),
+                new AWC(24, 35, 81243123, 812732),
+                new AWCC(29, 12, 890213, 901283),
+                new SWB(17, 23, 91872093, 10923)
         );
     }
 
