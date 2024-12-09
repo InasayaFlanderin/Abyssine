@@ -44,6 +44,8 @@ public abstract class LFG implements RandomGenerators {
     protected double calculate(BiFunction<Double, Double, Double> operator) {
         double result = Math.abs(operator.apply(this.lagQueue.get(this.lagQueue.size() - this.firstLagged), this.lagQueue.get(this.lagQueue.size() - this.secondLagged)));
 
+        this.lagQueue.removeFirst();
+
         if(Double.isInfinite(result)) {
             setSeed(System.currentTimeMillis());
 
