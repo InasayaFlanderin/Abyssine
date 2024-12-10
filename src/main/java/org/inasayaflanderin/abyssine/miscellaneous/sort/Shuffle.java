@@ -11,7 +11,7 @@ public class Shuffle {
     }
     
     public static <T> void normalShuffle(List<T> list, RandomGenerators rng) {
-        for(int i = 0; i < list.size(); i++) SortHelper.swap(list, i, (int) rng.next() * (list.size() - 1));
+        for(int i = 0; i < list.size(); i++) SortHelper.swap(list, i, (int) (rng.next() * list.size()));
     }
 
     public static <T> void FYShuffle(T[] array, RandomGenerators rng) {
@@ -19,6 +19,6 @@ public class Shuffle {
     }
 
     public static <T> void FYShuffle(List<T> list, RandomGenerators rng) {
-        for(int i = list.size() - 1; i > 0; i--) SortHelper.swap(list, i, (int) rng.next() * i);
+        for(int i = list.size() - 1; i > 0; i--) SortHelper.swap(list, i, (int) (rng.next() * i));
     }
 }
