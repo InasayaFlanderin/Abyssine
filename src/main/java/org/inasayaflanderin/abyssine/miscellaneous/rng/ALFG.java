@@ -10,7 +10,7 @@ public class ALFG extends LFG {
         super(firstLagged, secondLagged);
     }
 
-    public ALFG(double seed, int firstLagged, int secondLagged) {
+    public ALFG(long seed, int firstLagged, int secondLagged) {
         super(seed, firstLagged, secondLagged);
     }
 

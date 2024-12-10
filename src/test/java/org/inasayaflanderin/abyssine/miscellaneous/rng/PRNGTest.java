@@ -53,12 +53,18 @@ class PRNGTest {
 
                 () -> {
                     boolean satisfied = true;
-
+                    int countZ = 0;
+                    int countO = 0;
                     for(int i = 0; i < 1000000; i++) {
                         double r = rng.next();
 
                         if(r < 0 || r > 1) satisfied = false;
+                        if(r == 0) countZ++;
+                        if(r == 1) countO++;
                     }
+
+                    System.out.println(countZ);
+                    System.out.println(countO);
 
                     assertTrue(satisfied, rng.getClass().getSimpleName() + " generate out of bound [0, 1]");
                 }

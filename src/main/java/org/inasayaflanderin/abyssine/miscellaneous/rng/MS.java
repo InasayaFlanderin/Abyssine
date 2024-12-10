@@ -28,6 +28,6 @@ public class MS implements RandomGenerators {
 
         this.seed = Math.abs(this.seed);
 
-        return (double) this.seed / (this.seed % 10 == 0 ? this.seed : Math.pow(10, Math.ceil(Math.log10(this.seed))));
+        return (double) this.seed / Long.MAX_VALUE;
     }
 }

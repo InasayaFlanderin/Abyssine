@@ -46,7 +46,7 @@ public class MT implements RandomGenerators {
         result ^= (result << 37) & 0xFFF7EEE000000000L;
         result ^= (result >> 43);
 
-        return (double) result / (result % 10 == 0 ? result : Math.pow(10, Math.ceil(Math.log10(result))));
+        return (double) result / Long.MAX_VALUE;
     }
 
     public long getSeed() {

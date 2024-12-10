@@ -9,31 +9,31 @@ public class LMWC extends LCG {
     @Serial
     private static final long serialVersionUID = -2418898204426034523L;
 
-    protected LinkedList<Double> lagQueue;
+    protected LinkedList<Long> lagQueue;
     @Getter
     private int lag;
 
-    public LMWC(double multiplier, double increment, double modulus, int lag) {
+    public LMWC(long multiplier, long increment, long modulus, int lag) {
         super(multiplier, increment, modulus);
 
         initialLag(lag);
     }
 
-    public LMWC(double seed, double multiplier, double increment, double modulus, int lag) {
+    public LMWC(long seed, long multiplier, long increment, long modulus, int lag) {
         super(seed, multiplier, increment, modulus);
 
         initialLag(lag);
     }
 
     public double next() {
-        setSeed(lagQueue.remove());
+        setSeed(lagQueue.removeFirst());
 
-        var result = super.next();
-        this.lagQueue.add(result * getModulus());
+        var result = super.next() * getModulus();
+        this.lagQueue.add((long) result);
 
-        setIncrement(result);
+        setIncrement((long) result);
 
-        return result;
+        return result / getModulus();
     }
 
     public void setLag(int lag) {
@@ -41,8 +41,8 @@ public class LMWC extends LCG {
 
         this.lag = lag;
 
-        while(this.lagQueue.size() < lag) this.lagQueue.add(super.next());
-        while(this.lagQueue.size() > lag) this.lagQueue.removeFirst();
+        while(this.lagQueue.size() < this.lag) this.lagQueue.add((long) super.next() * this.getModulus());
+        while(this.lagQueue.size() > this.lag) this.lagQueue.removeFirst();
     }
 
     private void initialLag(int lag) {
@@ -51,13 +51,13 @@ public class LMWC extends LCG {
         this.lag = lag;
         this.lagQueue = new LinkedList<>();
 
-        for (int i = 0; i < lag; i++) this.lagQueue.add(super.next());
+        for (int i = 0; i < lag; i++) this.lagQueue.add((long) (super.next() * super.getModulus()));
     }
 
-    public void setSeed(double seed) {
+    public void setSeed(long seed) {
         super.setSeed(seed);
 
         this.lagQueue.clear();
-        for (int i = 0; i < lag; i++) this.lagQueue.add(super.next());
+        for (int i = 0; i < lag; i++) this.lagQueue.add((long) super.next() * this.getModulus());
     }
 }

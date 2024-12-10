@@ -6,11 +6,11 @@ public class MWCC extends LMWCC {
     @Serial
     private static final long serialVersionUID = -2359415121569211524L;
 
-    public MWCC(double multiplier, double increment, double modulus) {
+    public MWCC(long multiplier, long increment, long modulus) {
         super(multiplier, increment, modulus, 1);
     }
 
-    public MWCC(double seed, double multiplier, double increment, double modulus) {
+    public MWCC(long seed, long multiplier, long increment, long modulus) {
         super(seed, multiplier, increment, modulus, 1);
     }
 }

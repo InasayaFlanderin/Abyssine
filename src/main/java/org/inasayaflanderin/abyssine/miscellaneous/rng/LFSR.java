@@ -26,6 +26,6 @@ public class LFSR implements RandomGenerators {
 
         if(this.seed == 0) this.seed = Math.abs(System.currentTimeMillis());
 
-        return this.seed / (this.seed % 10 == 0 ? this.seed : Math.pow(10, Math.ceil(Math.log10(this.seed))));
+        return (double) this.seed / Long.MAX_VALUE;
     }
 }

@@ -1,31 +1,30 @@
 package org.inasayaflanderin.abyssine.miscellaneous.rng;
 
+import lombok.Setter;
+
 import java.io.Serial;
 
-public class SWB extends LFG{
+public class SWB extends LFG {
     @Serial
     private static final long serialVersionUID = -3192449302063185263L;
 
-    private double modulus;
-    private double increment;
+    private long modulus;
+    @Setter
+    private long increment;
 
-    public SWB(int firstLagged, int secondLagged, double increment, double modulus) {
+    public SWB(int firstLagged, int secondLagged, long increment, long modulus) {
         super(firstLagged, secondLagged);
 
         if(modulus <= 0) throw new IllegalArgumentException("Modulus must be larger than 0");
-        if(Double.isInfinite(increment)) throw new IllegalArgumentException("Increment must not be infinite");
-        if(Double.isInfinite(modulus)) throw new IllegalArgumentException("Modulus must not be infinite");
 
         this.modulus = modulus;
         this.increment = increment;
     }
 
-    public SWB(double seed, int firstLagged, int secondLagged, double increment, double modulus) {
+    public SWB(long seed, int firstLagged, int secondLagged, long increment, long modulus) {
         super(seed, firstLagged, secondLagged);
 
         if(modulus <= 0) throw new IllegalArgumentException("Modulus must be larger than 0");
-        if(Double.isInfinite(increment)) throw new IllegalArgumentException("Increment must not be infinite");
-        if(Double.isInfinite(modulus)) throw new IllegalArgumentException("Modulus must not be infinite");
 
         this.modulus = modulus;
         this.increment = increment;
@@ -40,18 +39,17 @@ public class SWB extends LFG{
         this.lagQueue.removeLast();
         this.lagQueue.add(result);
 
-        return result / this.modulus;
+        if(result == 0) {
+            setSeed(System.currentTimeMillis());
+
+            return next();
+        }
+
+        return (double) result / this.modulus;
     }
 
-    public void setIncrement(double increment) {
-        if(Double.isInfinite(increment)) throw new IllegalArgumentException("Increment must not be infinite");
-
-        this.increment = increment;
-    }
-
-    public void setModulus(double modulus) {
+    public void setModulus(long modulus) {
         if(modulus <= 0) throw new IllegalArgumentException("Modulus must be larger than 0");
-        if(Double.isInfinite(modulus)) throw new IllegalArgumentException("Modulus must not be infinite");
 
         this.modulus = modulus;
     }

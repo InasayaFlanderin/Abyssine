@@ -10,12 +10,12 @@ public abstract class LFG implements RandomGenerators {
     @Serial
     private static final long serialVersionUID = 4644751270481145040L;
 
-    protected BiFunction<Double, Double, Double> add = Double::sum;
-    protected BiFunction<Double, Double, Double> multiply = (a, b) -> a * b;
-    protected BiFunction<Double, Double, Double> subtract = (a, b) -> a - b;
-    protected LinkedList<Double> lagQueue;
+    protected BiFunction<Long, Long, Long> add = Long::sum;
+    protected BiFunction<Long, Long, Long> multiply = (a, b) -> a * b;
+    protected BiFunction<Long, Long, Long> subtract = (a, b) -> a - b;
+    protected LinkedList<Long> lagQueue;
     @Getter
-    private double seed;
+    private long seed;
     @Getter
     private int firstLagged;
     @Getter
@@ -25,7 +25,7 @@ public abstract class LFG implements RandomGenerators {
         this(System.currentTimeMillis(), firstLagged, secondLagged);
     }
 
-    protected LFG(double seed, int firstLagged, int secondLagged) {
+    protected LFG(long seed, int firstLagged, int secondLagged) {
         if(firstLagged <= 0) throw new IllegalArgumentException("First lagged must be larger than 0");
         if(secondLagged <= 0) throw new IllegalArgumentException("Second lagged must be larger than 0");
 
@@ -33,7 +33,7 @@ public abstract class LFG implements RandomGenerators {
         this.firstLagged = firstLagged;
         this.secondLagged = secondLagged;
         this.lagQueue = new LinkedList<>();
-        this.lagQueue.add(0.0);
+        this.lagQueue.add(1L);
         this.lagQueue.add(seed);
 
         for(int i = 0; i < Math.max(firstLagged, secondLagged) - 2; i++) this.lagQueue.add(this.lagQueue.getLast() + this.lagQueue.get(this.lagQueue.size() - 2));
@@ -41,27 +41,27 @@ public abstract class LFG implements RandomGenerators {
 
     public abstract double next();
 
-    protected double calculate(BiFunction<Double, Double, Double> operator) {
-        double result = Math.abs(operator.apply(this.lagQueue.get(this.lagQueue.size() - this.firstLagged), this.lagQueue.get(this.lagQueue.size() - this.secondLagged)));
+    protected long calculate(BiFunction<Long, Long, Long> operator) {
+        long result = Math.abs(operator.apply(this.lagQueue.get(this.lagQueue.size() - this.firstLagged), this.lagQueue.get(this.lagQueue.size() - this.secondLagged)));
 
         this.lagQueue.removeFirst();
 
-        if(Double.isInfinite(result)) {
-            setSeed(System.currentTimeMillis());
+        if(result == 0) {
+            this.lagQueue.add(System.currentTimeMillis());
 
             return calculate(operator);
+        } else {
+            this.lagQueue.add(result);
         }
-
-        this.lagQueue.add(result);
 
         return result;
     }
 
-    protected double normalize(double result) {
-        return result / (result % 10 == 0 ? result : Math.pow(10, Math.ceil(Math.log10(result))));
+    protected double normalize(long result) {
+        return (double) Math.abs(result % Long.MAX_VALUE) / Long.MAX_VALUE;
     }
 
-    public void setSeed(double seed) {
+    public void setSeed(long seed) {
         this.lagQueue.clear();
         this.lagQueue.add(seed);
         this.seed = seed;

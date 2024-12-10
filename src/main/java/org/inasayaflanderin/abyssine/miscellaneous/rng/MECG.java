@@ -12,7 +12,7 @@ public class MECG extends LCG {
 
     private long power;
 
-    public MECG(double multiplier, double increment, double modulus, long power) {
+    public MECG(long multiplier, long increment, long modulus, long power) {
         super(multiplier, increment, modulus);
 
         if(power <= 0) throw new IllegalArgumentException("Power must be larger than 0");
@@ -20,7 +20,7 @@ public class MECG extends LCG {
         this.power = power;
     }
 
-    public MECG(double seed, double multiplier, double increment, double modulus, int power) {
+    public MECG(long seed, long multiplier, long increment, long modulus, long power) {
         super(seed, multiplier, increment, modulus);
 
         if(power <= 0) throw new IllegalArgumentException("Power must be larger than 0");
