@@ -1,10 +1,12 @@
 package org.inasayaflanderin.abyssine.miscellaneous.rng;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
 import java.io.Serial;
 
-@Getter
+@Getter @EqualsAndHashCode(callSuper = true) @ToString(callSuper = true)
 public class Square extends MSWS {
     @Serial
     private static final long serialVersionUID = -7483589787447159440L;

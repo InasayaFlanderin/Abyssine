@@ -1,11 +1,13 @@
 package org.inasayaflanderin.abyssine.miscellaneous.rng;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
 import java.io.Serial;
 import java.math.BigDecimal;
 
-@Getter
+@Getter @EqualsAndHashCode(callSuper = true) @ToString(callSuper = true)
 public class MECG extends LCG {
     @Serial
     private static final long serialVersionUID = 8375653722788522189L;

@@ -1,17 +1,18 @@
 package org.inasayaflanderin.abyssine.miscellaneous.rng;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.io.Serial;
 
-@Setter
-@Getter
+@Setter @Getter @EqualsAndHashCode @ToString
 public class WH implements RandomGenerators {
     @Serial
     private static final long serialVersionUID = 4285723705878801473L;
 
-    private long seed;
+    @EqualsAndHashCode.Exclude private long seed;
     private static final LCG first = new LCG(171, 0, 30269);
     private static final LCG second = new LCG(172, 0, 30307);
     private static final LCG third = new LCG(170, 0, 30323);

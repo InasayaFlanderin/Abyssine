@@ -1,21 +1,24 @@
 package org.inasayaflanderin.abyssine.miscellaneous.rng;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
 import java.io.Serial;
 import java.util.LinkedList;
 import java.util.function.BiFunction;
 
+@EqualsAndHashCode @ToString
 public abstract class LFG implements RandomGenerators {
     @Serial
     private static final long serialVersionUID = 4644751270481145040L;
 
-    protected BiFunction<Long, Long, Long> add = Long::sum;
-    protected BiFunction<Long, Long, Long> multiply = (a, b) -> a * b;
-    protected BiFunction<Long, Long, Long> subtract = (a, b) -> a - b;
-    protected LinkedList<Long> lagQueue;
+    protected static final BiFunction<Long, Long, Long> add = Long::sum;
+    protected static final BiFunction<Long, Long, Long> multiply = (a, b) -> a * b;
+    protected static final BiFunction<Long, Long, Long> subtract = (a, b) -> a - b;
+    @EqualsAndHashCode.Exclude @ToString.Exclude protected LinkedList<Long> lagQueue;
     @Getter
-    private long seed;
+    @EqualsAndHashCode.Exclude private long seed;
     @Getter
     private int firstLagged;
     @Getter

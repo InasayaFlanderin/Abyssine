@@ -1,15 +1,18 @@
 package org.inasayaflanderin.abyssine.miscellaneous.rng;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
 import java.io.Serial;
 import java.util.LinkedList;
 
+@EqualsAndHashCode @ToString
 public class MT implements RandomGenerators {
     @Serial
     private static final long serialVersionUID = -5587861316672676165L;
 
-    private final LinkedList<Long> seed;
+    @EqualsAndHashCode.Exclude private final LinkedList<Long> seed;
     @Getter
     private int state;
     private int index;

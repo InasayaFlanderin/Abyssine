@@ -1,16 +1,18 @@
 package org.inasayaflanderin.abyssine.miscellaneous.rng;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.io.Serial;
 
-@Getter @Setter
+@Getter @Setter @EqualsAndHashCode @ToString
 public class XORShift implements RandomGenerators {
     @Serial
     private static final long serialVersionUID = 5646140063188153325L;
 
-    private long seed;
+    @EqualsAndHashCode.Exclude private long seed;
 
     public XORShift() {
         this(System.currentTimeMillis());

@@ -1,15 +1,18 @@
 package org.inasayaflanderin.abyssine.miscellaneous.rng;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
 import java.io.Serial;
 import java.util.LinkedList;
 
+@EqualsAndHashCode(callSuper = true) @ToString(callSuper = true)
 public class LMWC extends LCG {
     @Serial
     private static final long serialVersionUID = -2418898204426034523L;
 
-    protected LinkedList<Long> lagQueue;
+    @EqualsAndHashCode.Exclude protected LinkedList<Long> lagQueue;
     @Getter
     private int lag;
 
