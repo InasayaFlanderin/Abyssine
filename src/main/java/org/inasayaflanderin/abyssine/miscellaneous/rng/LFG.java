@@ -8,7 +8,8 @@ import java.io.Serial;
 import java.util.LinkedList;
 import java.util.function.BiFunction;
 
-@EqualsAndHashCode @ToString
+@EqualsAndHashCode
+@ToString
 public abstract class LFG implements RandomGenerators {
     @Serial
     private static final long serialVersionUID = 4644751270481145040L;
@@ -16,9 +17,12 @@ public abstract class LFG implements RandomGenerators {
     protected static final BiFunction<Long, Long, Long> add = Long::sum;
     protected static final BiFunction<Long, Long, Long> multiply = (a, b) -> a * b;
     protected static final BiFunction<Long, Long, Long> subtract = (a, b) -> a - b;
-    @EqualsAndHashCode.Exclude @ToString.Exclude protected LinkedList<Long> lagQueue;
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    protected LinkedList<Long> lagQueue;
     @Getter
-    @EqualsAndHashCode.Exclude private long seed;
+    @EqualsAndHashCode.Exclude
+    private long seed;
     @Getter
     private int firstLagged;
     @Getter

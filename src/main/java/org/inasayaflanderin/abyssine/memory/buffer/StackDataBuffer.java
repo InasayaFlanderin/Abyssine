@@ -11,24 +11,24 @@ import java.util.List;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-public class QueuedDataBuffer<D> extends AbstractDataBuffer<D, QueuedDataBuffer<D>> {
+public class StackDataBuffer<D> extends AbstractDataBuffer<D, StackDataBuffer<D>> {
     @Serial
-    private static final long serialVersionUID = -8132556679353010615L;
+    private static final long serialVersionUID = 1857886865191354498L;
 
-    public QueuedDataBuffer() {
+    public StackDataBuffer() {
         super(new LinkedList<>());
     }
 
     @SafeVarargs
-    public QueuedDataBuffer(D... data) {
+    public StackDataBuffer(D... data) {
         super(new LinkedList<>(Arrays.asList(data)));
     }
 
-    public QueuedDataBuffer(Collection<D> data) {
+    public StackDataBuffer(Collection<D> data) {
         super(new LinkedList<>(data));
     }
 
-    private QueuedDataBuffer(List<D> data) {
+    private StackDataBuffer(List<D> data) {
         super(data);
     }
 
@@ -36,18 +36,21 @@ public class QueuedDataBuffer<D> extends AbstractDataBuffer<D, QueuedDataBuffer<
         if(data.isEmpty()) return;
 
         this.currentDatum = this.data.remove(this.position);
+        this.position--;
         this.position = Math.clamp(this.position, 0, this.data.size() - 1);
     }
 
     public void write(D datum) {
         this.data.add(datum);
+
+        if(this.position == this.data.size() - 2) this.position++;
     }
 
     public int remain() {
         return this.data.size();
     }
 
-    protected QueuedDataBuffer<D> newBuffer(List<D> data) {
-        return new QueuedDataBuffer<>(data);
+    protected StackDataBuffer<D> newBuffer(List<D> data) {
+        return new StackDataBuffer<>(data);
     }
 }

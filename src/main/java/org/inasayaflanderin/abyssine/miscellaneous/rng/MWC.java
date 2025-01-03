@@ -1,7 +1,12 @@
 package org.inasayaflanderin.abyssine.miscellaneous.rng;
 
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+
 import java.io.Serial;
 
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 public class MWC extends LMWC {
     @Serial
     private static final long serialVersionUID = 617819207934434494L;

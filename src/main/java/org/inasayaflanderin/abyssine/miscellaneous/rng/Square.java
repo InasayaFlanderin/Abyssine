@@ -6,7 +6,9 @@ import lombok.ToString;
 
 import java.io.Serial;
 
-@Getter @EqualsAndHashCode(callSuper = true) @ToString(callSuper = true)
+@Getter
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 public class Square extends MSWS {
     @Serial
     private static final long serialVersionUID = -7483589787447159440L;

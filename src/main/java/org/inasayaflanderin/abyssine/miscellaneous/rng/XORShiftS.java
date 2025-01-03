@@ -7,12 +7,16 @@ import lombok.ToString;
 
 import java.io.Serial;
 
-@Getter @Setter @EqualsAndHashCode @ToString
+@Getter
+@Setter
+@EqualsAndHashCode
+@ToString
 public class XORShiftS implements RandomGenerators {
     @Serial
     private static final long serialVersionUID = 5646140063188153325L;
 
-    @EqualsAndHashCode.Exclude private long seed;
+    @EqualsAndHashCode.Exclude
+    private long seed;
 
     public XORShiftS() {
         this(System.currentTimeMillis());

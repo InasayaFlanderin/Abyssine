@@ -7,12 +7,16 @@ import lombok.ToString;
 
 import java.io.Serial;
 
-@Getter @Setter @EqualsAndHashCode @ToString
+@Getter
+@Setter
+@EqualsAndHashCode
+@ToString
 public class MS implements RandomGenerators {
     @Serial
     private static final long serialVersionUID = 9174087803386901937L;
 
-    @EqualsAndHashCode.Exclude private long seed;
+    @EqualsAndHashCode.Exclude
+    private long seed;
 
     public MS() {
         this(System.currentTimeMillis());

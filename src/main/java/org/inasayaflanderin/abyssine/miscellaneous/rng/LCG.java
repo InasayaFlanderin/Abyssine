@@ -7,13 +7,16 @@ import lombok.ToString;
 
 import java.io.Serial;
 
-@Getter @EqualsAndHashCode @ToString
+@Getter
+@EqualsAndHashCode
+@ToString
 public class LCG implements RandomGenerators {
     @Serial
     private static final long serialVersionUID = -4606388376591216708L;
 
     @Setter
-    @EqualsAndHashCode.Exclude private long seed;
+    @EqualsAndHashCode.Exclude
+    private long seed;
     @Setter
     private long multiplier;
     @Setter

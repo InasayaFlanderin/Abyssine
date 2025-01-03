@@ -8,13 +8,16 @@ import lombok.ToString;
 import java.io.Serial;
 import java.util.Collection;
 
-@EqualsAndHashCode @ToString
+@EqualsAndHashCode
+@ToString
 public class KISS implements RandomGenerators {
     @Serial
     private static final long serialVersionUID = 8712033139982022052L;
 
-    @Getter @Setter
-    @EqualsAndHashCode.Exclude private long seed;
+    @Getter
+    @Setter
+    @EqualsAndHashCode.Exclude
+    private long seed;
     private final RandomGenerators[] rngs;
 
     public KISS(RandomGenerators... rngs) {

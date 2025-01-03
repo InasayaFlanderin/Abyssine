@@ -7,16 +7,21 @@ import lombok.ToString;
 
 import java.io.Serial;
 
-@EqualsAndHashCode @ToString
+@EqualsAndHashCode
+@ToString
 public class MSWS implements RandomGenerators {
     @Serial
     private static final long serialVersionUID = -2434213597478164745L;
 
     private static final long s = 0xb5ad4eceda1ce2a9L;
 
-    @Getter @Setter
-    @EqualsAndHashCode.Exclude private long seed;
-    @EqualsAndHashCode.Exclude @ToString.Exclude private long w;
+    @Getter
+    @Setter
+    @EqualsAndHashCode.Exclude
+    private long seed;
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    private long w;
 
     public MSWS() {
         this(System.currentTimeMillis());

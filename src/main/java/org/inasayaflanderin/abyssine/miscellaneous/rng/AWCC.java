@@ -7,7 +7,9 @@ import lombok.ToString;
 
 import java.io.Serial;
 
-@Getter @EqualsAndHashCode(callSuper = true) @ToString(callSuper = true)
+@Getter
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 public class AWCC extends LFG {
     @Serial
     private static final long serialVersionUID = -3097602726304469484L;

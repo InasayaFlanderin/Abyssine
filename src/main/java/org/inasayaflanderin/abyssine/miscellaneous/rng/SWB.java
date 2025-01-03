@@ -6,7 +6,8 @@ import lombok.ToString;
 
 import java.io.Serial;
 
-@EqualsAndHashCode(callSuper = true) @ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 public class SWB extends LFG {
     @Serial
     private static final long serialVersionUID = -3192449302063185263L;

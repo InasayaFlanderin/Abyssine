@@ -9,5 +9,4 @@ import java.io.Serializable;
 public record Quin<F, S, T, H, C>(F first, S second, T third, H fourth, C fifth) implements Serializable {
     @Serial
     private static final long serialVersionUID = 1470872958785798357L;
-
 }

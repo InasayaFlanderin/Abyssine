@@ -7,12 +7,16 @@ import lombok.ToString;
 
 import java.io.Serial;
 
-@Getter @Setter @EqualsAndHashCode @ToString
+@Getter
+@Setter
+@EqualsAndHashCode
+@ToString
 public class LFSR implements RandomGenerators {
     @Serial
     private static final long serialVersionUID = 4605933907182896612L;
 
-    @EqualsAndHashCode.Exclude private long seed;
+    @EqualsAndHashCode.Exclude
+    private long seed;
 
     public LFSR() {
         this(System.currentTimeMillis());
