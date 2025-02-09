@@ -1,11 +1,10 @@
-package org.inasayaflanderin.abyssine.miscellaneous.sort;
+package org.inasayaflanderin.abyssine.miscellaneous;
 
 import org.inasayaflanderin.abyssine.miscellaneous.rng.MT;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 
 import static org.junit.jupiter.api.Assertions.*;
