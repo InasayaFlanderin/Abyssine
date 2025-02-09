@@ -192,16 +192,12 @@ public class ARCache<K, D> extends AbstractArrayBasedCaches<K, D>{
 
         List<Callable<Void>> tasks = new ArrayList<>(2);
         tasks.add(() -> {
-            IntStream.range(0, this.recently.size())
-                    .filter(i -> this.recently.get(i) != null && this.recently.get(i).fifth().equals(datum))
-                    .forEach(i -> remove(i, true));
+            for (int i = 0; i < this.recently.size(); i++) if(this.recently.get(i) != null && this.recently.get(i).fifth().equals(datum)) remove(i, true);
 
             return null;
         });
         tasks.add(() -> {
-            IntStream.range(0, this.frequency.size())
-                    .filter(i -> this.frequency.get(i) != null && this.frequency.get(i).fifth().equals(datum))
-                    .forEach(i -> remove(i, false));
+            for (int i = 0; i < this.frequency.size(); i++) if(this.frequency.get(i) != null && this.frequency.get(i).fifth().equals(datum)) remove(i, false);
 
             return null;
         });
@@ -329,14 +325,7 @@ public class ARCache<K, D> extends AbstractArrayBasedCaches<K, D>{
         if(isRecently) {
             while(this.recently.get(evictPosition) == null) evictPosition = (evictPosition + 1) % this.recently.size();
 
-            IntStream.iterate(evictPosition, i -> i != -1, i -> this.leastRecently ? this.recently.get(i).first() : this.recently.get(i).second())
-                    .filter(i -> (this.leastRecently ? this.recently.get(i).first() : this.recently.get(i).second()) == -1).findFirst()
-                    .ifPresentOrElse(i -> remove(i, true),
-                            () -> {
-                                log.error("Same as Recently Cache where this had the head");
-
-                                throw new ImpossibleException();
-                            });
+            for(int i = evictPosition; i != -1; i = this.leastRecently ? this.recently.get(i).first() : this.recently.get(i).second()) if ((this.leastRecently ? this.recently.get(i).first() : this.recently.get(i).second()) == -1) remove(i, true);
         } else {
             while(this.frequency.get(evictPosition) == null) evictPosition = (evictPosition + 1) % this.frequency.size();
 

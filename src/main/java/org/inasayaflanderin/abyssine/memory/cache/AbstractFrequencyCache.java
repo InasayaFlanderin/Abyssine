@@ -103,9 +103,7 @@ public abstract class AbstractFrequencyCache<K, D> extends AbstractArrayBasedCac
     public void removeByDatum(D datum) {
         if(isEmpty()) return;
 
-        IntStream.range(0, this.data.size())
-                .filter(i -> this.data.get(i) != null && this.data.get(i).fifth().equals(datum))
-                .forEach(this::remove);
+        for (int i = 0; i < this.data.size(); i++) if (this.data.get(i) != null && this.data.get(i).fifth().equals(datum)) remove(i);
     }
 
     public boolean containsByDatum(D datum) {
