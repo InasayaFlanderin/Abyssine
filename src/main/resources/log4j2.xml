@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Configuration>
+<Configuration>
+    <Appenders>
+        <Console name="ConsoleAppender" target="SYSTEM_OUT">
+            <PatternLayout disableAnsi="false">
+                <Pattern>
+                    %style{%d{yyyy-MM-dd}}{RED}-%style{%d{HH}}{YELLOW}:%style{%d{mm}}{GREEN}:%style{%d{ss}}{CYAN}.%style{%d{SSS}}{MAGENTA} %style{ [%t] }{BLUE} %highlight{%-5level %logger{36} %n%msg %n%throwable}{
+                        ERROR=red,
+                        WARN=yellow,
+                        INFO=cyan,
+                        DEBUG=magenta,
+                        TRACE=green
+                    }
+                </Pattern>
+            </PatternLayout>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <Root level="TRACE">
+            <AppenderRef ref="ConsoleAppender"/>
+        </Root>
+    </Loggers>
+</Configuration>
