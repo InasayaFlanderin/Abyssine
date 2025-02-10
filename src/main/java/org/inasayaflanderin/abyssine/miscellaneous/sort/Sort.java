@@ -269,11 +269,11 @@ public class Sort {
     }
 
     public static <D> void heap(List<D> data, Comparator<D> comparator) {
-        for (int i = data.size() / 2 - 1; i >= 0; i--) heapify(data, comparator, i, data.size());
+        for (int i = data.size() / 2 - 1; i >= 0; i--) heapify(data, comparator, data.size(), i);
 
         for (int i = data.size() - 1; i > 0; i--) {
             swap(data, 0, i);
-            heapify(data, comparator, 0, i);
+            heapify(data, comparator, i, 0);
         }
     }
 
@@ -281,15 +281,13 @@ public class Sort {
         var gap = data.size();
         var swapped = true;
 
-        while(gap > 1 || swapped) {
-            gap = gap * 10 / 13;
+        while(gap != 1 || swapped) {
+            gap = Math.max(1, gap * 10 / 13);
             swapped = false;
 
-            for (int i = 0; i < data.size() - gap; i++) {
-                if (comparator.compare(data.get(i), data.get(i + gap)) > 0) {
-                    swap(data, i, i + gap);
-                    swapped = true;
-                }
+            for(int i = 0; i < data.size() - gap; i++) if(comparator.compare(data.get(i), data.get(i + gap)) > 0) {
+                swap(data, i, i + gap);
+                swapped = true;
             }
         }
     }
@@ -317,7 +315,7 @@ public class Sort {
                     .filter(i -> comparator.compare(data.get(i), itemFinal) < 0)
                     .count();
 
-            if (pos == cycleStart) return;
+            if (pos == cycleStart) continue;
 
             while (item.equals(data.get(pos))) pos++;
 
@@ -665,14 +663,13 @@ public class Sort {
     }
 
     private static <D> void heapify(List<D> data, Comparator<D> comparator, int length, int index) {
-        var largest = index;
-        var left = 2 * index + 1;
-        var right = 2 * index + 2;
+        int largest = index;
+        int left = 2 * index + 1;
+        int right = 2 * index + 2;
 
-        if(left < length && comparator.compare(data.get(left), data.get(largest)) > 0) largest = left;
-        if(right < length && comparator.compare(data.get(right), data.get(largest)) > 0) largest = right;
-
-        if(largest != index) {
+        if (left < length && comparator.compare(data.get(left), data.get(largest)) > 0) largest = left;
+        if (right < length && comparator.compare(data.get(right), data.get(largest)) > 0) largest = right;
+        if (largest != index) {
             swap(data, index, largest);
             heapify(data, comparator, length, largest);
         }
@@ -845,29 +842,31 @@ public class Sort {
     }
 
     private static <D> void bitonicMerge(List<D> data, Comparator<D> comparator, int left, int length) {
-        var mid = getPowerOfTwoLess(length);
+        if(length > 1) {
+            var mid = getPowerOfTwoLess(length);
 
-        for(int i = left; i < left + length - mid; i++) if(comparator.compare(data.get(i), data.get(i + mid)) > 0) swap(data, i, i + mid);
+            for(int i = left; i < left + length - mid; i++) if(comparator.compare(data.get(i), data.get(i + mid)) > 0) swap(data, i, i + mid);
 
-        List<Callable<Void>> tasks = List.of(
-                () -> {
-                    bitonicMerge(data, comparator, left, mid);
+            List<Callable<Void>> tasks = List.of(
+                    () -> {
+                        bitonicMerge(data, comparator, left, mid);
 
-                    return null;
-                },
-                () -> {
-                    bitonicMerge(data, comparator, left + mid, length - mid);
+                        return null;
+                    },
+                    () -> {
+                        bitonicMerge(data, comparator, left + mid, length - mid);
 
-                    return null;
-                }
-        );
+                        return null;
+                    }
+            );
 
-        try {
-            executors.invokeAll(tasks);
-        } catch (InterruptedException e) {
-            log.error("Thread got interrupted!");
+            try {
+                executors.invokeAll(tasks);
+            } catch (InterruptedException e) {
+                log.error("Thread got interrupted!");
 
-            throw new ParallelExecutionException(e.getMessage());
+                throw new ParallelExecutionException(e.getMessage());
+            }
         }
     }
 
