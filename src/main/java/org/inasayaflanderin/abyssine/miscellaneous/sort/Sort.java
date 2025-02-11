@@ -1105,20 +1105,20 @@ public class Sort {
     private static <D> void quickLL(List<D> data, Comparator<D> comparator, int left, int right) {
         if(left < right) {
             D pivot = data.get(left);
-            int A = left + 1;
-            int B = left + 1;
+            int leftPointer = left + 1;
+            int rightPointer = left + 1;
 
-            while (B <= right) {
-                if (comparator.compare(data.get(B), pivot) < 0) {
-                    swap(data, A, B);
-                    A++;
+            while (rightPointer <= right) {
+                if (comparator.compare(data.get(rightPointer), pivot) < 0) {
+                    swap(data, leftPointer, rightPointer);
+                    leftPointer++;
                 }
 
-                B++;
+                rightPointer++;
             }
 
-            swap(data, left, A - 1);
-            var pivotIndex = A - 1;
+            swap(data, left, leftPointer - 1);
+            var pivotIndex = leftPointer - 1;
 
             List<Callable<Void>> tasks = List.of(
                     () -> {
