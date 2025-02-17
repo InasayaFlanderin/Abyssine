@@ -49,7 +49,7 @@ class SortTest {
                 Sort::smooth,
                 Sort::cartesian,
                 Sort::sqrt
-                //ComparableSort::wiki
+                //Sort::wiki
                 //ComparableSort::grail
         );
     }

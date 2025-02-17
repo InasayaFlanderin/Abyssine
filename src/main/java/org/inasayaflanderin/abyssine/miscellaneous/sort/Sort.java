@@ -5,13 +5,14 @@ import org.inasayaflanderin.abyssine.exception.ParallelExecutionException;
 import org.inasayaflanderin.abyssine.miscellaneous.BinarySearchTree;
 import org.inasayaflanderin.abyssine.miscellaneous.CartesianTree;
 import org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils;
+import org.inasayaflanderin.abyssine.primitives.Quin;
 
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.IntStream;
 
-import static org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils.isSort;
-import static org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils.swap;
+import static org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils.*;
 
 @Slf4j
 public class Sort {
@@ -144,6 +145,10 @@ public class Sort {
     public static <D> void sqrt(D[] data, Comparator<D> comparator) {
         sqrt(Arrays.asList(data), comparator);
     }
+
+    /*public static <D> void wiki(D[] data, Comparator<D> comparator) {
+        wiki(Arrays.asList(data), comparator);
+    }*/
 
     public static <D> void selection(List<D> data, Comparator<D> comparator) {
         for (int i = 0; i < data.size() - 1; i++) {
@@ -424,8 +429,13 @@ public class Sort {
     }
 
     public static <D> void mergeInsertion2(List<D> data, Comparator<D> comparator) {
-        if(data.size() < 16) binaryInsertion(data, comparator);
-        else merge(data, comparator);
+        if(data.size() <= 16) {
+            binaryInsertion(data, comparator);
+
+            return;
+        }
+
+        merge(data, comparator);
     }
 
     public static <D> void tournament(List<D> data, Comparator<D> comparator) {
@@ -994,16 +1004,19 @@ public class Sort {
     }
 
     private static <D> void intro(List<D> data, Comparator<D> comparator, int left, int right, int depth) {
-        if(right - left > 16) {
-            if(depth == 0) heap(data, comparator);
-            else {
-                depth--;
-                var pivotFinal = partitionQuick(data, comparator, left, right);
+        if(right - left <= 16 ) {
+            binaryInsertion(data, comparator);
 
-                intro(data, comparator, left, pivotFinal - 1, depth);
-                intro(data, comparator, pivotFinal + 1, right, depth);
-            }
-        } else insertion(data, comparator);
+            return;
+        }
+
+        if(depth == 0) heap(data, comparator);
+
+        depth--;
+        var pivotFinal = partitionQuick(data, comparator, left, right);
+
+        intro(data, comparator, left, pivotFinal - 1, depth);
+        intro(data, comparator, pivotFinal + 1, right, depth);
     }
 
     private static <D> int partitionQuick(List<D> data, Comparator<D> comparator, int left, int right) {
