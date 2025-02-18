@@ -26,8 +26,6 @@ class Range {
     }
 }
 
-
-//TODO range start = first, range end = second, count = third, from = fourth, to = fifth
 class Pull {
     public int from, to, count;
     public Range range;
@@ -437,7 +435,6 @@ class WikiSorter<T> {
         }
         if (size < 8) return;
 
-        // we need to keep track of a lot of ranges during this sort!
         Range buffer1 = new Range(), buffer2 = new Range();
         Range blockA = new Range(), blockB = new Range();
         Range lastA = new Range(), lastB = new Range();
