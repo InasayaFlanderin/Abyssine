@@ -28,18 +28,6 @@ class Range {
     }
 }
 
-//TODO range start = first, range end = second, count = third, from = fourth, to = fifth
-class Pull {
-    public int from, to, count;
-    public Range range;
-    public Pull() { range = new Range(0, 0); }
-    void reset() {
-        range.set(0, 0);
-        from = 0;
-        to = 0;
-        count = 0;
-    }
-}
 class Iterator {
     public int size, power_of_two;
     public int numerator, decimal;
@@ -101,15 +89,6 @@ class Iterator {
 }
 
 class WikiSorter<T> {
-    private static final int cache_size = 512;
-    private final T[] cache;
-
-    public WikiSorter() {
-        @SuppressWarnings("unchecked")
-        T[] cache1 = (T[])new Object[cache_size];
-        cache = cache1;
-    }
-
     public static <T> void sort(T[] array, Comparator<T> comp) {
         new WikiSorter<T>().Sort(array, comp);
     }
@@ -209,7 +188,7 @@ class WikiSorter<T> {
         }
     }
 
-    void Rotate(T[] array, int amount, Range range, boolean use_cache) {
+    void Rotate(T[] array, int amount, Range range, T[] cache) {
         if (range.length() == 0) return;
 
         int split;
@@ -221,16 +200,16 @@ class WikiSorter<T> {
         Range range1 = new Range(range.start, split);
         Range range2 = new Range(split, range.end);
 
-        if (use_cache) {
+        if (cache != null) {
             if (range1.length() <= range2.length()) {
-                if (range1.length() <= cache_size) {
+                if (range1.length() <= 512) {
                     System.arraycopy(array, range1.start, cache, 0, range1.length());
                     System.arraycopy(array, range2.start, array, range1.start, range2.length());
                     System.arraycopy(cache, 0, array, range1.start + range2.length(), range1.length());
                     return;
                 }
             } else {
-                if (range2.length() <= cache_size) {
+                if (range2.length() <= 512) {
                     System.arraycopy(array, range2.start, cache, 0, range2.length());
                     System.arraycopy(array, range1.start, array, range2.end - range1.length(), range1.length());
                     System.arraycopy(cache, 0, array, range1.start, range2.length());
@@ -272,7 +251,7 @@ class WikiSorter<T> {
         }
     }
 
-    void MergeExternal(T[] array, Range A, Range B, Comparator<T> comp) {
+    void MergeExternal(T[] array, Range A, Range B, Comparator<T> comp, T[] cache) {
         int A_index = 0;
         int B_index = B.start;
         int insert_index = A.start;
@@ -324,7 +303,7 @@ class WikiSorter<T> {
         BlockSwap(array, buffer.start + A_count, A.start + insert, A.length() - A_count);
     }
 
-    void MergeInPlace(T[] array, Range A, Range B, Comparator<T> comp) {
+    void MergeInPlace(T[] array, Range A, Range B, Comparator<T> comp, T[] cache) {
         if (A.length() == 0 || B.length() == 0) return;
 
 
@@ -335,7 +314,7 @@ class WikiSorter<T> {
             int mid = BinaryFirst(array, array[A.start], B, comp);
 
             int amount = mid - A.end;
-            Rotate(array, -amount, new Range(A.start, mid), true);
+            Rotate(array, -amount, new Range(A.start, mid), cache);
             if (B.end == mid) break;
 
             B.start = mid;
@@ -359,6 +338,7 @@ class WikiSorter<T> {
 
     @SuppressWarnings("unchecked")
     void Sort(T[] array, Comparator<T> comp) {
+        T[] cache = (T[]) new Object[512];
         int size = array.length;
 
         if (size < 4) {
@@ -480,8 +460,8 @@ class WikiSorter<T> {
 
         do {
 
-            if (iterator.length() < cache_size) {
-                if ((iterator.length() + 1) * 4 <= cache_size && iterator.length() * 4 <= size) {
+            if (iterator.length() < 512) {
+                if ((iterator.length() + 1) * 4 <= 512 && iterator.length() * 4 <= size) {
                     iterator.begin();
                     while (!iterator.finished()) {
                         Range A1 = iterator.nextRange();
@@ -536,10 +516,10 @@ class WikiSorter<T> {
                         B = iterator.nextRange();
 
                         if (comp.compare(array[B.end - 1], array[A.start]) < 0) {
-                            Rotate(array, A.length(), new Range(A.start, B.end), true);
+                            Rotate(array, A.length(), new Range(A.start, B.end), cache);
                         } else if (comp.compare(array[B.start], array[A.end - 1]) < 0) {
                             System.arraycopy(array, A.start, cache, 0, A.length());
-                            MergeExternal(array, A, B, comp);
+                            MergeExternal(array, A, B, comp, cache);
                         }
                     }
                 }
@@ -558,7 +538,7 @@ class WikiSorter<T> {
                 int find = buffer_size + buffer_size;
                 boolean find_separately = false;
 
-                if (block_size <= cache_size) {
+                if (block_size <= 512) {
                     find = buffer_size;
                 } else if (find > iterator.length()) {
                     find = buffer_size;
@@ -588,7 +568,7 @@ class WikiSorter<T> {
                         } else if (find == buffer_size + buffer_size) {
                             buffer1.set(A.start, A.start + count);
                             find = buffer_size;
-                        } else if (block_size <= cache_size) {
+                        } else if (block_size <= 512) {
                             buffer1.set(A.start, A.start + count);
                             break;
                         } else if (find_separately) {
@@ -620,7 +600,7 @@ class WikiSorter<T> {
                         } else if (find == buffer_size + buffer_size) {
                             buffer1.set(B.end - count, B.end);
                             find = buffer_size;
-                        } else if (block_size <= cache_size) {
+                        } else if (block_size <= 512) {
                             buffer1.set(B.end - count, B.end);
                             break;
                         } else if (find_separately) {
@@ -646,7 +626,7 @@ class WikiSorter<T> {
                         for (count = 1; count < length; count++) {
                             index = FindFirstBackward(array, array[index - 1], new Range(pull[pull_index].fifth(), pull[pull_index].fourth() - (count - 1)), comp, length - count);
                             Range range = new Range(index + 1, pull[pull_index].fourth() + 1);
-                            Rotate(array, range.length() - count, range, true);
+                            Rotate(array, range.length() - count, range, cache);
                             pull[pull_index] = pull[pull_index].withFourth(index + count);
                         }
                     } else if (pull[pull_index].fifth() > pull[pull_index].fourth()) {
@@ -654,7 +634,7 @@ class WikiSorter<T> {
                         for (count = 1; count < length; count++) {
                             index = FindLastForward(array, array[index], new Range(index, pull[pull_index].fifth()), comp, length - count);
                             Range range = new Range(pull[pull_index].fourth(), index - 1);
-                            Rotate(array, count, range, true);
+                            Rotate(array, count, range, cache);
                             pull[pull_index] = pull[pull_index].withFourth(index - 1 - count);
                         }
                     }
@@ -690,7 +670,7 @@ class WikiSorter<T> {
                     }
 
                     if (comp.compare(array[B.end - 1], array[A.start]) < 0) {
-                        Rotate(array, A.length(), new Range(A.start, B.end), true);
+                        Rotate(array, A.length(), new Range(A.start, B.end), cache);
                     } else if (comp.compare(array[A.end], array[A.end - 1]) < 0) {
                         blockA.set(A.start, A.end);
                         firstA.set(A.start, A.start + blockA.length() % block_size);
@@ -707,7 +687,7 @@ class WikiSorter<T> {
                         blockA.start += firstA.length();
                         indexA = buffer1.start;
 
-                        if (lastA.length() <= cache_size)
+                        if (lastA.length() <= 512)
                             System.arraycopy(array, lastA.start, cache, 0, lastA.length());
                         else if (buffer2.length() > 0)
                             BlockSwap(array, lastA.start, buffer2.start, lastA.length());
@@ -729,22 +709,22 @@ class WikiSorter<T> {
                                     array[indexA] = swap;
                                     indexA++;
 
-                                    if (lastA.length() <= cache_size)
-                                        MergeExternal(array, lastA, new Range(lastA.end, B_split), comp);
+                                    if (lastA.length() <= 512)
+                                        MergeExternal(array, lastA, new Range(lastA.end, B_split), comp, cache);
                                     else if (buffer2.length() > 0)
                                         MergeInternal(array, lastA, new Range(lastA.end, B_split), comp, buffer2);
                                     else
-                                        MergeInPlace(array, lastA, new Range(lastA.end, B_split), comp);
+                                        MergeInPlace(array, lastA, new Range(lastA.end, B_split), comp, cache);
 
-                                    if (buffer2.length() > 0 || block_size <= cache_size) {
-                                        if (block_size <= cache_size)
+                                    if (buffer2.length() > 0 || block_size <= 512) {
+                                        if (block_size <= 512)
                                             System.arraycopy(array, blockA.start, cache, 0, block_size);
                                         else
                                             BlockSwap(array, blockA.start, buffer2.start, block_size);
 
                                         BlockSwap(array, B_split, blockA.start + block_size - B_remaining, B_remaining);
                                     } else {
-                                        Rotate(array, blockA.start - B_split, new Range(B_split, blockA.start + block_size), true);
+                                        Rotate(array, blockA.start - B_split, new Range(B_split, blockA.start + block_size), cache);
                                     }
 
                                     lastA.set(blockA.start - B_remaining, blockA.start - B_remaining + block_size);
@@ -755,7 +735,7 @@ class WikiSorter<T> {
                                         break;
 
                                 } else if (blockB.length() < block_size) {
-                                    Rotate(array, -blockB.length(), new Range(blockA.start, blockB.end), false);
+                                    Rotate(array, -blockB.length(), new Range(blockA.start, blockB.end), null);
 
                                     lastB.set(blockA.start, blockA.start + blockB.length());
                                     blockA.start += blockB.length();
@@ -776,12 +756,12 @@ class WikiSorter<T> {
                             }
                         }
 
-                        if (lastA.length() <= cache_size)
-                            MergeExternal(array, lastA, new Range(lastA.end, B.end), comp);
+                        if (lastA.length() <= 512)
+                            MergeExternal(array, lastA, new Range(lastA.end, B.end), comp, cache);
                         else if (buffer2.length() > 0)
                             MergeInternal(array, lastA, new Range(lastA.end, B.end), comp, buffer2);
                         else
-                            MergeInPlace(array, lastA, new Range(lastA.end, B.end), comp);
+                            MergeInPlace(array, lastA, new Range(lastA.end, B.end), comp, cache);
                     }
                 }
 
@@ -794,7 +774,7 @@ class WikiSorter<T> {
                         while (buffer.length() > 0) {
                             index = FindFirstForward(array, array[buffer.start], new Range(buffer.end, pull[pull_index].second()), comp, unique);
                             int amount = index - buffer.end;
-                            Rotate(array, buffer.length(), new Range(buffer.start, index), true);
+                            Rotate(array, buffer.length(), new Range(buffer.start, index), cache);
                             buffer.start += (amount + 1);
                             buffer.end += amount;
                             unique -= 2;
@@ -804,7 +784,7 @@ class WikiSorter<T> {
                         while (buffer.length() > 0) {
                             index = FindLastBackward(array, array[buffer.end - 1], new Range(pull[pull_index].first(), buffer.start), comp, unique);
                             int amount = buffer.start - index;
-                            Rotate(array, amount, new Range(index, buffer.end), true);
+                            Rotate(array, amount, new Range(index, buffer.end), cache);
                             buffer.start -= amount;
                             buffer.end -= (amount + 1);
                             unique -= 2;
