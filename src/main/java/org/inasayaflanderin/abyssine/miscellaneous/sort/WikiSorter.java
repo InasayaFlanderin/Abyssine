@@ -64,48 +64,48 @@ class WikiSorter<D> {
         return start;
     }
 
-    int FindFirstForward(D[] data, Comparator<D> comp, D value, Range range, int unique) {
+    int FindFirstForward(List<D> data, Comparator<D> comp, D value, Range range, int unique) {
         if (range.length() == 0) return range.start;
         int index, skip = Math.max(range.length()/unique, 1);
 
-        for (index = range.start + skip; comp.compare(data[index - 1], value) < 0; index += skip)
+        for (index = range.start + skip; comp.compare(data.get(index - 1), value) < 0; index += skip)
             if (index >= range.end - skip)
-                return BinaryFirst(Arrays.asList(data), comp, value, new Range(index, range.end));
+                return BinaryFirst(data, comp, value, new Range(index, range.end));
 
-        return BinaryFirst(Arrays.asList(data), comp, value, new Range(index - skip, index));
+        return BinaryFirst(data, comp, value, new Range(index - skip, index));
     }
 
-    int FindLastForward(D[] data, D value, Range range, Comparator<D> comp, int unique) {
+    int FindLastForward(List<D> data, D value, Range range, Comparator<D> comp, int unique) {
         if (range.length() == 0) return range.start;
         int index, skip = Math.max(range.length()/unique, 1);
 
-        for (index = range.start + skip; comp.compare(value, data[index - 1]) >= 0; index += skip)
+        for (index = range.start + skip; comp.compare(value, data.get(index - 1)) >= 0; index += skip)
             if (index >= range.end - skip)
-                return BinaryLast(Arrays.asList(data), comp, value, new Range(index, range.end));
+                return BinaryLast(data, comp, value, new Range(index, range.end));
 
-        return BinaryLast(Arrays.asList(data), comp, value, new Range(index - skip, index));
+        return BinaryLast(data, comp, value, new Range(index - skip, index));
     }
 
-    int FindFirstBackward(D[] data, Comparator<D> comp, D value, Range range, int unique) {
+    int FindFirstBackward(List<D> data, Comparator<D> comp, D value, Range range, int unique) {
         if (range.length() == 0) return range.start;
         int index, skip = Math.max(range.length()/unique, 1);
 
-        for (index = range.end - skip; index > range.start && comp.compare(data[index - 1], value) >= 0; index -= skip)
+        for (index = range.end - skip; index > range.start && comp.compare(data.get(index - 1), value) >= 0; index -= skip)
             if (index < range.start + skip)
-                return BinaryFirst(Arrays.asList(data), comp, value, new Range(range.start, index));
+                return BinaryFirst(data, comp, value, new Range(range.start, index));
 
-        return BinaryFirst(Arrays.asList(data), comp, value, new Range(index, index + skip));
+        return BinaryFirst(data, comp, value, new Range(index, index + skip));
     }
 
-    int FindLastBackward(D[] data, Comparator<D> comp, D value, Range range, int unique) {
+    int FindLastBackward(List<D> data, Comparator<D> comp, D value, Range range, int unique) {
         if (range.length() == 0) return range.start;
         int index, skip = Math.max(range.length()/unique, 1);
 
-        for (index = range.end - skip; index > range.start && comp.compare(value, data[index - 1]) < 0; index -= skip)
+        for (index = range.end - skip; index > range.start && comp.compare(value, data.get(index - 1)) < 0; index -= skip)
             if (index < range.start + skip)
-                return BinaryLast(Arrays.asList(data), comp, value, new Range(range.start, index));
+                return BinaryLast(data, comp, value, new Range(range.start, index));
 
-        return BinaryLast(Arrays.asList(data), comp, value, new Range(index, index + skip));
+        return BinaryLast(data, comp, value, new Range(index, index + skip));
     }
 
     void InsertionSort(D[] data, Range range, Comparator<D> comp) {
@@ -556,7 +556,7 @@ class WikiSorter<D> {
                     BEnd = decimal;
 
                     for (last = AStart, count = 1; count < find; last = index, count++) {
-                        index = FindLastForward(data, data[last], new Range(last + 1, AEnd), comp, find - count);
+                        index = FindLastForward(Arrays.asList(data), data[last], new Range(last + 1, AEnd), comp, find - count);
                         if (index == AEnd) break;
                     }
                     index = last;
@@ -588,7 +588,7 @@ class WikiSorter<D> {
                     }
 
                     for (last = BEnd - 1, count = 1; count < find; last = index - 1, count++) {
-                        index = FindFirstBackward(data, comp, data[last], new Range(BStart, last), find - count);
+                        index = FindFirstBackward(Arrays.asList(data), comp, data[last], new Range(BStart, last), find - count);
                         if (index == BStart) break;
                     }
                     index = last;
@@ -629,7 +629,7 @@ class WikiSorter<D> {
                         index = pull[pull_index].fourth();
 
                         for (count = 1; count < length; count++) {
-                            index = FindFirstBackward(data, comp, data[index - 1], new Range(pull[pull_index].fifth(), pull[pull_index].fourth() - (count - 1)), length - count);
+                            index = FindFirstBackward(Arrays.asList(data), comp, data[index - 1], new Range(pull[pull_index].fifth(), pull[pull_index].fourth() - (count - 1)), length - count);
                             Range range = new Range(index + 1, pull[pull_index].fourth() + 1);
                             Rotate(data, range.length() - count, range, cache);
                             pull[pull_index] = pull[pull_index].withFourth(index + count);
@@ -637,7 +637,7 @@ class WikiSorter<D> {
                     } else if (pull[pull_index].fifth() > pull[pull_index].fourth()) {
                         index = pull[pull_index].fourth() + 1;
                         for (count = 1; count < length; count++) {
-                            index = FindLastForward(data, data[index], new Range(index, pull[pull_index].fifth()), comp, length - count);
+                            index = FindLastForward(Arrays.asList(data), data[index], new Range(index, pull[pull_index].fifth()), comp, length - count);
                             Range range = new Range(pull[pull_index].fourth(), index - 1);
                             Rotate(data, count, range, cache);
                             pull[pull_index] = pull[pull_index].withFourth(index - 1 - count);
@@ -793,7 +793,7 @@ class WikiSorter<D> {
                     if (pull[pull_index].fourth() > pull[pull_index].fifth()) {
                         Range buffer = new Range(pull[pull_index].first(), pull[pull_index].first() + pull[pull_index].third());
                         while (buffer.length() > 0) {
-                            index = FindFirstForward(data, comp, data[buffer.start], new Range(buffer.end, pull[pull_index].second()), unique);
+                            index = FindFirstForward(Arrays.asList(data), comp, data[buffer.start], new Range(buffer.end, pull[pull_index].second()), unique);
                             int amount = index - buffer.end;
                             Rotate(data, buffer.length(), new Range(buffer.start, index), cache);
                             buffer.start += (amount + 1);
@@ -803,7 +803,7 @@ class WikiSorter<D> {
                     } else if (pull[pull_index].fourth() < pull[pull_index].fifth()) {
                         Range buffer = new Range(pull[pull_index].second() - pull[pull_index].third(), pull[pull_index].second());
                         while (buffer.length() > 0) {
-                            index = FindLastBackward(data, comp, data[buffer.end - 1], new Range(pull[pull_index].first(), buffer.start), unique);
+                            index = FindLastBackward(Arrays.asList(data), comp, data[buffer.end - 1], new Range(pull[pull_index].first(), buffer.start), unique);
                             int amount = buffer.start - index;
                             Rotate(data, amount, new Range(index, buffer.end), cache);
                             buffer.start -= amount;
