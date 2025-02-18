@@ -117,12 +117,8 @@ class WikiSorter<D> {
         }
     }
 
-    void BlockSwap(D[] data, int start1, int start2, int block_size) {
-        for (int index = 0; index < block_size; index++) {
-            D swap = data[start1 + index];
-            data[start1 + index] = data[start2 + index];
-            data[start2 + index] = swap;
-        }
+    void BlockSwap(List<D> data, int start1, int start2, int block_size) {
+        for (int index = 0; index < block_size; index++) swap(data, start1 + index, start2 + index);
     }
 
     void Rotate(D[] data, int amount, Range range, D[] cache) {
@@ -237,7 +233,7 @@ class WikiSorter<D> {
             }
         }
 
-        BlockSwap(data, buffer.start + A_count, A.start + insert, A.length() - A_count);
+        BlockSwap(Arrays.asList(data), buffer.start + A_count, A.start + insert, A.length() - A_count);
     }
 
     void MergeInPlace(D[] data, Range A, Range B, Comparator<D> comp, D[] cache) {
@@ -711,7 +707,7 @@ class WikiSorter<D> {
                         if (lastA.length() <= 512)
                             System.arraycopy(data, lastA.start, cache, 0, lastA.length());
                         else if (buffer2.length() > 0)
-                            BlockSwap(data, lastA.start, buffer2.start, lastA.length());
+                            BlockSwap(Arrays.asList(data), lastA.start, buffer2.start, lastA.length());
 
                         if (blockA.length() > 0) {
                             while (true) {
@@ -723,7 +719,7 @@ class WikiSorter<D> {
                                     for (int findA = minA + block_size; findA < blockA.end; findA += block_size)
                                         if (comp.compare(data[findA], data[minA]) < 0)
                                             minA = findA;
-                                    BlockSwap(data, blockA.start, minA, block_size);
+                                    BlockSwap(Arrays.asList(data), blockA.start, minA, block_size);
 
                                     D swap = data[blockA.start];
                                     data[blockA.start] = data[indexA];
@@ -741,9 +737,9 @@ class WikiSorter<D> {
                                         if (block_size <= 512)
                                             System.arraycopy(data, blockA.start, cache, 0, block_size);
                                         else
-                                            BlockSwap(data, blockA.start, buffer2.start, block_size);
+                                            BlockSwap(Arrays.asList(data), blockA.start, buffer2.start, block_size);
 
-                                        BlockSwap(data, B_split, blockA.start + block_size - B_remaining, B_remaining);
+                                        BlockSwap(Arrays.asList(data), B_split, blockA.start + block_size - B_remaining, B_remaining);
                                     } else {
                                         Rotate(data, blockA.start - B_split, new Range(B_split, blockA.start + block_size), cache);
                                     }
@@ -763,7 +759,7 @@ class WikiSorter<D> {
                                     blockA.end += blockB.length();
                                     blockB.end = blockB.start;
                                 } else {
-                                    BlockSwap(data, blockA.start, blockB.start, block_size);
+                                    BlockSwap(Arrays.asList(data), blockA.start, blockB.start, block_size);
                                     lastB.set(blockA.start, blockA.start + block_size);
 
                                     blockA.start += block_size;
