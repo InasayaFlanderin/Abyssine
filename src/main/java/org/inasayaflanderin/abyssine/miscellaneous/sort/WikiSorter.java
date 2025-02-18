@@ -1,5 +1,7 @@
 package org.inasayaflanderin.abyssine.miscellaneous.sort;
 
+import org.inasayaflanderin.abyssine.primitives.Quin;
+
 import java.util.Comparator;
 
 class Range {
@@ -26,6 +28,7 @@ class Range {
     }
 }
 
+//TODO range start = first, range end = second, count = third, from = fourth, to = fifth
 class Pull {
     public int from, to, count;
     public Range range;
@@ -354,6 +357,7 @@ class WikiSorter<T> {
         }
     }
 
+    @SuppressWarnings("unchecked")
     void Sort(T[] array, Comparator<T> comp) {
         int size = array.length;
 
@@ -391,45 +395,74 @@ class WikiSorter<T> {
             Range range = iterator.nextRange();
 
             if (range.length() == 8) {
-                NetSwap(array, order, range, comp, 0, 1); NetSwap(array, order, range, comp, 2, 3);
-                NetSwap(array, order, range, comp, 4, 5); NetSwap(array, order, range, comp, 6, 7);
-                NetSwap(array, order, range, comp, 0, 2); NetSwap(array, order, range, comp, 1, 3);
-                NetSwap(array, order, range, comp, 4, 6); NetSwap(array, order, range, comp, 5, 7);
-                NetSwap(array, order, range, comp, 1, 2); NetSwap(array, order, range, comp, 5, 6);
-                NetSwap(array, order, range, comp, 0, 4); NetSwap(array, order, range, comp, 3, 7);
-                NetSwap(array, order, range, comp, 1, 5); NetSwap(array, order, range, comp, 2, 6);
-                NetSwap(array, order, range, comp, 1, 4); NetSwap(array, order, range, comp, 3, 6);
-                NetSwap(array, order, range, comp, 2, 4); NetSwap(array, order, range, comp, 3, 5);
+                NetSwap(array, order, range, comp, 0, 1);
+                NetSwap(array, order, range, comp, 2, 3);
+                NetSwap(array, order, range, comp, 4, 5);
+                NetSwap(array, order, range, comp, 6, 7);
+                NetSwap(array, order, range, comp, 0, 2);
+                NetSwap(array, order, range, comp, 1, 3);
+                NetSwap(array, order, range, comp, 4, 6);
+                NetSwap(array, order, range, comp, 5, 7);
+                NetSwap(array, order, range, comp, 1, 2);
+                NetSwap(array, order, range, comp, 5, 6);
+                NetSwap(array, order, range, comp, 0, 4);
+                NetSwap(array, order, range, comp, 3, 7);
+                NetSwap(array, order, range, comp, 1, 5);
+                NetSwap(array, order, range, comp, 2, 6);
+                NetSwap(array, order, range, comp, 1, 4);
+                NetSwap(array, order, range, comp, 3, 6);
+                NetSwap(array, order, range, comp, 2, 4);
+                NetSwap(array, order, range, comp, 3, 5);
                 NetSwap(array, order, range, comp, 3, 4);
 
             } else if (range.length() == 7) {
-                NetSwap(array, order, range, comp, 1, 2); NetSwap(array, order, range, comp, 3, 4); NetSwap(array, order, range, comp, 5, 6);
-                NetSwap(array, order, range, comp, 0, 2); NetSwap(array, order, range, comp, 3, 5); NetSwap(array, order, range, comp, 4, 6);
-                NetSwap(array, order, range, comp, 0, 1); NetSwap(array, order, range, comp, 4, 5); NetSwap(array, order, range, comp, 2, 6);
-                NetSwap(array, order, range, comp, 0, 4); NetSwap(array, order, range, comp, 1, 5);
-                NetSwap(array, order, range, comp, 0, 3); NetSwap(array, order, range, comp, 2, 5);
-                NetSwap(array, order, range, comp, 1, 3); NetSwap(array, order, range, comp, 2, 4);
+                NetSwap(array, order, range, comp, 1, 2);
+                NetSwap(array, order, range, comp, 3, 4);
+                NetSwap(array, order, range, comp, 5, 6);
+                NetSwap(array, order, range, comp, 0, 2);
+                NetSwap(array, order, range, comp, 3, 5);
+                NetSwap(array, order, range, comp, 4, 6);
+                NetSwap(array, order, range, comp, 0, 1);
+                NetSwap(array, order, range, comp, 4, 5);
+                NetSwap(array, order, range, comp, 2, 6);
+                NetSwap(array, order, range, comp, 0, 4);
+                NetSwap(array, order, range, comp, 1, 5);
+                NetSwap(array, order, range, comp, 0, 3);
+                NetSwap(array, order, range, comp, 2, 5);
+                NetSwap(array, order, range, comp, 1, 3);
+                NetSwap(array, order, range, comp, 2, 4);
                 NetSwap(array, order, range, comp, 2, 3);
 
             } else if (range.length() == 6) {
-                NetSwap(array, order, range, comp, 1, 2); NetSwap(array, order, range, comp, 4, 5);
-                NetSwap(array, order, range, comp, 0, 2); NetSwap(array, order, range, comp, 3, 5);
-                NetSwap(array, order, range, comp, 0, 1); NetSwap(array, order, range, comp, 3, 4); NetSwap(array, order, range, comp, 2, 5);
-                NetSwap(array, order, range, comp, 0, 3); NetSwap(array, order, range, comp, 1, 4);
-                NetSwap(array, order, range, comp, 2, 4); NetSwap(array, order, range, comp, 1, 3);
+                NetSwap(array, order, range, comp, 1, 2);
+                NetSwap(array, order, range, comp, 4, 5);
+                NetSwap(array, order, range, comp, 0, 2);
+                NetSwap(array, order, range, comp, 3, 5);
+                NetSwap(array, order, range, comp, 0, 1);
+                NetSwap(array, order, range, comp, 3, 4);
+                NetSwap(array, order, range, comp, 2, 5);
+                NetSwap(array, order, range, comp, 0, 3);
+                NetSwap(array, order, range, comp, 1, 4);
+                NetSwap(array, order, range, comp, 2, 4);
+                NetSwap(array, order, range, comp, 1, 3);
                 NetSwap(array, order, range, comp, 2, 3);
 
             } else if (range.length() == 5) {
-                NetSwap(array, order, range, comp, 0, 1); NetSwap(array, order, range, comp, 3, 4);
+                NetSwap(array, order, range, comp, 0, 1);
+                NetSwap(array, order, range, comp, 3, 4);
                 NetSwap(array, order, range, comp, 2, 4);
-                NetSwap(array, order, range, comp, 2, 3); NetSwap(array, order, range, comp, 1, 4);
+                NetSwap(array, order, range, comp, 2, 3);
+                NetSwap(array, order, range, comp, 1, 4);
                 NetSwap(array, order, range, comp, 0, 3);
-                NetSwap(array, order, range, comp, 0, 2); NetSwap(array, order, range, comp, 1, 3);
+                NetSwap(array, order, range, comp, 0, 2);
+                NetSwap(array, order, range, comp, 1, 3);
                 NetSwap(array, order, range, comp, 1, 2);
 
             } else if (range.length() == 4) {
-                NetSwap(array, order, range, comp, 0, 1); NetSwap(array, order, range, comp, 2, 3);
-                NetSwap(array, order, range, comp, 0, 2); NetSwap(array, order, range, comp, 1, 3);
+                NetSwap(array, order, range, comp, 0, 1);
+                NetSwap(array, order, range, comp, 2, 3);
+                NetSwap(array, order, range, comp, 0, 2);
+                NetSwap(array, order, range, comp, 1, 3);
                 NetSwap(array, order, range, comp, 1, 2);
             }
         }
@@ -441,9 +474,9 @@ class WikiSorter<T> {
         Range firstA = new Range();
         Range A, B;
 
-        Pull[] pull = new Pull[2];
-        pull[0] = new Pull();
-        pull[1] = new Pull();
+        Quin<Integer, Integer, Integer, Integer, Integer>[] pull = (Quin<Integer, Integer, Integer, Integer, Integer>[]) new Quin[2];
+        pull[0] = new Quin<>(0, 0, 0, 0, 0);
+        pull[1] = new Quin<>(0, 0, 0, 0, 0);
 
         do {
 
@@ -519,8 +552,8 @@ class WikiSorter<T> {
                 buffer1.set(0, 0);
                 buffer2.set(0, 0);
 
-                pull[0].reset();
-                pull[1].reset();
+                pull[0] = pull[0].withFirst(0).withSecond(0).withThird(0).withFourth(0).withFifth(0);
+                pull[1] = pull[1].withFirst(0).withSecond(0).withThird(0).withFourth(0).withFifth(0);
 
                 int find = buffer_size + buffer_size;
                 boolean find_separately = false;
@@ -545,10 +578,7 @@ class WikiSorter<T> {
                     index = last;
 
                     if (count >= buffer_size) {
-                        pull[pull_index].range.set(A.start, B.end);
-                        pull[pull_index].count = count;
-                        pull[pull_index].from = index;
-                        pull[pull_index].to = A.start;
+                        pull[pull_index] = pull[pull_index].withFirst(A.start).withSecond(B.end).withThird(count).withFourth(index).withFifth(A.start);
                         pull_index = 1;
 
                         if (count == buffer_size + buffer_size) {
@@ -570,11 +600,7 @@ class WikiSorter<T> {
                         }
                     } else if (pull_index == 0 && count > buffer1.length()) {
                         buffer1.set(A.start, A.start + count);
-
-                        pull[pull_index].range.set(A.start, B.end);
-                        pull[pull_index].count = count;
-                        pull[pull_index].from = index;
-                        pull[pull_index].to = A.start;
+                        pull[pull_index].withFirst(A.start).withSecond(B.end).withThird(count).withFourth(index).withFifth(A.start);
                     }
 
                     for (last = B.end - 1, count = 1; count < find; last = index - 1, count++) {
@@ -584,10 +610,7 @@ class WikiSorter<T> {
                     index = last;
 
                     if (count >= buffer_size) {
-                        pull[pull_index].range.set(A.start, B.end);
-                        pull[pull_index].count = count;
-                        pull[pull_index].from = index;
-                        pull[pull_index].to = B.end;
+                        pull[pull_index] = pull[pull_index].withFirst(A.start).withSecond(B.end).withThird(count).withFourth(index).withFifth(B.end);
                         pull_index = 1;
 
                         if (count == buffer_size + buffer_size) {
@@ -604,39 +627,35 @@ class WikiSorter<T> {
                             buffer1 = new Range(B.end - count, B.end);
                             find_separately = false;
                         } else {
-                            if (pull[0].range.start == A.start) pull[0].range.end -= pull[1].count;
+                            if (pull[0].first() == A.start) pull[0] = pull[0].withSecond((pull[0].second() - pull[1].third()));
 
                             buffer2.set(B.end - count, B.end);
                             break;
                         }
                     } else if (pull_index == 0 && count > buffer1.length()) {
                         buffer1.set(B.end - count, B.end);
-
-                        pull[pull_index].range.set(A.start, B.end);
-                        pull[pull_index].count = count;
-                        pull[pull_index].from = index;
-                        pull[pull_index].to = B.end;
+                        pull[pull_index] = pull[pull_index].withFirst(A.start).withSecond(B.end).withThird(count).withFourth(index).withFifth(B.end);
                     }
                 }
 
                 for (pull_index = 0; pull_index < 2; pull_index++) {
-                    int length = pull[pull_index].count;
+                    int length = pull[pull_index].third();
 
-                    if (pull[pull_index].to < pull[pull_index].from) {
-                        index = pull[pull_index].from;
+                    if (pull[pull_index].fifth() < pull[pull_index].fourth()) {
+                        index = pull[pull_index].fourth();
                         for (count = 1; count < length; count++) {
-                            index = FindFirstBackward(array, array[index - 1], new Range(pull[pull_index].to, pull[pull_index].from - (count - 1)), comp, length - count);
-                            Range range = new Range(index + 1, pull[pull_index].from + 1);
+                            index = FindFirstBackward(array, array[index - 1], new Range(pull[pull_index].fifth(), pull[pull_index].fourth() - (count - 1)), comp, length - count);
+                            Range range = new Range(index + 1, pull[pull_index].fourth() + 1);
                             Rotate(array, range.length() - count, range, true);
-                            pull[pull_index].from = index + count;
+                            pull[pull_index] = pull[pull_index].withFourth(index + count);
                         }
-                    } else if (pull[pull_index].to > pull[pull_index].from) {
-                        index = pull[pull_index].from + 1;
+                    } else if (pull[pull_index].fifth() > pull[pull_index].fourth()) {
+                        index = pull[pull_index].fourth() + 1;
                         for (count = 1; count < length; count++) {
-                            index = FindLastForward(array, array[index], new Range(index, pull[pull_index].to), comp, length - count);
-                            Range range = new Range(pull[pull_index].from, index - 1);
+                            index = FindLastForward(array, array[index], new Range(index, pull[pull_index].fifth()), comp, length - count);
+                            Range range = new Range(pull[pull_index].fourth(), index - 1);
                             Rotate(array, count, range, true);
-                            pull[pull_index].from = index - 1 - count;
+                            pull[pull_index] = pull[pull_index].withFourth(index - 1 - count);
                         }
                     }
                 }
@@ -650,22 +669,22 @@ class WikiSorter<T> {
                     B = iterator.nextRange();
 
                     int start = A.start;
-                    if (start == pull[0].range.start) {
-                        if (pull[0].from > pull[0].to) {
-                            A.start += pull[0].count;
+                    if (start == pull[0].first()) {
+                        if (pull[0].fourth() > pull[0].fifth()) {
+                            A.start += pull[0].third();
 
                             if (A.length() == 0) continue;
-                        } else if (pull[0].from < pull[0].to) {
-                            B.end -= pull[0].count;
+                        } else if (pull[0].fourth() < pull[0].fifth()) {
+                            B.end -= pull[0].third();
                             if (B.length() == 0) continue;
                         }
                     }
-                    if (start == pull[1].range.start) {
-                        if (pull[1].from > pull[1].to) {
-                            A.start += pull[1].count;
+                    if (start == pull[1].first()) {
+                        if (pull[1].fourth() > pull[1].fifth()) {
+                            A.start += pull[1].third();
                             if (A.length() == 0) continue;
-                        } else if (pull[1].from < pull[1].to) {
-                            B.end -= pull[1].count;
+                        } else if (pull[1].fourth() < pull[1].fifth()) {
+                            B.end -= pull[1].third();
                             if (B.length() == 0) continue;
                         }
                     }
@@ -769,21 +788,21 @@ class WikiSorter<T> {
                 InsertionSort(array, buffer2, comp);
 
                 for (pull_index = 0; pull_index < 2; pull_index++) {
-                    int unique = pull[pull_index].count * 2;
-                    if (pull[pull_index].from > pull[pull_index].to) {
-                        Range buffer = new Range(pull[pull_index].range.start, pull[pull_index].range.start + pull[pull_index].count);
+                    int unique = pull[pull_index].third() * 2;
+                    if (pull[pull_index].fourth() > pull[pull_index].fifth()) {
+                        Range buffer = new Range(pull[pull_index].first(), pull[pull_index].first() + pull[pull_index].third());
                         while (buffer.length() > 0) {
-                            index = FindFirstForward(array, array[buffer.start], new Range(buffer.end, pull[pull_index].range.end), comp, unique);
+                            index = FindFirstForward(array, array[buffer.start], new Range(buffer.end, pull[pull_index].second()), comp, unique);
                             int amount = index - buffer.end;
                             Rotate(array, buffer.length(), new Range(buffer.start, index), true);
                             buffer.start += (amount + 1);
                             buffer.end += amount;
                             unique -= 2;
                         }
-                    } else if (pull[pull_index].from < pull[pull_index].to) {
-                        Range buffer = new Range(pull[pull_index].range.end - pull[pull_index].count, pull[pull_index].range.end);
+                    } else if (pull[pull_index].fourth() < pull[pull_index].fifth()) {
+                        Range buffer = new Range(pull[pull_index].second() - pull[pull_index].third(), pull[pull_index].second());
                         while (buffer.length() > 0) {
-                            index = FindLastBackward(array, array[buffer.end - 1], new Range(pull[pull_index].range.start, buffer.start), comp, unique);
+                            index = FindLastBackward(array, array[buffer.end - 1], new Range(pull[pull_index].first(), buffer.start), comp, unique);
                             int amount = buffer.start - index;
                             Rotate(array, amount, new Range(index, buffer.end), true);
                             buffer.start -= amount;
