@@ -4,6 +4,8 @@ import org.inasayaflanderin.abyssine.primitives.Quin;
 
 import java.util.Comparator;
 
+import static org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils.flip;
+
 class Range {
     public int start;
     public int end;
@@ -28,12 +30,12 @@ class Range {
     }
 }
 
-class WikiSorter<T> {
-    public static <T> void sort(T[] array, Comparator<T> comp) {
-        new WikiSorter<T>().Sort(array, comp);
+class WikiSorter<D> {
+    public static <D> void sort(D[] array, Comparator<D> comp) {
+        new WikiSorter<D>().Sort(array, comp);
     }
 
-    int BinaryFirst(T[] array, T value, Range range, Comparator<T> comp) {
+    int BinaryFirst(D[] array, D value, Range range, Comparator<D> comp) {
         int start = range.start, end = range.end - 1;
         while (start < end) {
             int mid = start + (end - start)/2;
@@ -46,7 +48,7 @@ class WikiSorter<T> {
         return start;
     }
 
-    int BinaryLast(T[] array, T value, Range range, Comparator<T> comp) {
+    int BinaryLast(D[] array, D value, Range range, Comparator<D> comp) {
         int start = range.start, end = range.end - 1;
         while (start < end) {
             int mid = start + (end - start)/2;
@@ -59,7 +61,7 @@ class WikiSorter<T> {
         return start;
     }
 
-    int FindFirstForward(T[] array, T value, Range range, Comparator<T> comp, int unique) {
+    int FindFirstForward(D[] array, D value, Range range, Comparator<D> comp, int unique) {
         if (range.length() == 0) return range.start;
         int index, skip = Math.max(range.length()/unique, 1);
 
@@ -70,7 +72,7 @@ class WikiSorter<T> {
         return BinaryFirst(array, value, new Range(index - skip, index), comp);
     }
 
-    int FindLastForward(T[] array, T value, Range range, Comparator<T> comp, int unique) {
+    int FindLastForward(D[] array, D value, Range range, Comparator<D> comp, int unique) {
         if (range.length() == 0) return range.start;
         int index, skip = Math.max(range.length()/unique, 1);
 
@@ -81,7 +83,7 @@ class WikiSorter<T> {
         return BinaryLast(array, value, new Range(index - skip, index), comp);
     }
 
-    int FindFirstBackward(T[] array, T value, Range range, Comparator<T> comp, int unique) {
+    int FindFirstBackward(D[] array, D value, Range range, Comparator<D> comp, int unique) {
         if (range.length() == 0) return range.start;
         int index, skip = Math.max(range.length()/unique, 1);
 
@@ -92,7 +94,7 @@ class WikiSorter<T> {
         return BinaryFirst(array, value, new Range(index, index + skip), comp);
     }
 
-    int FindLastBackward(T[] array, T value, Range range, Comparator<T> comp, int unique) {
+    int FindLastBackward(D[] array, D value, Range range, Comparator<D> comp, int unique) {
         if (range.length() == 0) return range.start;
         int index, skip = Math.max(range.length()/unique, 1);
 
@@ -103,32 +105,24 @@ class WikiSorter<T> {
         return BinaryLast(array, value, new Range(index, index + skip), comp);
     }
 
-    void InsertionSort(T[] array, Range range, Comparator<T> comp) {
+    void InsertionSort(D[] array, Range range, Comparator<D> comp) {
         for (int j, i = range.start + 1; i < range.end; i++) {
-            T temp = array[i];
+            D temp = array[i];
             for (j = i; j > range.start && comp.compare(temp, array[j - 1]) < 0; j--)
                 array[j] = array[j - 1];
             array[j] = temp;
         }
     }
 
-    void Reverse(T[] array, Range range) {
-        for (int index = range.length()/2 - 1; index >= 0; index--) {
-            T swap = array[range.start + index];
-            array[range.start + index] = array[range.end - index - 1];
-            array[range.end - index - 1] = swap;
-        }
-    }
-
-    void BlockSwap(T[] array, int start1, int start2, int block_size) {
+    void BlockSwap(D[] array, int start1, int start2, int block_size) {
         for (int index = 0; index < block_size; index++) {
-            T swap = array[start1 + index];
+            D swap = array[start1 + index];
             array[start1 + index] = array[start2 + index];
             array[start2 + index] = swap;
         }
     }
 
-    void Rotate(T[] array, int amount, Range range, T[] cache) {
+    void Rotate(D[] array, int amount, Range range, D[] cache) {
         if (range.length() == 0) return;
 
         int split;
@@ -158,12 +152,12 @@ class WikiSorter<T> {
             }
         }
 
-        Reverse(array, range1);
-        Reverse(array, range2);
-        Reverse(array, range);
+        flip(array, range1.start, range1.end);
+        flip(array, range2.start, range2.end);
+        flip(array, range.start, range.end);
     }
 
-    void MergeInto(T[] from, Range A, Range B, Comparator<T> comp, T[] into, int at_index) {
+    void MergeInto(D[] from, Range A, Range B, Comparator<D> comp, D[] into, int at_index) {
         int A_index = A.start;
         int B_index = B.start;
         int insert_index = at_index;
@@ -191,7 +185,7 @@ class WikiSorter<T> {
         }
     }
 
-    void MergeExternal(T[] array, Range A, Range B, Comparator<T> comp, T[] cache) {
+    void MergeExternal(D[] array, Range A, Range B, Comparator<D> comp, D[] cache) {
         int A_index = 0;
         int B_index = B.start;
         int insert_index = A.start;
@@ -217,20 +211,20 @@ class WikiSorter<T> {
         System.arraycopy(cache, A_index, array, insert_index, A_last - A_index);
     }
 
-    void MergeInternal(T[] array, Range A, Range B, Comparator<T> comp, Range buffer) {
+    void MergeInternal(D[] array, Range A, Range B, Comparator<D> comp, Range buffer) {
         int A_count = 0, B_count = 0, insert = 0;
 
         if (B.length() > 0 && A.length() > 0) {
             while (true) {
                 if (comp.compare(array[B.start + B_count], array[buffer.start + A_count]) >= 0) {
-                    T swap = array[A.start + insert];
+                    D swap = array[A.start + insert];
                     array[A.start + insert] = array[buffer.start + A_count];
                     array[buffer.start + A_count] = swap;
                     A_count++;
                     insert++;
                     if (A_count >= A.length()) break;
                 } else {
-                    T swap = array[A.start + insert];
+                    D swap = array[A.start + insert];
                     array[A.start + insert] = array[B.start + B_count];
                     array[B.start + B_count] = swap;
                     B_count++;
@@ -243,7 +237,7 @@ class WikiSorter<T> {
         BlockSwap(array, buffer.start + A_count, A.start + insert, A.length() - A_count);
     }
 
-    void MergeInPlace(T[] array, Range A, Range B, Comparator<T> comp, T[] cache) {
+    void MergeInPlace(D[] array, Range A, Range B, Comparator<D> comp, D[] cache) {
         if (A.length() == 0 || B.length() == 0) return;
 
 
@@ -264,10 +258,10 @@ class WikiSorter<T> {
         }
     }
 
-    void NetSwap(T[] array, int[] order, Range range, Comparator<T> comp, int x, int y) {
+    void NetSwap(D[] array, int[] order, Range range, Comparator<D> comp, int x, int y) {
         int compare = comp.compare(array[range.start + x], array[range.start + y]);
         if (compare > 0 || (order[x] > order[y] && compare == 0)) {
-            T swap = array[range.start + x];
+            D swap = array[range.start + x];
             array[range.start + x] = array[range.start + y];
             array[range.start + y] = swap;
             int swap2 = order[x];
@@ -277,19 +271,19 @@ class WikiSorter<T> {
     }
 
     @SuppressWarnings("unchecked")
-    void Sort(T[] array, Comparator<T> comp) {
-        T[] cache = (T[]) new Object[512];
+    void Sort(D[] array, Comparator<D> comp) {
+        D[] cache = (D[]) new Object[512];
         int size = array.length;
 
         if (size < 4) {
             if (size == 3) {
                 if (comp.compare(array[1], array[0]) < 0) {
-                    T swap = array[0];
+                    D swap = array[0];
                     array[0] = array[1];
                     array[1] = swap;
                 }
                 if (comp.compare(array[2], array[1]) < 0) {
-                    T swap = array[1];
+                    D swap = array[1];
                     array[1] = array[2];
                     array[2] = swap;
                     if (comp.compare(array[1], array[0]) < 0) {
@@ -300,7 +294,7 @@ class WikiSorter<T> {
                 }
             } else if (size == 2) {
                 if (comp.compare(array[1], array[0]) < 0) {
-                    T swap = array[0];
+                    D swap = array[0];
                     array[0] = array[1];
                     array[1] = swap;
                 }
@@ -725,7 +719,7 @@ class WikiSorter<T> {
                         firstA.set(AStart, AStart + blockA.length() % block_size);
                         int indexA = buffer1.start;
                         for (index = firstA.end; index < blockA.end; index += block_size) {
-                            T swap = array[indexA];
+                            D swap = array[indexA];
                             array[indexA] = array[index];
                             array[index] = swap;
                             indexA++;
@@ -753,7 +747,7 @@ class WikiSorter<T> {
                                             minA = findA;
                                     BlockSwap(array, blockA.start, minA, block_size);
 
-                                    T swap = array[blockA.start];
+                                    D swap = array[blockA.start];
                                     array[blockA.start] = array[indexA];
                                     array[indexA] = swap;
                                     indexA++;
