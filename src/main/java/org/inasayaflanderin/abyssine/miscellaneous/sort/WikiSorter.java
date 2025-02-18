@@ -2,9 +2,7 @@ package org.inasayaflanderin.abyssine.miscellaneous.sort;
 
 import org.inasayaflanderin.abyssine.primitives.Quin;
 
-import java.util.Arrays;
 import java.util.Comparator;
-import java.util.List;
 
 import static org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils.flip;
 import static org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils.swap;
@@ -38,7 +36,7 @@ class WikiSorter<D> {
         new WikiSorter<D>().Sort(data, comp);
     }
 
-    int BinaryFirst(D[] data, D value, Range range, Comparator<D> comp) {
+    int BinaryFirst(D[] data, Comparator<D> comp, D value, Range range) {
         int start = range.start, end = range.end - 1;
         while (start < end) {
             int mid = start + (end - start)/2;
@@ -51,7 +49,7 @@ class WikiSorter<D> {
         return start;
     }
 
-    int BinaryLast(D[] data, D value, Range range, Comparator<D> comp) {
+    int BinaryLast(D[] data,  Comparator<D> comp, D value, Range range) {
         int start = range.start, end = range.end - 1;
         while (start < end) {
             int mid = start + (end - start)/2;
@@ -64,15 +62,15 @@ class WikiSorter<D> {
         return start;
     }
 
-    int FindFirstForward(D[] data, D value, Range range, Comparator<D> comp, int unique) {
+    int FindFirstForward(D[] data, Comparator<D> comp, D value, Range range, int unique) {
         if (range.length() == 0) return range.start;
         int index, skip = Math.max(range.length()/unique, 1);
 
         for (index = range.start + skip; comp.compare(data[index - 1], value) < 0; index += skip)
             if (index >= range.end - skip)
-                return BinaryFirst(data, value, new Range(index, range.end), comp);
+                return BinaryFirst(data, comp, value, new Range(index, range.end));
 
-        return BinaryFirst(data, value, new Range(index - skip, index), comp);
+        return BinaryFirst(data, comp, value, new Range(index - skip, index));
     }
 
     int FindLastForward(D[] data, D value, Range range, Comparator<D> comp, int unique) {
@@ -81,31 +79,31 @@ class WikiSorter<D> {
 
         for (index = range.start + skip; comp.compare(value, data[index - 1]) >= 0; index += skip)
             if (index >= range.end - skip)
-                return BinaryLast(data, value, new Range(index, range.end), comp);
+                return BinaryLast(data, comp, value, new Range(index, range.end));
 
-        return BinaryLast(data, value, new Range(index - skip, index), comp);
+        return BinaryLast(data, comp, value, new Range(index - skip, index));
     }
 
-    int FindFirstBackward(D[] data, D value, Range range, Comparator<D> comp, int unique) {
+    int FindFirstBackward(D[] data, Comparator<D> comp, D value, Range range, int unique) {
         if (range.length() == 0) return range.start;
         int index, skip = Math.max(range.length()/unique, 1);
 
         for (index = range.end - skip; index > range.start && comp.compare(data[index - 1], value) >= 0; index -= skip)
             if (index < range.start + skip)
-                return BinaryFirst(data, value, new Range(range.start, index), comp);
+                return BinaryFirst(data, comp, value, new Range(range.start, index));
 
-        return BinaryFirst(data, value, new Range(index, index + skip), comp);
+        return BinaryFirst(data, comp, value, new Range(index, index + skip));
     }
 
-    int FindLastBackward(D[] data, D value, Range range, Comparator<D> comp, int unique) {
+    int FindLastBackward(D[] data, Comparator<D> comp, D value, Range range, int unique) {
         if (range.length() == 0) return range.start;
         int index, skip = Math.max(range.length()/unique, 1);
 
         for (index = range.end - skip; index > range.start && comp.compare(value, data[index - 1]) < 0; index -= skip)
             if (index < range.start + skip)
-                return BinaryLast(data, value, new Range(range.start, index), comp);
+                return BinaryLast(data, comp, value, new Range(range.start, index));
 
-        return BinaryLast(data, value, new Range(index, index + skip), comp);
+        return BinaryLast(data, comp, value, new Range(index, index + skip));
     }
 
     void InsertionSort(D[] data, Range range, Comparator<D> comp) {
@@ -248,7 +246,7 @@ class WikiSorter<D> {
         B = new Range(B.start, B.end);
 
         while (true) {
-            int mid = BinaryFirst(data, data[A.start], B, comp);
+            int mid = BinaryFirst(data, comp, data[A.start], B);
 
             int amount = mid - A.end;
             Rotate(data, -amount, new Range(A.start, mid), cache);
@@ -256,7 +254,7 @@ class WikiSorter<D> {
 
             B.start = mid;
             A.set(A.start + amount, B.start);
-            A.start = BinaryLast(data, data[A.start], A, comp);
+            A.start = BinaryLast(data, comp, data[A.start], A);
             if (A.length() == 0) break;
         }
     }
@@ -448,7 +446,6 @@ class WikiSorter<D> {
                             System.arraycopy(data, B1Start, cache, A1End - A1Start, B1End - B1Start);
                         }
 
-                        A1Start = A1Start;
                         A1End = B1End;
 
                         if (comp.compare(data[B2End - 1], data[A2Start]) < 0) {
@@ -461,7 +458,6 @@ class WikiSorter<D> {
                             System.arraycopy(data, B2Start, cache, A1End - A1Start + A2End - A2Start, B2End - B2Start);
                         }
 
-                        A2Start = A2Start;
                         A2End = B2End;
 
                         Range A3 = new Range(0, A1End - A1Start);
@@ -590,7 +586,7 @@ class WikiSorter<D> {
                     }
 
                     for (last = BEnd - 1, count = 1; count < find; last = index - 1, count++) {
-                        index = FindFirstBackward(data, data[last], new Range(BStart, last), comp, find - count);
+                        index = FindFirstBackward(data, comp, data[last], new Range(BStart, last), find - count);
                         if (index == BStart) break;
                     }
                     index = last;
@@ -631,7 +627,7 @@ class WikiSorter<D> {
                         index = pull[pull_index].fourth();
 
                         for (count = 1; count < length; count++) {
-                            index = FindFirstBackward(data, data[index - 1], new Range(pull[pull_index].fifth(), pull[pull_index].fourth() - (count - 1)), comp, length - count);
+                            index = FindFirstBackward(data, comp, data[index - 1], new Range(pull[pull_index].fifth(), pull[pull_index].fourth() - (count - 1)), length - count);
                             Range range = new Range(index + 1, pull[pull_index].fourth() + 1);
                             Rotate(data, range.length() - count, range, cache);
                             pull[pull_index] = pull[pull_index].withFourth(index + count);
@@ -718,7 +714,7 @@ class WikiSorter<D> {
                         if (blockA.length() > 0) {
                             while (true) {
                                 if ((lastB.length() > 0 && comp.compare(data[lastB.end - 1], data[indexA]) >= 0) || blockB.length() == 0) {
-                                    int B_split = BinaryFirst(data, data[indexA], lastB, comp);
+                                    int B_split = BinaryFirst(data, comp, data[indexA], lastB);
                                     int B_remaining = lastB.end - B_split;
 
                                     int minA = blockA.start;
@@ -795,7 +791,7 @@ class WikiSorter<D> {
                     if (pull[pull_index].fourth() > pull[pull_index].fifth()) {
                         Range buffer = new Range(pull[pull_index].first(), pull[pull_index].first() + pull[pull_index].third());
                         while (buffer.length() > 0) {
-                            index = FindFirstForward(data, data[buffer.start], new Range(buffer.end, pull[pull_index].second()), comp, unique);
+                            index = FindFirstForward(data, comp, data[buffer.start], new Range(buffer.end, pull[pull_index].second()), unique);
                             int amount = index - buffer.end;
                             Rotate(data, buffer.length(), new Range(buffer.start, index), cache);
                             buffer.start += (amount + 1);
@@ -805,7 +801,7 @@ class WikiSorter<D> {
                     } else if (pull[pull_index].fourth() < pull[pull_index].fifth()) {
                         Range buffer = new Range(pull[pull_index].second() - pull[pull_index].third(), pull[pull_index].second());
                         while (buffer.length() > 0) {
-                            index = FindLastBackward(data, data[buffer.end - 1], new Range(pull[pull_index].first(), buffer.start), comp, unique);
+                            index = FindLastBackward(data, comp, data[buffer.end - 1], new Range(pull[pull_index].first(), buffer.start), unique);
                             int amount = buffer.start - index;
                             Rotate(data, amount, new Range(index, buffer.end), cache);
                             buffer.start -= amount;
