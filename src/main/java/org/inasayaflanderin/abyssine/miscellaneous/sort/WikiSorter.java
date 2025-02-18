@@ -2,7 +2,9 @@ package org.inasayaflanderin.abyssine.miscellaneous.sort;
 
 import org.inasayaflanderin.abyssine.primitives.Quin;
 
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 
 import static org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils.flip;
 import static org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils.swap;
@@ -36,29 +38,29 @@ class WikiSorter<D> {
         new WikiSorter<D>().Sort(data, comp);
     }
 
-    int BinaryFirst(D[] data, Comparator<D> comp, D value, Range range) {
+    int BinaryFirst(List<D> data, Comparator<D> comp, D value, Range range) {
         int start = range.start, end = range.end - 1;
         while (start < end) {
             int mid = start + (end - start)/2;
-            if (comp.compare(data[mid], value) < 0)
+            if (comp.compare(data.get(mid), value) < 0)
                 start = mid + 1;
             else
                 end = mid;
         }
-        if (start == range.end - 1 && comp.compare(data[start], value) < 0) start++;
+        if (start == range.end - 1 && comp.compare(data.get(start), value) < 0) start++;
         return start;
     }
 
-    int BinaryLast(D[] data,  Comparator<D> comp, D value, Range range) {
+    int BinaryLast(List<D> data,  Comparator<D> comp, D value, Range range) {
         int start = range.start, end = range.end - 1;
         while (start < end) {
             int mid = start + (end - start)/2;
-            if (comp.compare(value, data[mid]) >= 0)
+            if (comp.compare(value, data.get(mid)) >= 0)
                 start = mid + 1;
             else
                 end = mid;
         }
-        if (start == range.end - 1 && comp.compare(value, data[start]) >= 0) start++;
+        if (start == range.end - 1 && comp.compare(value, data.get(start)) >= 0) start++;
         return start;
     }
 
@@ -68,9 +70,9 @@ class WikiSorter<D> {
 
         for (index = range.start + skip; comp.compare(data[index - 1], value) < 0; index += skip)
             if (index >= range.end - skip)
-                return BinaryFirst(data, comp, value, new Range(index, range.end));
+                return BinaryFirst(Arrays.asList(data), comp, value, new Range(index, range.end));
 
-        return BinaryFirst(data, comp, value, new Range(index - skip, index));
+        return BinaryFirst(Arrays.asList(data), comp, value, new Range(index - skip, index));
     }
 
     int FindLastForward(D[] data, D value, Range range, Comparator<D> comp, int unique) {
@@ -79,9 +81,9 @@ class WikiSorter<D> {
 
         for (index = range.start + skip; comp.compare(value, data[index - 1]) >= 0; index += skip)
             if (index >= range.end - skip)
-                return BinaryLast(data, comp, value, new Range(index, range.end));
+                return BinaryLast(Arrays.asList(data), comp, value, new Range(index, range.end));
 
-        return BinaryLast(data, comp, value, new Range(index - skip, index));
+        return BinaryLast(Arrays.asList(data), comp, value, new Range(index - skip, index));
     }
 
     int FindFirstBackward(D[] data, Comparator<D> comp, D value, Range range, int unique) {
@@ -90,9 +92,9 @@ class WikiSorter<D> {
 
         for (index = range.end - skip; index > range.start && comp.compare(data[index - 1], value) >= 0; index -= skip)
             if (index < range.start + skip)
-                return BinaryFirst(data, comp, value, new Range(range.start, index));
+                return BinaryFirst(Arrays.asList(data), comp, value, new Range(range.start, index));
 
-        return BinaryFirst(data, comp, value, new Range(index, index + skip));
+        return BinaryFirst(Arrays.asList(data), comp, value, new Range(index, index + skip));
     }
 
     int FindLastBackward(D[] data, Comparator<D> comp, D value, Range range, int unique) {
@@ -101,9 +103,9 @@ class WikiSorter<D> {
 
         for (index = range.end - skip; index > range.start && comp.compare(value, data[index - 1]) < 0; index -= skip)
             if (index < range.start + skip)
-                return BinaryLast(data, comp, value, new Range(range.start, index));
+                return BinaryLast(Arrays.asList(data), comp, value, new Range(range.start, index));
 
-        return BinaryLast(data, comp, value, new Range(index, index + skip));
+        return BinaryLast(Arrays.asList(data), comp, value, new Range(index, index + skip));
     }
 
     void InsertionSort(D[] data, Range range, Comparator<D> comp) {
@@ -246,7 +248,7 @@ class WikiSorter<D> {
         B = new Range(B.start, B.end);
 
         while (true) {
-            int mid = BinaryFirst(data, comp, data[A.start], B);
+            int mid = BinaryFirst(Arrays.asList(data), comp, data[A.start], B);
 
             int amount = mid - A.end;
             Rotate(data, -amount, new Range(A.start, mid), cache);
@@ -254,7 +256,7 @@ class WikiSorter<D> {
 
             B.start = mid;
             A.set(A.start + amount, B.start);
-            A.start = BinaryLast(data, comp, data[A.start], A);
+            A.start = BinaryLast(Arrays.asList(data), comp, data[A.start], A);
             if (A.length() == 0) break;
         }
     }
@@ -714,7 +716,7 @@ class WikiSorter<D> {
                         if (blockA.length() > 0) {
                             while (true) {
                                 if ((lastB.length() > 0 && comp.compare(data[lastB.end - 1], data[indexA]) >= 0) || blockB.length() == 0) {
-                                    int B_split = BinaryFirst(data, comp, data[indexA], lastB);
+                                    int B_split = BinaryFirst(Arrays.asList(data), comp, data[indexA], lastB);
                                     int B_remaining = lastB.end - B_split;
 
                                     int minA = blockA.start;
