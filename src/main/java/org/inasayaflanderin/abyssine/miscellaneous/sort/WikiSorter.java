@@ -28,66 +28,6 @@ class Range {
     }
 }
 
-class Iterator {
-    public int size, power_of_two;
-    public int numerator, decimal;
-    public int denominator, decimal_step, numerator_step;
-    Iterator(int size2, int min_level) {
-        size = size2;
-        power_of_two = FloorPowerOfTwo(size);
-        denominator = power_of_two/min_level;
-        numerator_step = size % denominator;
-        decimal_step = size/denominator;
-        begin();
-    }
-
-    static int FloorPowerOfTwo(int value) {
-        int x = value;
-        x = x | (x >> 1);
-        x = x | (x >> 2);
-        x = x | (x >> 4);
-        x = x | (x >> 8);
-        x = x | (x >> 16);
-        return x - (x >> 1);
-    }
-
-    void begin() {
-        numerator = decimal = 0;
-    }
-
-    Range nextRange() {
-        int start = decimal;
-
-        decimal += decimal_step;
-        numerator += numerator_step;
-        if (numerator >= denominator) {
-            numerator -= denominator;
-            decimal++;
-        }
-
-        return new Range(start, decimal);
-    }
-
-    boolean finished() {
-        return (decimal >= size);
-    }
-
-    boolean nextLevel() {
-        decimal_step += decimal_step;
-        numerator_step += numerator_step;
-        if (numerator_step >= denominator) {
-            numerator_step -= denominator;
-            decimal_step++;
-        }
-
-        return (decimal_step < size);
-    }
-
-    int length() {
-        return decimal_step;
-    }
-}
-
 class WikiSorter<T> {
     public static <T> void sort(T[] array, Comparator<T> comp) {
         new WikiSorter<T>().Sort(array, comp);
@@ -369,81 +309,102 @@ class WikiSorter<T> {
             return;
         }
 
-        Iterator iterator = new Iterator(size, 4);
-        while (!iterator.finished()) {
+        var powerOfTwo = size;
+        powerOfTwo |= powerOfTwo >> 1;
+        powerOfTwo |= powerOfTwo >> 2;
+        powerOfTwo |= powerOfTwo >> 4;
+        powerOfTwo |= powerOfTwo >> 8;
+        powerOfTwo |= powerOfTwo >> 16;
+        powerOfTwo -= powerOfTwo >> 1;
+        var denominator = powerOfTwo / 4;
+        var numeratorStep = size % denominator;
+        var decimalStep = size / denominator;
+        var numerator = 0;
+        var decimal = 0;
+
+        while (decimal < size) {
             int[] order = { 0, 1, 2, 3, 4, 5, 6, 7 };
-            Range range = iterator.nextRange();
+            var rangeStart = decimal;
+            decimal += decimalStep;
+            numerator += numeratorStep;
 
-            if (range.length() == 8) {
-                NetSwap(array, order, range, comp, 0, 1);
-                NetSwap(array, order, range, comp, 2, 3);
-                NetSwap(array, order, range, comp, 4, 5);
-                NetSwap(array, order, range, comp, 6, 7);
-                NetSwap(array, order, range, comp, 0, 2);
-                NetSwap(array, order, range, comp, 1, 3);
-                NetSwap(array, order, range, comp, 4, 6);
-                NetSwap(array, order, range, comp, 5, 7);
-                NetSwap(array, order, range, comp, 1, 2);
-                NetSwap(array, order, range, comp, 5, 6);
-                NetSwap(array, order, range, comp, 0, 4);
-                NetSwap(array, order, range, comp, 3, 7);
-                NetSwap(array, order, range, comp, 1, 5);
-                NetSwap(array, order, range, comp, 2, 6);
-                NetSwap(array, order, range, comp, 1, 4);
-                NetSwap(array, order, range, comp, 3, 6);
-                NetSwap(array, order, range, comp, 2, 4);
-                NetSwap(array, order, range, comp, 3, 5);
-                NetSwap(array, order, range, comp, 3, 4);
+            if (numerator >= denominator) {
+                numerator -= denominator;
+                decimal++;
+            }
 
-            } else if (range.length() == 7) {
-                NetSwap(array, order, range, comp, 1, 2);
-                NetSwap(array, order, range, comp, 3, 4);
-                NetSwap(array, order, range, comp, 5, 6);
-                NetSwap(array, order, range, comp, 0, 2);
-                NetSwap(array, order, range, comp, 3, 5);
-                NetSwap(array, order, range, comp, 4, 6);
-                NetSwap(array, order, range, comp, 0, 1);
-                NetSwap(array, order, range, comp, 4, 5);
-                NetSwap(array, order, range, comp, 2, 6);
-                NetSwap(array, order, range, comp, 0, 4);
-                NetSwap(array, order, range, comp, 1, 5);
-                NetSwap(array, order, range, comp, 0, 3);
-                NetSwap(array, order, range, comp, 2, 5);
-                NetSwap(array, order, range, comp, 1, 3);
-                NetSwap(array, order, range, comp, 2, 4);
-                NetSwap(array, order, range, comp, 2, 3);
+            var rangeEnd = decimal;
 
-            } else if (range.length() == 6) {
-                NetSwap(array, order, range, comp, 1, 2);
-                NetSwap(array, order, range, comp, 4, 5);
-                NetSwap(array, order, range, comp, 0, 2);
-                NetSwap(array, order, range, comp, 3, 5);
-                NetSwap(array, order, range, comp, 0, 1);
-                NetSwap(array, order, range, comp, 3, 4);
-                NetSwap(array, order, range, comp, 2, 5);
-                NetSwap(array, order, range, comp, 0, 3);
-                NetSwap(array, order, range, comp, 1, 4);
-                NetSwap(array, order, range, comp, 2, 4);
-                NetSwap(array, order, range, comp, 1, 3);
-                NetSwap(array, order, range, comp, 2, 3);
+            if (rangeEnd - rangeStart == 8) {
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 0, 1);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 2, 3);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 4, 5);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 6, 7);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 0, 2);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 1, 3);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 4, 6);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 5, 7);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 1, 2);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 5, 6);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 0, 4);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 3, 7);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 1, 5);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 2, 6);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 1, 4);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 3, 6);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 2, 4);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 3, 5);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 3, 4);
 
-            } else if (range.length() == 5) {
-                NetSwap(array, order, range, comp, 0, 1);
-                NetSwap(array, order, range, comp, 3, 4);
-                NetSwap(array, order, range, comp, 2, 4);
-                NetSwap(array, order, range, comp, 2, 3);
-                NetSwap(array, order, range, comp, 1, 4);
-                NetSwap(array, order, range, comp, 0, 3);
-                NetSwap(array, order, range, comp, 0, 2);
-                NetSwap(array, order, range, comp, 1, 3);
-                NetSwap(array, order, range, comp, 1, 2);
+            } else if (rangeEnd - rangeStart == 7) {
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 1, 2);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 3, 4);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 5, 6);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 0, 2);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 3, 5);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 4, 6);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 0, 1);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 4, 5);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 2, 6);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 0, 4);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 1, 5);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 0, 3);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 2, 5);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 1, 3);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 2, 4);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 2, 3);
 
-            } else if (range.length() == 4) {
-                NetSwap(array, order, range, comp, 0, 1);
-                NetSwap(array, order, range, comp, 2, 3);
-                NetSwap(array, order, range, comp, 0, 2);
-                NetSwap(array, order, range, comp, 1, 3);
-                NetSwap(array, order, range, comp, 1, 2);
+            } else if (rangeEnd - rangeStart == 6) {
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 1, 2);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 4, 5);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 0, 2);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 3, 5);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 0, 1);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 3, 4);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 2, 5);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 0, 3);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 1, 4);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 2, 4);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 1, 3);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 2, 3);
+
+            } else if (rangeEnd - rangeStart == 5) {
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 0, 1);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 3, 4);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 2, 4);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 2, 3);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 1, 4);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 0, 3);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 0, 2);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 1, 3);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 1, 2);
+
+            } else if (rangeEnd - rangeStart == 4) {
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 0, 1);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 2, 3);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 0, 2);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 1, 3);
+                NetSwap(array, order, new Range(rangeStart, rangeEnd), comp, 1, 2);
             }
         }
         if (size < 8) return;
@@ -452,7 +413,7 @@ class WikiSorter<T> {
         Range blockA = new Range(), blockB = new Range();
         Range lastA = new Range(), lastB = new Range();
         Range firstA = new Range();
-        Range A, B;
+        int AStart, AEnd, BStart, BEnd;
 
         Quin<Integer, Integer, Integer, Integer, Integer>[] pull = (Quin<Integer, Integer, Integer, Integer, Integer>[]) new Quin[2];
         pull[0] = new Quin<>(0, 0, 0, 0, 0);
@@ -460,73 +421,130 @@ class WikiSorter<T> {
 
         do {
 
-            if (iterator.length() < 512) {
-                if ((iterator.length() + 1) * 4 <= 512 && iterator.length() * 4 <= size) {
-                    iterator.begin();
-                    while (!iterator.finished()) {
-                        Range A1 = iterator.nextRange();
-                        Range B1 = iterator.nextRange();
-                        Range A2 = iterator.nextRange();
-                        Range B2 = iterator.nextRange();
+            if (decimalStep < 512) {
+                if ((decimalStep + 1) * 4 <= 512 && decimalStep * 4 <= size) {
+                    numerator = decimal = 0;
+                    while (decimal < size) {
+                        var A1Start = decimal;
+                        decimal += decimalStep;
+                        numerator += numeratorStep;
+                        if (numerator >= denominator) {
+                            numerator -= denominator;
+                            decimal++;
+                        }
 
-                        if (comp.compare(array[B1.end - 1], array[A1.start]) < 0) {
-                            System.arraycopy(array, A1.start, cache, B1.length(), A1.length());
-                            System.arraycopy(array, B1.start, cache, 0, B1.length());
-                        } else if (comp.compare(array[B1.start], array[A1.end - 1]) < 0) {
-                            MergeInto(array, A1, B1, comp, cache, 0);
+                        var A1End = decimal;
+                        var B1Start = decimal;
+                        decimal += decimalStep;
+                        numerator += numeratorStep;
+                        if (numerator >= denominator) {
+                            numerator -= denominator;
+                            decimal++;
+                        }
+
+                        var B1End = decimal;
+                        var A2Start = decimal;
+                        decimal += decimalStep;
+                        numerator += numeratorStep;
+                        if (numerator >= denominator) {
+                            numerator -= denominator;
+                            decimal++;
+                        }
+
+                        var A2End = decimal;
+                        var B2Start = decimal;
+                        decimal += decimalStep;
+                        numerator += numeratorStep;
+                        if (numerator >= denominator) {
+                            numerator -= denominator;
+                            decimal++;
+                        }
+
+                        var B2End = decimal;
+
+                        if (comp.compare(array[B1End - 1], array[A1Start]) < 0) {
+                            System.arraycopy(array, A1Start, cache, B1End - B1Start, A1End - A1Start);
+                            System.arraycopy(array, B1Start, cache, 0, B1End - B1Start);
+                        } else if (comp.compare(array[B1Start], array[A1End - 1]) < 0) {
+                            MergeInto(array, new Range(A1Start, A1End), new Range(B1Start, B1End), comp, cache, 0);
                         } else {
-                            if (comp.compare(array[B2.start], array[A2.end - 1]) >= 0 && comp.compare(array[A2.start], array[B1.end - 1]) >= 0)
+                            if (comp.compare(array[B2Start], array[A2End - 1]) >= 0 && comp.compare(array[A2Start], array[B1End - 1]) >= 0)
                                 continue;
 
-                            System.arraycopy(array, A1.start, cache, 0, A1.length());
-                            System.arraycopy(array, B1.start, cache, A1.length(), B1.length());
+                            System.arraycopy(array, A1Start, cache, 0, A1End - A1Start);
+                            System.arraycopy(array, B1Start, cache, A1End - A1Start, B1End - B1Start);
                         }
-                        A1.set(A1.start, B1.end);
 
-                        if (comp.compare(array[B2.end - 1], array[A2.start]) < 0) {
-                            System.arraycopy(array, A2.start, cache, A1.length() + B2.length(), A2.length());
-                            System.arraycopy(array, B2.start, cache, A1.length(), B2.length());
-                        } else if (comp.compare(array[B2.start], array[A2.end - 1]) < 0) {
-                            MergeInto(array, A2, B2, comp, cache, A1.length());
+                        A1Start = A1Start;
+                        A1End = B1End;
+
+                        if (comp.compare(array[B2End - 1], array[A2Start]) < 0) {
+                            System.arraycopy(array, A2Start, cache, A1End - A1Start + B2End - B2Start, A2End - A2Start);
+                            System.arraycopy(array, B2Start, cache, A1End - A1Start, B2End - B2Start);
+                        } else if (comp.compare(array[B2Start], array[A2End - 1]) < 0) {
+                            MergeInto(array, new Range(A2Start, A2End), new Range(B2Start, B2End), comp, cache, A1End - A1Start);
                         } else {
-                            System.arraycopy(array, A2.start, cache, A1.length(), A2.length());
-                            System.arraycopy(array, B2.start, cache, A1.length() + A2.length(), B2.length());
+                            System.arraycopy(array, A2Start, cache, A1End - A1Start, A2End - A2Start);
+                            System.arraycopy(array, B2Start, cache, A1End - A1Start + A2End - A2Start, B2End - B2Start);
                         }
-                        A2.set(A2.start, B2.end);
 
-                        Range A3 = new Range(0, A1.length());
-                        Range B3 = new Range(A1.length(), A1.length() + A2.length());
+                        A2Start = A2Start;
+                        A2End = B2End;
+
+                        Range A3 = new Range(0, A1End - A1Start);
+                        Range B3 = new Range(A1End - A1Start, A1End - A1Start + A2End - A2Start);
 
                         if (comp.compare(cache[B3.end - 1], cache[A3.start]) < 0) {
-                            System.arraycopy(cache, A3.start, array, A1.start + A2.length(), A3.length());
-                            System.arraycopy(cache, B3.start, array, A1.start, B3.length());
+                            System.arraycopy(cache, A3.start, array, A1Start + A2End - A2Start, A3.length());
+                            System.arraycopy(cache, B3.start, array, A1Start, B3.length());
                         } else if (comp.compare(cache[B3.start], cache[A3.end - 1]) < 0) {
-                            MergeInto(cache, A3, B3, comp, array, A1.start);
+                            MergeInto(cache, A3, B3, comp, array, A1Start);
                         } else {
-                            System.arraycopy(cache, A3.start, array, A1.start, A3.length());
-                            System.arraycopy(cache, B3.start, array, A1.start + A1.length(), B3.length());
+                            System.arraycopy(cache, A3.start, array, A1Start, A3.length());
+                            System.arraycopy(cache, B3.start, array, A1End, B3.length());
                         }
                     }
-                    iterator.nextLevel();
 
+                    decimalStep += decimalStep;
+                    numeratorStep += numeratorStep;
+                    if (numeratorStep >= denominator) {
+                        numeratorStep -= denominator;
+                        decimalStep++;
+                    }
                 } else {
-                    iterator.begin();
-                    while (!iterator.finished()) {
-                        A = iterator.nextRange();
-                        B = iterator.nextRange();
+                    numerator = decimal = 0;
+                    while (decimal < size) {
+                        AStart = decimal;
+                        decimal += decimalStep;
+                        numerator += numeratorStep;
+                        if (numerator >= denominator) {
+                            numerator -= denominator;
+                            decimal++;
+                        }
 
-                        if (comp.compare(array[B.end - 1], array[A.start]) < 0) {
-                            Rotate(array, A.length(), new Range(A.start, B.end), cache);
-                        } else if (comp.compare(array[B.start], array[A.end - 1]) < 0) {
-                            System.arraycopy(array, A.start, cache, 0, A.length());
-                            MergeExternal(array, A, B, comp, cache);
+                        AEnd = decimal;
+                        BStart = decimal;
+                        decimal += decimalStep;
+                        numerator += numeratorStep;
+                        if (numerator >= denominator) {
+                            numerator -= denominator;
+                            decimal++;
+                        }
+
+                        BEnd = decimal;
+
+                        if (comp.compare(array[BEnd - 1], array[AStart]) < 0) {
+                            Rotate(array, AEnd - AStart, new Range(AStart, BEnd), cache);
+                        } else if (comp.compare(array[BStart], array[AEnd - 1]) < 0) {
+                            System.arraycopy(array, AStart, cache, 0, AEnd - AStart);
+                            MergeExternal(array, new Range(AStart, AEnd), new Range(BStart, BEnd), comp, cache);
                         }
                     }
                 }
             } else {
 
-                int block_size = (int) Math.sqrt(iterator.length());
-                int buffer_size = iterator.length() / block_size + 1;
+                int block_size = (int) Math.sqrt(decimalStep);
+                int buffer_size = decimalStep / block_size + 1;
 
                 int index, last, count, pull_index = 0;
                 buffer1.set(0, 0);
@@ -540,81 +558,96 @@ class WikiSorter<T> {
 
                 if (block_size <= 512) {
                     find = buffer_size;
-                } else if (find > iterator.length()) {
+                } else if (find > decimalStep) {
                     find = buffer_size;
                     find_separately = true;
                 }
 
+                numerator = decimal = 0;
+                while (decimal < size) {
+                    AStart = decimal;
+                    decimal += decimalStep;
+                    numerator += numeratorStep;
+                    if (numerator >= denominator) {
+                        numerator -= denominator;
+                        decimal++;
+                    }
 
-                iterator.begin();
-                while (!iterator.finished()) {
-                    A = iterator.nextRange();
-                    B = iterator.nextRange();
+                    AEnd = decimal;
+                    BStart = decimal;
+                    decimal += decimalStep;
+                    numerator += numeratorStep;
+                    if (numerator >= denominator) {
+                        numerator -= denominator;
+                        decimal++;
+                    }
 
-                    for (last = A.start, count = 1; count < find; last = index, count++) {
-                        index = FindLastForward(array, array[last], new Range(last + 1, A.end), comp, find - count);
-                        if (index == A.end) break;
+                    BEnd = decimal;
+
+                    for (last = AStart, count = 1; count < find; last = index, count++) {
+                        index = FindLastForward(array, array[last], new Range(last + 1, AEnd), comp, find - count);
+                        if (index == AEnd) break;
                     }
                     index = last;
 
                     if (count >= buffer_size) {
-                        pull[pull_index] = pull[pull_index].withFirst(A.start).withSecond(B.end).withThird(count).withFourth(index).withFifth(A.start);
+                        pull[pull_index] = pull[pull_index].withFirst(AStart).withSecond(BEnd).withThird(count).withFourth(index).withFifth(AStart);
                         pull_index = 1;
 
                         if (count == buffer_size + buffer_size) {
-                            buffer1.set(A.start, A.start + buffer_size);
-                            buffer2.set(A.start + buffer_size, A.start + count);
+                            buffer1.set(AStart, AStart + buffer_size);
+                            buffer2.set(AStart + buffer_size, AStart + count);
                             break;
                         } else if (find == buffer_size + buffer_size) {
-                            buffer1.set(A.start, A.start + count);
+                            buffer1.set(AStart, AStart + count);
                             find = buffer_size;
                         } else if (block_size <= 512) {
-                            buffer1.set(A.start, A.start + count);
+                            buffer1.set(AStart, AStart + count);
                             break;
                         } else if (find_separately) {
-                            buffer1 = new Range(A.start, A.start + count);
+                            buffer1 = new Range(AStart, AStart + count);
                             find_separately = false;
                         } else {
-                            buffer2.set(A.start, A.start + count);
+                            buffer2.set(AStart, AStart + count);
                             break;
                         }
                     } else if (pull_index == 0 && count > buffer1.length()) {
-                        buffer1.set(A.start, A.start + count);
-                        pull[pull_index].withFirst(A.start).withSecond(B.end).withThird(count).withFourth(index).withFifth(A.start);
+                        buffer1.set(AStart, AStart + count);
+                        pull[pull_index] = pull[pull_index].withFirst(AStart).withSecond(BEnd).withThird(count).withFourth(index).withFifth(AStart);
                     }
 
-                    for (last = B.end - 1, count = 1; count < find; last = index - 1, count++) {
-                        index = FindFirstBackward(array, array[last], new Range(B.start, last), comp, find - count);
-                        if (index == B.start) break;
+                    for (last = BEnd - 1, count = 1; count < find; last = index - 1, count++) {
+                        index = FindFirstBackward(array, array[last], new Range(BStart, last), comp, find - count);
+                        if (index == BStart) break;
                     }
                     index = last;
 
                     if (count >= buffer_size) {
-                        pull[pull_index] = pull[pull_index].withFirst(A.start).withSecond(B.end).withThird(count).withFourth(index).withFifth(B.end);
+                        pull[pull_index] = pull[pull_index].withFirst(AStart).withSecond(BEnd).withThird(count).withFourth(index).withFifth(BEnd);
                         pull_index = 1;
 
                         if (count == buffer_size + buffer_size) {
-                            buffer1.set(B.end - count, B.end - buffer_size);
-                            buffer2.set(B.end - buffer_size, B.end);
+                            buffer1.set(BEnd - count, BEnd - buffer_size);
+                            buffer2.set(BEnd - buffer_size, BEnd);
                             break;
                         } else if (find == buffer_size + buffer_size) {
-                            buffer1.set(B.end - count, B.end);
+                            buffer1.set(BEnd - count, BEnd);
                             find = buffer_size;
                         } else if (block_size <= 512) {
-                            buffer1.set(B.end - count, B.end);
+                            buffer1.set(BEnd - count, BEnd);
                             break;
                         } else if (find_separately) {
-                            buffer1 = new Range(B.end - count, B.end);
+                            buffer1 = new Range(BEnd - count, BEnd);
                             find_separately = false;
                         } else {
-                            if (pull[0].first() == A.start) pull[0] = pull[0].withSecond((pull[0].second() - pull[1].third()));
+                            if (pull[0].first() == AStart) pull[0] = pull[0].withSecond((pull[0].second() - pull[1].third()));
 
-                            buffer2.set(B.end - count, B.end);
+                            buffer2.set(BEnd - count, BEnd);
                             break;
                         }
                     } else if (pull_index == 0 && count > buffer1.length()) {
-                        buffer1.set(B.end - count, B.end);
-                        pull[pull_index] = pull[pull_index].withFirst(A.start).withSecond(B.end).withThird(count).withFourth(index).withFifth(B.end);
+                        buffer1.set(BEnd - count, BEnd);
+                        pull[pull_index] = pull[pull_index].withFirst(AStart).withSecond(BEnd).withThird(count).withFourth(index).withFifth(BEnd);
                     }
                 }
 
@@ -641,39 +674,55 @@ class WikiSorter<T> {
                 }
 
                 buffer_size = buffer1.length();
-                block_size = iterator.length() / buffer_size + 1;
+                block_size = decimalStep / buffer_size + 1;
 
-                iterator.begin();
-                while (!iterator.finished()) {
-                    A = iterator.nextRange();
-                    B = iterator.nextRange();
+                numerator = decimal = 0;
+                while (decimal < size) {
+                    AStart = decimal;
+                    decimal += decimalStep;
+                    numerator += numeratorStep;
+                    if (numerator >= denominator) {
+                        numerator -= denominator;
+                        decimal++;
+                    }
 
-                    int start = A.start;
+                    AEnd = decimal;
+                    BStart = decimal;
+                    decimal += decimalStep;
+                    numerator += numeratorStep;
+                    if (numerator >= denominator) {
+                        numerator -= denominator;
+                        decimal++;
+                    }
+
+                    BEnd = decimal;
+
+                    int start = AStart;
                     if (start == pull[0].first()) {
                         if (pull[0].fourth() > pull[0].fifth()) {
-                            A.start += pull[0].third();
+                            AStart += pull[0].third();
 
-                            if (A.length() == 0) continue;
+                            if (AEnd - AStart == 0) continue;
                         } else if (pull[0].fourth() < pull[0].fifth()) {
-                            B.end -= pull[0].third();
-                            if (B.length() == 0) continue;
+                            BEnd -= pull[0].third();
+                            if (BEnd - BStart == 0) continue;
                         }
                     }
                     if (start == pull[1].first()) {
                         if (pull[1].fourth() > pull[1].fifth()) {
-                            A.start += pull[1].third();
-                            if (A.length() == 0) continue;
+                            AStart += pull[1].third();
+                            if (AEnd - AStart == 0) continue;
                         } else if (pull[1].fourth() < pull[1].fifth()) {
-                            B.end -= pull[1].third();
-                            if (B.length() == 0) continue;
+                            BEnd -= pull[1].third();
+                            if (BEnd - BStart == 0) continue;
                         }
                     }
 
-                    if (comp.compare(array[B.end - 1], array[A.start]) < 0) {
-                        Rotate(array, A.length(), new Range(A.start, B.end), cache);
-                    } else if (comp.compare(array[A.end], array[A.end - 1]) < 0) {
-                        blockA.set(A.start, A.end);
-                        firstA.set(A.start, A.start + blockA.length() % block_size);
+                    if (comp.compare(array[BEnd - 1], array[AStart]) < 0) {
+                        Rotate(array, AEnd - AStart, new Range(AStart, BEnd), cache);
+                    } else if (comp.compare(array[AEnd], array[AEnd - 1]) < 0) {
+                        blockA.set(AStart, AEnd);
+                        firstA.set(AStart, AStart + blockA.length() % block_size);
                         int indexA = buffer1.start;
                         for (index = firstA.end; index < blockA.end; index += block_size) {
                             T swap = array[indexA];
@@ -683,7 +732,7 @@ class WikiSorter<T> {
                         }
                         lastA.set(firstA.start, firstA.end);
                         lastB.set(0, 0);
-                        blockB.set(B.start, B.start + Math.min(block_size, B.length()));
+                        blockB.set(BStart, BStart + Math.min(block_size, BEnd - BStart));
                         blockA.start += firstA.length();
                         indexA = buffer1.start;
 
@@ -750,18 +799,18 @@ class WikiSorter<T> {
                                     blockB.start += block_size;
                                     blockB.end += block_size;
 
-                                    if (blockB.end > B.end)
-                                        blockB.end = B.end;
+                                    if (blockB.end > BEnd)
+                                        blockB.end = BEnd;
                                 }
                             }
                         }
 
                         if (lastA.length() <= 512)
-                            MergeExternal(array, lastA, new Range(lastA.end, B.end), comp, cache);
+                            MergeExternal(array, lastA, new Range(lastA.end, BEnd), comp, cache);
                         else if (buffer2.length() > 0)
-                            MergeInternal(array, lastA, new Range(lastA.end, B.end), comp, buffer2);
+                            MergeInternal(array, lastA, new Range(lastA.end, BEnd), comp, buffer2);
                         else
-                            MergeInPlace(array, lastA, new Range(lastA.end, B.end), comp, cache);
+                            MergeInPlace(array, lastA, new Range(lastA.end, BEnd), comp, cache);
                     }
                 }
 
@@ -793,6 +842,12 @@ class WikiSorter<T> {
                 }
             }
 
-        } while (iterator.nextLevel());
+            decimalStep += decimalStep;
+            numeratorStep += numeratorStep;
+            if (numeratorStep >= denominator) {
+                numeratorStep -= denominator;
+                decimalStep++;
+            }
+        } while (decimalStep < size);
     }
 }
