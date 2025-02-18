@@ -8,8 +8,18 @@ import org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils;
 import org.inasayaflanderin.abyssine.primitives.Quin;
 
 import java.lang.reflect.Array;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Comparator;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Stack;
+import java.util.ArrayList;
+import java.util.PriorityQueue;
+import java.util.Iterator;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.stream.IntStream;
 
 import static org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils.*;
@@ -1034,7 +1044,7 @@ public class Sort {
         return pivot + 1;
     }
 
-    private static <D> void insertion(List<D> data, Comparator<D> comparator, int start, int stop) {
+    public static <D> void insertion(List<D> data, Comparator<D> comparator, int start, int stop) {
         for (int i = start + 1; i < stop; i++) {
             var pos = Math.abs(RandomAccessUtils.binarySearch(data, start, i, data.get(i), comparator) + 1);
             var datum = data.get(i);
