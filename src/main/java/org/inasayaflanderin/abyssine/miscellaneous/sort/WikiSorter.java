@@ -72,7 +72,7 @@ class WikiSorter<D> {
         return BinaryFirst(data, comparator, value, new Range(index - skip, index));
     }
 
-    int FindLastForward(List<D> data, D value, Range range, Comparator<D> comparator, int unique) {
+    int FindLastForward(List<D> data, Comparator<D> comparator, D value, Range range, int unique) {
         if (range.end - range.start== 0) return range.start;
         int index, skip = Math.max((range.end - range.start) / unique, 1);
 
@@ -566,7 +566,7 @@ class WikiSorter<D> {
                     BEnd = decimal;
 
                     for (last = AStart, count = 1; count < find; last = index, count++) {
-                        index = FindLastForward(data, data.get(last), new Range(last + 1, AEnd), comparator, find - count);
+                        index = FindLastForward(data, comparator, data.get(last), new Range(last + 1, AEnd), find - count);
                         if (index == AEnd) break;
                     }
                     index = last;
@@ -647,7 +647,7 @@ class WikiSorter<D> {
                     } else if (pull[pull_index].fifth() > pull[pull_index].fourth()) {
                         index = pull[pull_index].fourth() + 1;
                         for (count = 1; count < length; count++) {
-                            index = FindLastForward(data, data.get(index), new Range(index, pull[pull_index].fifth()), comparator, length - count);
+                            index = FindLastForward(data, comparator, data.get(index), new Range(index, pull[pull_index].fifth()), length - count);
                             Range range = new Range(pull[pull_index].fourth(), index - 1);
                             Rotate(data, count, range, cache);
                             pull[pull_index] = pull[pull_index].withFourth(index - 1 - count);
