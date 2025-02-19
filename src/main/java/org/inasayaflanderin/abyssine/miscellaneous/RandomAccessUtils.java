@@ -52,11 +52,11 @@ public class RandomAccessUtils {
         for (int i = 0; i < list.size(); i++) swap(list, i, (int) (rng.next() * list.size()));
     }
 
-    public static <D> int binarySearch(D[] array, int fromIndex, int toIndex, D key, Comparator<D> comparator) {
+    public static <D> int binarySearch(D[] array, Comparator<D> comparator, int fromIndex, int toIndex, D key) {
         return Arrays.binarySearch(array, fromIndex, toIndex, key, comparator);
     }
 
-    public static <D> int binarySearch(List<D> list, int fromIndex, int toIndex, D key, Comparator<D> comparator) {
+    public static <D> int binarySearch(List<D> list, Comparator<D> comparator, int fromIndex, int toIndex, D key) {
         if (fromIndex > toIndex) throw new IllegalArgumentException("fromIndex(" + fromIndex + ") > toIndex(" + toIndex + ")");
         if (fromIndex < 0 || toIndex > list.size()) throw new ArrayIndexOutOfBoundsException(fromIndex);
 
@@ -74,5 +74,30 @@ public class RandomAccessUtils {
         }
 
         return -(low + 1);
+    }
+
+    public static <D> void copy(D[] src, int srcPos, D[] dest, int destPos, int length) {
+        System.arraycopy(src, srcPos, dest, destPos, length);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <D> void copy(List<D> src, int srcPos, D[] dest, int destPos, int length) {
+        D[] srcCopy = (D[]) new Object[length];
+        for (int i = 0; i < length; i++) srcCopy[i] = src.get(srcPos + i);
+        System.arraycopy(srcCopy, 0, dest, destPos, length);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <D> void copy(D[] src, int srcPos, List<D> dest, int destPos, int length) {
+        D[] srcCopy = (D[]) new Object[length];
+        System.arraycopy(src, srcPos, srcCopy, 0, length);
+        for (int i = 0; i < length; i++) dest.set(destPos + i, srcCopy[srcPos + i]);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <D> void copy(List<D> src, int srcPos, List<D> dest, int destPos, int length) {
+        D[] srcCopy = (D[]) new Object[length];
+        for (int i = 0; i < length; i++) srcCopy[i] = src.get(srcPos + i);
+        for (int i = 0; i < length; i++) dest.set(destPos + i, srcCopy[i]);
     }
 }

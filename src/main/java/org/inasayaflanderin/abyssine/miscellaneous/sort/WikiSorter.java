@@ -1,13 +1,13 @@
 package org.inasayaflanderin.abyssine.miscellaneous.sort;
 
+import lombok.extern.slf4j.Slf4j;
 import org.inasayaflanderin.abyssine.primitives.Quin;
 
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
-import static org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils.flip;
-import static org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils.swap;
+import static org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils.*;
 
 class Range {
     public int start;
@@ -33,6 +33,7 @@ class Range {
     }
 }
 
+@Slf4j
 class WikiSorter<D> {
     public static <D> void sort(D[] data, Comparator<D> comp) {
         new WikiSorter<D>().Sort(data, comp);
@@ -121,7 +122,7 @@ class WikiSorter<D> {
         for (int index = 0; index < block_size; index++) swap(data, start1 + index, start2 + index);
     }
 
-    void Rotate(D[] data, int amount, Range range, D[] cache) {
+    void Rotate(List<D> data, int amount, Range range, D[] cache) {
         if (range.length() == 0) return;
 
         int split;
@@ -136,16 +137,16 @@ class WikiSorter<D> {
         if (cache != null) {
             if (range1.length() <= range2.length()) {
                 if (range1.length() <= 512) {
-                    System.arraycopy(data, range1.start, cache, 0, range1.length());
-                    System.arraycopy(data, range2.start, data, range1.start, range2.length());
-                    System.arraycopy(cache, 0, data, range1.start + range2.length(), range1.length());
+                    copy(data, range1.start, cache, 0, range1.length());
+                    copy(data, range2.start, data, range1.start, range2.length());
+                    copy(cache, 0, data, range1.start + range2.length(), range1.length());
                     return;
                 }
             } else {
                 if (range2.length() <= 512) {
-                    System.arraycopy(data, range2.start, cache, 0, range2.length());
-                    System.arraycopy(data, range1.start, data, range2.end - range1.length(), range1.length());
-                    System.arraycopy(cache, 0, data, range1.start, range2.length());
+                    copy(data, range2.start, cache, 0, range2.length());
+                    copy(data, range1.start, data, range2.end - range1.length(), range1.length());
+                    copy(cache, 0, data, range1.start, range2.length());
                     return;
                 }
             }
@@ -247,7 +248,7 @@ class WikiSorter<D> {
             int mid = BinaryFirst(Arrays.asList(data), comp, data[A.start], B);
 
             int amount = mid - A.end;
-            Rotate(data, -amount, new Range(A.start, mid), cache);
+            Rotate(Arrays.asList(data), -amount, new Range(A.start, mid), cache);
             if (B.end == mid) break;
 
             B.start = mid;
@@ -501,7 +502,7 @@ class WikiSorter<D> {
                         BEnd = decimal;
 
                         if (comp.compare(data[BEnd - 1], data[AStart]) < 0) {
-                            Rotate(data, AEnd - AStart, new Range(AStart, BEnd), cache);
+                            Rotate(Arrays.asList(data), AEnd - AStart, new Range(AStart, BEnd), cache);
                         } else if (comp.compare(data[BStart], data[AEnd - 1]) < 0) {
                             System.arraycopy(data, AStart, cache, 0, AEnd - AStart);
                             MergeExternal(data, new Range(AStart, AEnd), new Range(BStart, BEnd), comp, cache);
@@ -627,7 +628,7 @@ class WikiSorter<D> {
                         for (count = 1; count < length; count++) {
                             index = FindFirstBackward(Arrays.asList(data), comp, data[index - 1], new Range(pull[pull_index].fifth(), pull[pull_index].fourth() - (count - 1)), length - count);
                             Range range = new Range(index + 1, pull[pull_index].fourth() + 1);
-                            Rotate(data, range.length() - count, range, cache);
+                            Rotate(Arrays.asList(data), range.length() - count, range, cache);
                             pull[pull_index] = pull[pull_index].withFourth(index + count);
                         }
                     } else if (pull[pull_index].fifth() > pull[pull_index].fourth()) {
@@ -635,7 +636,7 @@ class WikiSorter<D> {
                         for (count = 1; count < length; count++) {
                             index = FindLastForward(Arrays.asList(data), data[index], new Range(index, pull[pull_index].fifth()), comp, length - count);
                             Range range = new Range(pull[pull_index].fourth(), index - 1);
-                            Rotate(data, count, range, cache);
+                            Rotate(Arrays.asList(data), count, range, cache);
                             pull[pull_index] = pull[pull_index].withFourth(index - 1 - count);
                         }
                     }
@@ -687,7 +688,7 @@ class WikiSorter<D> {
                     }
 
                     if (comp.compare(data[BEnd - 1], data[AStart]) < 0) {
-                        Rotate(data, AEnd - AStart, new Range(AStart, BEnd), cache);
+                        Rotate(Arrays.asList(data), AEnd - AStart, new Range(AStart, BEnd), cache);
                     } else if (comp.compare(data[AEnd], data[AEnd - 1]) < 0) {
                         blockA.set(AStart, AEnd);
                         firstA.set(AStart, AStart + blockA.length() % block_size);
@@ -741,7 +742,7 @@ class WikiSorter<D> {
 
                                         BlockSwap(Arrays.asList(data), B_split, blockA.start + block_size - B_remaining, B_remaining);
                                     } else {
-                                        Rotate(data, blockA.start - B_split, new Range(B_split, blockA.start + block_size), cache);
+                                        Rotate(Arrays.asList(data), blockA.start - B_split, new Range(B_split, blockA.start + block_size), cache);
                                     }
 
                                     lastA.set(blockA.start - B_remaining, blockA.start - B_remaining + block_size);
@@ -752,7 +753,7 @@ class WikiSorter<D> {
                                         break;
 
                                 } else if (blockB.length() < block_size) {
-                                    Rotate(data, -blockB.length(), new Range(blockA.start, blockB.end), null);
+                                    Rotate(Arrays.asList(data), -blockB.length(), new Range(blockA.start, blockB.end), null);
 
                                     lastB.set(blockA.start, blockA.start + blockB.length());
                                     blockA.start += blockB.length();
@@ -791,7 +792,7 @@ class WikiSorter<D> {
                         while (buffer.length() > 0) {
                             index = FindFirstForward(Arrays.asList(data), comp, data[buffer.start], new Range(buffer.end, pull[pull_index].second()), unique);
                             int amount = index - buffer.end;
-                            Rotate(data, buffer.length(), new Range(buffer.start, index), cache);
+                            Rotate(Arrays.asList(data), buffer.length(), new Range(buffer.start, index), cache);
                             buffer.start += (amount + 1);
                             buffer.end += amount;
                             unique -= 2;
@@ -801,7 +802,7 @@ class WikiSorter<D> {
                         while (buffer.length() > 0) {
                             index = FindLastBackward(Arrays.asList(data), comp, data[buffer.end - 1], new Range(pull[pull_index].first(), buffer.start), unique);
                             int amount = buffer.start - index;
-                            Rotate(data, amount, new Range(index, buffer.end), cache);
+                            Rotate(Arrays.asList(data), amount, new Range(index, buffer.end), cache);
                             buffer.start -= amount;
                             buffer.end -= (amount + 1);
                             unique -= 2;

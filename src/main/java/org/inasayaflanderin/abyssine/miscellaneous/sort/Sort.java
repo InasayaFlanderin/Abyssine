@@ -5,9 +5,7 @@ import org.inasayaflanderin.abyssine.exception.ParallelExecutionException;
 import org.inasayaflanderin.abyssine.miscellaneous.BinarySearchTree;
 import org.inasayaflanderin.abyssine.miscellaneous.CartesianTree;
 import org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils;
-import org.inasayaflanderin.abyssine.primitives.Quin;
 
-import java.lang.reflect.Array;
 import java.util.Comparator;
 import java.util.Arrays;
 import java.util.List;
@@ -1046,7 +1044,7 @@ public class Sort {
 
     public static <D> void insertion(List<D> data, Comparator<D> comparator, int start, int stop) {
         for (int i = start + 1; i < stop; i++) {
-            var pos = Math.abs(RandomAccessUtils.binarySearch(data, start, i, data.get(i), comparator) + 1);
+            var pos = Math.abs(RandomAccessUtils.binarySearch(data, comparator, start, i, data.get(i)) + 1);
             var datum = data.get(i);
 
             for(int j = i; j > pos; j--) data.set(j, data.get(j - 1));
