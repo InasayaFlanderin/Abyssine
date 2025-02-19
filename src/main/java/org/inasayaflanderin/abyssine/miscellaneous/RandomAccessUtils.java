@@ -91,7 +91,7 @@ public class RandomAccessUtils {
     public static <D> void copy(D[] src, int srcPos, List<D> dest, int destPos, int length) {
         D[] srcCopy = (D[]) new Object[length];
         System.arraycopy(src, srcPos, srcCopy, 0, length);
-        for (int i = 0; i < length; i++) dest.set(destPos + i, srcCopy[srcPos + i]);
+        for (int i = 0; i < length; i++) dest.set(destPos + i, srcCopy[i]);
     }
 
     @SuppressWarnings("unchecked")
