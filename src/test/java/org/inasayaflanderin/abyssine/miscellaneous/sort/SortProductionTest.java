@@ -49,7 +49,8 @@ class SortProductionTest {
                 Sort::weave,
                 Sort::smooth,
                 Sort::cartesian,
-                Sort::sqrt
+                Sort::sqrt,
+                Sort::wiki
         );
     }
 

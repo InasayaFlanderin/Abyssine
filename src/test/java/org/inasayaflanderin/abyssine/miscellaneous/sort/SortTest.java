@@ -48,8 +48,8 @@ class SortTest {
                 Sort::weave,
                 Sort::smooth,
                 Sort::cartesian,
-                Sort::sqrt
-                //Sort::wiki
+                Sort::sqrt,
+                Sort::wiki
                 //ComparableSort::grail
         );
     }
