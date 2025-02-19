@@ -27,10 +27,6 @@ class Range {
         start = start1;
         end = end1;
     }
-
-    int length() {
-        return end - start;
-    }
 }
 
 @Slf4j
@@ -66,8 +62,8 @@ class WikiSorter<D> {
     }
 
     int FindFirstForward(List<D> data, Comparator<D> comparator, D value, Range range, int unique) {
-        if (range.length() == 0) return range.start;
-        int index, skip = Math.max(range.length()/unique, 1);
+        if (range.end - range.start == 0) return range.start;
+        int index, skip = Math.max((range.end - range.start)/unique, 1);
 
         for (index = range.start + skip; comparator.compare(data.get(index - 1), value) < 0; index += skip)
             if (index >= range.end - skip)
@@ -77,8 +73,8 @@ class WikiSorter<D> {
     }
 
     int FindLastForward(List<D> data, D value, Range range, Comparator<D> comparator, int unique) {
-        if (range.length() == 0) return range.start;
-        int index, skip = Math.max(range.length()/unique, 1);
+        if (range.end - range.start== 0) return range.start;
+        int index, skip = Math.max((range.end - range.start) / unique, 1);
 
         for (index = range.start + skip; comparator.compare(value, data.get(index - 1)) >= 0; index += skip)
             if (index >= range.end - skip)
@@ -88,8 +84,8 @@ class WikiSorter<D> {
     }
 
     int FindFirstBackward(List<D> data, Comparator<D> comparator, D value, Range range, int unique) {
-        if (range.length() == 0) return range.start;
-        int index, skip = Math.max(range.length()/unique, 1);
+        if (range.end - range.start == 0) return range.start;
+        int index, skip = Math.max((range.end - range.start) / unique, 1);
 
         for (index = range.end - skip; index > range.start && comparator.compare(data.get(index - 1), value) >= 0; index -= skip)
             if (index < range.start + skip)
@@ -99,8 +95,8 @@ class WikiSorter<D> {
     }
 
     int FindLastBackward(List<D> data, Comparator<D> comparator, D value, Range range, int unique) {
-        if (range.length() == 0) return range.start;
-        int index, skip = Math.max(range.length()/unique, 1);
+        if (range.end - range.start == 0) return range.start;
+        int index, skip = Math.max((range.end - range.start) / unique, 1);
 
         for (index = range.end - skip; index > range.start && comparator.compare(value, data.get(index - 1)) < 0; index -= skip)
             if (index < range.start + skip)
@@ -109,21 +105,12 @@ class WikiSorter<D> {
         return BinaryLast(data, comparator, value, new Range(index, index + skip));
     }
 
-    void InsertionSort(D[] data, Range range, Comparator<D> comparator) {
-        for (int j, i = range.start + 1; i < range.end; i++) {
-            D temp = data[i];
-            for (j = i; j > range.start && comparator.compare(temp, data[j - 1]) < 0; j--)
-                data[j] = data[j - 1];
-            data[j] = temp;
-        }
-    }
-
     void BlockSwap(List<D> data, int start1, int start2, int block_size) {
         for (int index = 0; index < block_size; index++) swap(data, start1 + index, start2 + index);
     }
 
     void Rotate(List<D> data, int amount, Range range, D[] cache) {
-        if (range.length() == 0) return;
+        if (range.end - range.start == 0) return;
 
         int split;
         if (amount >= 0)
@@ -135,18 +122,18 @@ class WikiSorter<D> {
         Range range2 = new Range(split, range.end);
 
         if (cache != null) {
-            if (range1.length() <= range2.length()) {
-                if (range1.length() <= 512) {
-                    copy(data, range1.start, cache, 0, range1.length());
-                    copy(data, range2.start, data, range1.start, range2.length());
-                    copy(cache, 0, data, range1.start + range2.length(), range1.length());
+            if (range1.end - range1.start <= range2.end - range2.start) {
+                if (range1.end - range1.start <= 512) {
+                    copy(data, range1.start, cache, 0, range1.end - range1.start);
+                    copy(data, range2.start, data, range1.start, range2.end - range2.start);
+                    copy(cache, 0, data, range1.start + range2.end - range2.start, range1.end - range1.start);
                     return;
                 }
             } else {
-                if (range2.length() <= 512) {
-                    copy(data, range2.start, cache, 0, range2.length());
-                    copy(data, range1.start, data, range2.end - range1.length(), range1.length());
-                    copy(cache, 0, data, range1.start, range2.length());
+                if (range2.end - range2.start <= 512) {
+                    copy(data, range2.start, cache, 0, range2.end - range2.start);
+                    copy(data, range1.start, data, range2.end - range1.end + range1.start, range1.end - range1.start);
+                    copy(cache, 0, data, range1.start, range2.end - range2.start);
                     return;
                 }
             }
@@ -217,10 +204,10 @@ class WikiSorter<D> {
         int A_index = 0;
         int B_index = B.start;
         int insert_index = A.start;
-        int A_last = A.length();
+        int A_last = A.end - A.start;
         int B_last = B.end;
 
-        if (B.length() > 0 && A.length() > 0) {
+        if (B.end - B.start > 0 && A.end - A.start > 0) {
             while (true) {
                 if (comparator.compare(data.get(B_index), cache[A_index]) >= 0) {
                     data.set(insert_index, cache[A_index]);
@@ -242,27 +229,27 @@ class WikiSorter<D> {
     void MergeInternal(List<D> data, Comparator<D> comparator, Range A, Range B, Range buffer) {
         int A_count = 0, B_count = 0, insert = 0;
 
-        if (B.length() > 0 && A.length() > 0) {
+        if (B.end - B.start > 0 && A.end - A.start > 0) {
             while (true) {
                 if (comparator.compare(data.get(B.start + B_count), data.get(buffer.start + A_count)) >= 0) {
                     swap(data, A.start + insert, buffer.start + A_count);
                     A_count++;
                     insert++;
-                    if (A_count >= A.length()) break;
+                    if (A_count >= A.end - A.start) break;
                 } else {
                     swap(data, A.start + insert, B.start + B_count);
                     B_count++;
                     insert++;
-                    if (B_count >= B.length()) break;
+                    if (B_count >= B.end - B.start) break;
                 }
             }
         }
 
-        BlockSwap(data, buffer.start + A_count, A.start + insert, A.length() - A_count);
+        BlockSwap(data, buffer.start + A_count, A.start + insert, A.end - A.start - A_count);
     }
 
     void MergeInPlace(List<D> data, Comparator<D> comparator, Range A, Range B, D[] cache) {
-        if (A.length() == 0 || B.length() == 0) return;
+        if (A.end - A.start == 0 || B.end - B.start == 0) return;
 
 
         A = new Range(A.start, A.end);
@@ -273,12 +260,14 @@ class WikiSorter<D> {
 
             int amount = mid - A.end;
             Rotate(data, -amount, new Range(A.start, mid), cache);
+
             if (B.end == mid) break;
 
             B.start = mid;
             A.set(A.start + amount, B.start);
             A.start = BinaryLast(data, comparator, data.get(A.start), A);
-            if (A.length() == 0) break;
+
+            if (A.end - A.start == 0) break;
         }
     }
 
@@ -487,13 +476,13 @@ class WikiSorter<D> {
                         Range B3 = new Range(A1End - A1Start, A1End - A1Start + A2End - A2Start);
 
                         if (comparator.compare(cache[B3.end - 1], cache[A3.start]) < 0) {
-                            copy(cache, A3.start, data, A1Start + A2End - A2Start, A3.length());
-                            copy(cache, B3.start, data, A1Start, B3.length());
+                            copy(cache, A3.start, data, A1Start + A2End - A2Start, A3.end - A3.start);
+                            copy(cache, B3.start, data, A1Start, B3.end - B3.start);
                         } else if (comparator.compare(cache[B3.start], cache[A3.end - 1]) < 0) {
                             MergeInto(cache, comparator, A3, B3, data, A1Start);
                         } else {
-                            copy(cache, A3.start, data, A1Start, A3.length());
-                            copy(cache, B3.start, data, A1End, B3.length());
+                            copy(cache, A3.start, data, A1Start, A3.end - A3.start);
+                            copy(cache, B3.start, data, A1End, B3.end - B3.start);
                         }
                     }
 
@@ -603,7 +592,7 @@ class WikiSorter<D> {
                             buffer2.set(AStart, AStart + count);
                             break;
                         }
-                    } else if (pull_index == 0 && count > buffer1.length()) {
+                    } else if (pull_index == 0 && count > buffer1.end - buffer1.start) {
                         buffer1.set(AStart, AStart + count);
                         pull[pull_index] = pull[pull_index].withFirst(AStart).withSecond(BEnd).withThird(count).withFourth(index).withFifth(AStart);
                     }
@@ -637,7 +626,7 @@ class WikiSorter<D> {
                             buffer2.set(BEnd - count, BEnd);
                             break;
                         }
-                    } else if (pull_index == 0 && count > buffer1.length()) {
+                    } else if (pull_index == 0 && count > buffer1.end - buffer1.start) {
                         buffer1.set(BEnd - count, BEnd);
                         pull[pull_index] = pull[pull_index].withFirst(AStart).withSecond(BEnd).withThird(count).withFourth(index).withFifth(BEnd);
                     }
@@ -652,7 +641,7 @@ class WikiSorter<D> {
                         for (count = 1; count < length; count++) {
                             index = FindFirstBackward(data, comparator, data.get(index - 1), new Range(pull[pull_index].fifth(), pull[pull_index].fourth() - (count - 1)), length - count);
                             Range range = new Range(index + 1, pull[pull_index].fourth() + 1);
-                            Rotate(data, range.length() - count, range, cache);
+                            Rotate(data, range.end - range.start - count, range, cache);
                             pull[pull_index] = pull[pull_index].withFourth(index + count);
                         }
                     } else if (pull[pull_index].fifth() > pull[pull_index].fourth()) {
@@ -666,7 +655,7 @@ class WikiSorter<D> {
                     }
                 }
 
-                buffer_size = buffer1.length();
+                buffer_size = buffer1.end - buffer1.start;
                 block_size = decimalStep / buffer_size + 1;
 
                 numerator = decimal = 0;
@@ -715,7 +704,7 @@ class WikiSorter<D> {
                         Rotate(data, AEnd - AStart, new Range(AStart, BEnd), cache);
                     } else if (comparator.compare(data.get(AEnd), data.get(AEnd - 1)) < 0) {
                         blockA.set(AStart, AEnd);
-                        firstA.set(AStart, AStart + blockA.length() % block_size);
+                        firstA.set(AStart, AStart + (blockA.end - blockA.start) % block_size);
                         int indexA = buffer1.start;
                         for (index = firstA.end; index < blockA.end; index += block_size) {
                             swap(data, indexA, index);
@@ -724,17 +713,17 @@ class WikiSorter<D> {
                         lastA.set(firstA.start, firstA.end);
                         lastB.set(0, 0);
                         blockB.set(BStart, BStart + Math.min(block_size, BEnd - BStart));
-                        blockA.start += firstA.length();
+                        blockA.start += firstA.end - firstA.start;
                         indexA = buffer1.start;
 
-                        if (lastA.length() <= 512)
-                            copy(data, lastA.start, cache, 0, lastA.length());
-                        else if (buffer2.length() > 0)
-                            BlockSwap(data, lastA.start, buffer2.start, lastA.length());
+                        if (lastA.end - lastA.start <= 512)
+                            copy(data, lastA.start, cache, 0, lastA.end - lastA.start);
+                        else if (buffer2.end - buffer2.start > 0)
+                            BlockSwap(data, lastA.start, buffer2.start, lastA.end - lastA.start);
 
-                        if (blockA.length() > 0) {
+                        if (blockA.end - blockA.start > 0) {
                             while (true) {
-                                if ((lastB.length() > 0 && comparator.compare(data.get(lastB.end - 1), data.get(indexA)) >= 0) || blockB.length() == 0) {
+                                if ((lastB.end - lastB.start > 0 && comparator.compare(data.get(lastB.end - 1), data.get(indexA)) >= 0) || blockB.end - blockB.start == 0) {
                                     int B_split = BinaryFirst(data, comparator, data.get(indexA), lastB);
                                     int B_remaining = lastB.end - B_split;
 
@@ -747,14 +736,14 @@ class WikiSorter<D> {
                                     swap(data, blockA.start, indexA);
                                     indexA++;
 
-                                    if (lastA.length() <= 512)
+                                    if (lastA.end - lastA.start <= 512)
                                         MergeExternal(data, comparator, lastA, new Range(lastA.end, B_split), cache);
-                                    else if (buffer2.length() > 0)
+                                    else if (buffer2.end - buffer2.start > 0)
                                         MergeInternal(data, comparator, lastA, new Range(lastA.end, B_split), buffer2);
                                     else
                                         MergeInPlace(data, comparator, lastA, new Range(lastA.end, B_split), cache);
 
-                                    if (buffer2.length() > 0 || block_size <= 512) {
+                                    if (buffer2.end - buffer2.start > 0 || block_size <= 512) {
                                         if (block_size <= 512)
                                             copy(data, blockA.start, cache, 0, block_size);
                                         else
@@ -769,15 +758,15 @@ class WikiSorter<D> {
                                     lastB.set(lastA.end, lastA.end + B_remaining);
 
                                     blockA.start += block_size;
-                                    if (blockA.length() == 0)
+                                    if (blockA.end - blockA.start == 0)
                                         break;
 
-                                } else if (blockB.length() < block_size) {
-                                    Rotate(data, -blockB.length(), new Range(blockA.start, blockB.end), null);
+                                } else if (blockB.end - blockB.start < block_size) {
+                                    Rotate(data, -blockB.end + blockB.start, new Range(blockA.start, blockB.end), null);
 
-                                    lastB.set(blockA.start, blockA.start + blockB.length());
-                                    blockA.start += blockB.length();
-                                    blockA.end += blockB.length();
+                                    lastB.set(blockA.start, blockA.start + blockB.end - blockB.start);
+                                    blockA.start += blockB.end - blockB.start;
+                                    blockA.end += blockB.end - blockB.start;
                                     blockB.end = blockB.start;
                                 } else {
                                     BlockSwap(data, blockA.start, blockB.start, block_size);
@@ -794,9 +783,9 @@ class WikiSorter<D> {
                             }
                         }
 
-                        if (lastA.length() <= 512)
+                        if (lastA.end - lastA.start <= 512)
                             MergeExternal(data, comparator, lastA, new Range(lastA.end, BEnd), cache);
-                        else if (buffer2.length() > 0)
+                        else if (buffer2.end - buffer2.start > 0)
                             MergeInternal(data, comparator, lastA, new Range(lastA.end, BEnd), buffer2);
                         else
                             MergeInPlace(data, comparator, lastA, new Range(lastA.end, BEnd), cache);
@@ -809,17 +798,17 @@ class WikiSorter<D> {
                     int unique = pull[pull_index].third() * 2;
                     if (pull[pull_index].fourth() > pull[pull_index].fifth()) {
                         Range buffer = new Range(pull[pull_index].first(), pull[pull_index].first() + pull[pull_index].third());
-                        while (buffer.length() > 0) {
+                        while (buffer.end - buffer.start > 0) {
                             index = FindFirstForward(data, comparator, data.get(buffer.start), new Range(buffer.end, pull[pull_index].second()), unique);
                             int amount = index - buffer.end;
-                            Rotate(data, buffer.length(), new Range(buffer.start, index), cache);
+                            Rotate(data, buffer.end - buffer.start, new Range(buffer.start, index), cache);
                             buffer.start += (amount + 1);
                             buffer.end += amount;
                             unique -= 2;
                         }
                     } else if (pull[pull_index].fourth() < pull[pull_index].fifth()) {
                         Range buffer = new Range(pull[pull_index].second() - pull[pull_index].third(), pull[pull_index].second());
-                        while (buffer.length() > 0) {
+                        while (buffer.end - buffer.start > 0) {
                             index = FindLastBackward(data, comparator, data.get(buffer.end - 1), new Range(pull[pull_index].first(), buffer.start), unique);
                             int amount = buffer.start - index;
                             Rotate(data, amount, new Range(index, buffer.end), cache);
