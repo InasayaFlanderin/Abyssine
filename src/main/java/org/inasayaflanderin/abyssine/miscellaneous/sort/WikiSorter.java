@@ -150,32 +150,6 @@ class WikiSorter<D> {
         }
     }
 
-    void MergeInto(D[] from, Comparator<D> comparator, int AStart, int AEnd, int BStart, int BEnd, List<D> into, int atIndex) {
-        int AIndex = AStart;
-        int BIndex = BStart;
-        int insertIndex = atIndex;
-
-        while (true) {
-            if (comparator.compare(from[BIndex], from[AIndex]) >= 0) {
-                into.set(insertIndex, from[AIndex]);
-                AIndex++;
-                insertIndex++;
-                if (AIndex == AEnd) {
-                    copy(from, BIndex, into, insertIndex, BEnd - BIndex);
-                    break;
-                }
-            } else {
-                into.set(insertIndex, from[BIndex]);
-                BIndex++;
-                insertIndex++;
-                if (BIndex == BEnd) {
-                    copy(from, AIndex, into, insertIndex, AEnd - AIndex);
-                    break;
-                }
-            }
-        }
-    }
-
     void MergeExternal(List<D> data, Comparator<D> comparator, int AStart, int AEnd, int BStart, int BEnd, D[] cache) {
         int AIndex = 0;
         int BIndex = BStart;
@@ -463,7 +437,31 @@ class WikiSorter<D> {
                             copy(cache, A3Start, data, A1Start + A2End - A2Start, A3End - A3Start);
                             copy(cache, B3Start, data, A1Start, B3End - B3Start);
                         } else if (comparator.compare(cache[B3Start], cache[A3End - 1]) < 0) {
-                            MergeInto(cache, comparator, A3Start, A3End, B3Start, B3End, data, A1Start);
+                            var AIndex = A3Start;
+                            var BIndex = B3Start;
+                            var insertIndex = A1Start;
+
+                            while(true) {
+                                if(comparator.compare(cache[BIndex], cache[AIndex]) >= 0) {
+                                    data.set(insertIndex, cache[AIndex]);
+                                    AIndex++;
+                                    insertIndex++;
+
+                                    if(AIndex == A3End) {
+                                        copy(cache, BIndex, data, insertIndex, B3End - BIndex);
+                                        break;
+                                    }
+                                } else {
+                                    data.set(insertIndex, cache[BIndex]);
+                                    BIndex++;
+                                    insertIndex++;
+
+                                    if(BIndex == B3End) {
+                                        copy(cache, AIndex, data, insertIndex, A3End - AIndex);
+                                        break;
+                                    }
+                                }
+                            }
                         } else {
                             copy(cache, A3Start, data, A1Start, A3End - A3Start);
                             copy(cache, B3Start, data, A1End, B3End - B3Start);
