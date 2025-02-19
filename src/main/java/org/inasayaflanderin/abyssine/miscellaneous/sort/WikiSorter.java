@@ -85,8 +85,8 @@ class WikiSorter<D> {
         return BinaryLast(data, comparator, value, index, index + skip);
     }
 
-    void BlockSwap(List<D> data, int start1, int start2, int block_size) {
-        for (int index = 0; index < block_size; index++) swap(data, start1 + index, start2 + index);
+    void BlockSwap(List<D> data, int start1, int start2, int blockSize) {
+        for (int index = 0; index < blockSize; index++) swap(data, start1 + index, start2 + index);
     }
 
     void Rotate(List<D> data, int amount, int rangeStart, int rangeEnd, D[] cache) {
@@ -98,84 +98,78 @@ class WikiSorter<D> {
         else
             split = rangeEnd + amount;
 
-        var range1Start = rangeStart;
         var range1End = split;
         var range2Start = split;
-        var range2End = rangeEnd;
 
         if (cache != null) {
-            if (range1End - range1Start <= range2End - range2Start) {
-                if (range1End - range1Start <= 512) {
-                    copy(data, range1Start, cache, 0, range1End - range1Start);
-                    copy(data, range2Start, data, range1Start, range2End - range2Start);
-                    copy(cache, 0, data, range1Start + range2End - range2Start, range1End - range1Start);
+            if (range1End - rangeStart <= rangeEnd - range2Start) {
+                if (range1End - rangeStart <= 512) {
+                    copy(data, rangeStart, cache, 0, range1End - rangeStart);
+                    copy(data, range2Start, data, rangeStart, rangeEnd - range2Start);
+                    copy(cache, 0, data, rangeStart + rangeEnd - range2Start, range1End - rangeStart);
                     return;
                 }
             } else {
-                if (range2End - range2Start <= 512) {
-                    copy(data, range2Start, cache, 0, range2End - range2Start);
-                    copy(data, range1Start, data, range2End - range1End + range1Start, range1End - range1Start);
-                    copy(cache, 0, data, range1Start, range2End - range2Start);
+                if (rangeEnd - range2Start <= 512) {
+                    copy(data, range2Start, cache, 0, rangeEnd - range2Start);
+                    copy(data, rangeStart, data, rangeEnd - range1End + rangeStart, range1End - rangeStart);
+                    copy(cache, 0, data, rangeStart, rangeEnd - range2Start);
                     return;
                 }
             }
         }
 
-        flip(data, range1Start, range1End);
-        flip(data, range2Start, range2End);
+        flip(data, rangeStart, range1End);
+        flip(data, range2Start, rangeEnd);
         flip(data, rangeStart, rangeEnd);
     }
 
-    void MergeInto(List<D> from, Comparator<D> comparator, int AStart, int AEnd, int BStart, int BEnd, D[] into, int at_index) {
-        int A_index = AStart;
-        int B_index = BStart;
-        int insert_index = at_index;
-        int A_last = AEnd;
-        int B_last = BEnd;
+    void MergeInto(List<D> from, Comparator<D> comparator, int AStart, int AEnd, int BStart, int BEnd, D[] into, int atIndex) {
+        int AIndex = AStart;
+        int BIndex = BStart;
+        int insertIndex = atIndex;
 
         while (true) {
-            if (comparator.compare(from.get(B_index), from.get(A_index)) >= 0) {
-                into[insert_index] = from.get(A_index);
-                A_index++;
-                insert_index++;
-                if (A_index == A_last) {
-                    copy(from, B_index, into, insert_index, B_last - B_index);
+            if (comparator.compare(from.get(BIndex), from.get(AIndex)) >= 0) {
+                into[insertIndex] = from.get(AIndex);
+                AIndex++;
+                insertIndex++;
+                if (AIndex == AEnd) {
+                    copy(from, BIndex, into, insertIndex, BEnd - BIndex);
                     break;
                 }
             } else {
-                into[insert_index] = from.get(B_index);
-                B_index++;
-                insert_index++;
-                if (B_index == B_last) {
-                    copy(from, A_index, into, insert_index, A_last - A_index);
+                into[insertIndex] = from.get(BIndex);
+                BIndex++;
+                insertIndex++;
+                if (BIndex == BEnd) {
+                    copy(from, AIndex, into, insertIndex, AEnd - AIndex);
                     break;
                 }
             }
         }
     }
 
-    void MergeInto(D[] from, Comparator<D> comparator, int AStart, int AEnd, int BStart, int BEnd, List<D> into, int at_index) {
-        int A_index = AStart;
-        int B_index = BStart;
-        int insert_index = at_index;
-        int A_last = AEnd;
-        int B_last = BEnd;
+    void MergeInto(D[] from, Comparator<D> comparator, int AStart, int AEnd, int BStart, int BEnd, List<D> into, int atIndex) {
+        int AIndex = AStart;
+        int BIndex = BStart;
+        int insertIndex = atIndex;
 
         while (true) {
-            if (comparator.compare(from[B_index], from[A_index]) >= 0) {
-                into.set(insert_index, from[A_index]);
-                A_index++;
-                insert_index++;
-                if (A_index == A_last) {
-                    copy(from, B_index, into, insert_index, B_last - B_index);
+            if (comparator.compare(from[BIndex], from[AIndex]) >= 0) {
+                into.set(insertIndex, from[AIndex]);
+                AIndex++;
+                insertIndex++;
+                if (AIndex == AEnd) {
+                    copy(from, BIndex, into, insertIndex, BEnd - BIndex);
                     break;
                 }
             } else {
-                into.set(insert_index, from[B_index]);
-                B_index++;
-                insert_index++;
-                if (B_index == B_last) {
-                    copy(from, A_index, into, insert_index, A_last - A_index);
+                into.set(insertIndex, from[BIndex]);
+                BIndex++;
+                insertIndex++;
+                if (BIndex == BEnd) {
+                    copy(from, AIndex, into, insertIndex, AEnd - AIndex);
                     break;
                 }
             }
@@ -183,60 +177,54 @@ class WikiSorter<D> {
     }
 
     void MergeExternal(List<D> data, Comparator<D> comparator, int AStart, int AEnd, int BStart, int BEnd, D[] cache) {
-        int A_index = 0;
-        int B_index = BStart;
-        int insert_index = AStart;
-        int A_last = AEnd - AStart;
-        int B_last = BEnd;
+        int AIndex = 0;
+        int BIndex = BStart;
+        int insertIndex = AStart;
+        int ALast = AEnd - AStart;
 
         if (BEnd - BStart > 0 && AEnd - AStart > 0) {
             while (true) {
-                if (comparator.compare(data.get(B_index), cache[A_index]) >= 0) {
-                    data.set(insert_index, cache[A_index]);
-                    A_index++;
-                    insert_index++;
-                    if (A_index == A_last) break;
+                if (comparator.compare(data.get(BIndex), cache[AIndex]) >= 0) {
+                    data.set(insertIndex, cache[AIndex]);
+                    AIndex++;
+                    insertIndex++;
+                    if (AIndex == ALast) break;
                 } else {
-                    data.set(insert_index, data.get(B_index));
-                    B_index++;
-                    insert_index++;
-                    if (B_index == B_last) break;
+                    data.set(insertIndex, data.get(BIndex));
+                    BIndex++;
+                    insertIndex++;
+                    if (BIndex == BEnd) break;
                 }
             }
         }
 
-        copy(cache, A_index, data, insert_index, A_last - A_index);
+        copy(cache, AIndex, data, insertIndex, ALast - AIndex);
     }
 
-    void MergeInternal(List<D> data, Comparator<D> comparator, int AStart, int AEnd, int BStart, int BEnd, int bufferStart, int bufferEnd) {
-        int A_count = 0, B_count = 0, insert = 0;
+    void MergeInternal(List<D> data, Comparator<D> comparator, int AStart, int AEnd, int BStart, int BEnd, int bufferStart) {
+        int ACount = 0, BCount = 0, insert = 0;
 
         if (BEnd - BStart > 0 && AEnd - AStart > 0) {
             while (true) {
-                if (comparator.compare(data.get(BStart + B_count), data.get(bufferStart + A_count)) >= 0) {
-                    swap(data, AStart + insert, bufferStart + A_count);
-                    A_count++;
+                if (comparator.compare(data.get(BStart + BCount), data.get(bufferStart + ACount)) >= 0) {
+                    swap(data, AStart + insert, bufferStart + ACount);
+                    ACount++;
                     insert++;
-                    if (A_count >= AEnd - AStart) break;
+                    if (ACount >= AEnd - AStart) break;
                 } else {
-                    swap(data, AStart + insert, BStart + B_count);
-                    B_count++;
+                    swap(data, AStart + insert, BStart + BCount);
+                    BCount++;
                     insert++;
-                    if (B_count >= BEnd - BStart) break;
+                    if (BCount >= BEnd - BStart) break;
                 }
             }
         }
 
-        BlockSwap(data, bufferStart + A_count, AStart + insert, AEnd - AStart - A_count);
+        BlockSwap(data, bufferStart + ACount, AStart + insert, AEnd - AStart - ACount);
     }
 
     void MergeInPlace(List<D> data, Comparator<D> comparator, int AStart, int AEnd, int BStart, int BEnd, D[] cache) {
         if (AEnd - AStart == 0 || BEnd - BStart == 0) return;
-
-        AStart = AStart;
-        AEnd = AEnd;
-        BStart = BStart;
-        BEnd = BEnd;
 
         while (true) {
             int mid = BinaryFirst(data, comparator, data.get(AStart), BStart, BEnd);
@@ -255,7 +243,7 @@ class WikiSorter<D> {
         }
     }
 
-    void NetSwap(List<D> data, Comparator<D> comparator, int[] order, int rangeStart, int rangeEnd, int x, int y) {
+    void NetSwap(List<D> data, Comparator<D> comparator, int[] order, int rangeStart, int x, int y) {
         int compare = comparator.compare(data.get(rangeStart + x), data.get(rangeStart + y));
         if (compare > 0 || (order[x] > order[y] && compare == 0)) {
             swap(data, rangeStart + x, rangeStart + y);
@@ -303,75 +291,75 @@ class WikiSorter<D> {
             var rangeEnd = decimal;
 
             if (rangeEnd - rangeStart == 8) {
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 0, 1);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 2, 3);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 4, 5);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 6, 7);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 0, 2);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 1, 3);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 4, 6);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 5, 7);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 1, 2);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 5, 6);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 0, 4);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 3, 7);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 1, 5);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 2, 6);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 1, 4);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 3, 6);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 2, 4);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 3, 5);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 3, 4);
+                NetSwap(data, comparator, order, rangeStart, 0, 1);
+                NetSwap(data, comparator, order, rangeStart, 2, 3);
+                NetSwap(data, comparator, order, rangeStart, 4, 5);
+                NetSwap(data, comparator, order, rangeStart, 6, 7);
+                NetSwap(data, comparator, order, rangeStart, 0, 2);
+                NetSwap(data, comparator, order, rangeStart, 1, 3);
+                NetSwap(data, comparator, order, rangeStart, 4, 6);
+                NetSwap(data, comparator, order, rangeStart, 5, 7);
+                NetSwap(data, comparator, order, rangeStart, 1, 2);
+                NetSwap(data, comparator, order, rangeStart, 5, 6);
+                NetSwap(data, comparator, order, rangeStart, 0, 4);
+                NetSwap(data, comparator, order, rangeStart, 3, 7);
+                NetSwap(data, comparator, order, rangeStart, 1, 5);
+                NetSwap(data, comparator, order, rangeStart, 2, 6);
+                NetSwap(data, comparator, order, rangeStart, 1, 4);
+                NetSwap(data, comparator, order, rangeStart, 3, 6);
+                NetSwap(data, comparator, order, rangeStart, 2, 4);
+                NetSwap(data, comparator, order, rangeStart, 3, 5);
+                NetSwap(data, comparator, order, rangeStart, 3, 4);
 
             } else if (rangeEnd - rangeStart == 7) {
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 1, 2);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 3, 4);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 5, 6);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 0, 2);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 3, 5);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 4, 6);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 0, 1);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 4, 5);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 2, 6);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 0, 4);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 1, 5);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 0, 3);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 2, 5);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 1, 3);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 2, 4);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 2, 3);
+                NetSwap(data, comparator, order, rangeStart, 1, 2);
+                NetSwap(data, comparator, order, rangeStart, 3, 4);
+                NetSwap(data, comparator, order, rangeStart, 5, 6);
+                NetSwap(data, comparator, order, rangeStart, 0, 2);
+                NetSwap(data, comparator, order, rangeStart, 3, 5);
+                NetSwap(data, comparator, order, rangeStart, 4, 6);
+                NetSwap(data, comparator, order, rangeStart, 0, 1);
+                NetSwap(data, comparator, order, rangeStart, 4, 5);
+                NetSwap(data, comparator, order, rangeStart, 2, 6);
+                NetSwap(data, comparator, order, rangeStart, 0, 4);
+                NetSwap(data, comparator, order, rangeStart, 1, 5);
+                NetSwap(data, comparator, order, rangeStart, 0, 3);
+                NetSwap(data, comparator, order, rangeStart, 2, 5);
+                NetSwap(data, comparator, order, rangeStart, 1, 3);
+                NetSwap(data, comparator, order, rangeStart, 2, 4);
+                NetSwap(data, comparator, order, rangeStart, 2, 3);
 
             } else if (rangeEnd - rangeStart == 6) {
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 1, 2);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 4, 5);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 0, 2);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 3, 5);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 0, 1);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 3, 4);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 2, 5);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 0, 3);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 1, 4);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 2, 4);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 1, 3);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 2, 3);
+                NetSwap(data, comparator, order, rangeStart, 1, 2);
+                NetSwap(data, comparator, order, rangeStart, 4, 5);
+                NetSwap(data, comparator, order, rangeStart, 0, 2);
+                NetSwap(data, comparator, order, rangeStart, 3, 5);
+                NetSwap(data, comparator, order, rangeStart, 0, 1);
+                NetSwap(data, comparator, order, rangeStart, 3, 4);
+                NetSwap(data, comparator, order, rangeStart, 2, 5);
+                NetSwap(data, comparator, order, rangeStart, 0, 3);
+                NetSwap(data, comparator, order, rangeStart, 1, 4);
+                NetSwap(data, comparator, order, rangeStart, 2, 4);
+                NetSwap(data, comparator, order, rangeStart, 1, 3);
+                NetSwap(data, comparator, order, rangeStart, 2, 3);
 
             } else if (rangeEnd - rangeStart == 5) {
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 0, 1);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 3, 4);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 2, 4);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 2, 3);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 1, 4);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 0, 3);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 0, 2);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 1, 3);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 1, 2);
+                NetSwap(data, comparator, order, rangeStart, 0, 1);
+                NetSwap(data, comparator, order, rangeStart, 3, 4);
+                NetSwap(data, comparator, order, rangeStart, 2, 4);
+                NetSwap(data, comparator, order, rangeStart, 2, 3);
+                NetSwap(data, comparator, order, rangeStart, 1, 4);
+                NetSwap(data, comparator, order, rangeStart, 0, 3);
+                NetSwap(data, comparator, order, rangeStart, 0, 2);
+                NetSwap(data, comparator, order, rangeStart, 1, 3);
+                NetSwap(data, comparator, order, rangeStart, 1, 2);
 
             } else if (rangeEnd - rangeStart == 4) {
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 0, 1);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 2, 3);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 0, 2);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 1, 3);
-                NetSwap(data, comparator, order, rangeStart, rangeEnd, 1, 2);
+                NetSwap(data, comparator, order, rangeStart, 0, 1);
+                NetSwap(data, comparator, order, rangeStart, 2, 3);
+                NetSwap(data, comparator, order, rangeStart, 0, 2);
+                NetSwap(data, comparator, order, rangeStart, 1, 3);
+                NetSwap(data, comparator, order, rangeStart, 1, 2);
             }
         }
         if (size < 8) return;
@@ -399,8 +387,8 @@ class WikiSorter<D> {
         do {
 
             if (decimalStep < 512) {
+                numerator = decimal = 0;
                 if ((decimalStep + 1) * 4 <= 512 && decimalStep * 4 <= size) {
-                    numerator = decimal = 0;
                     while (decimal < size) {
                         var A1Start = decimal;
                         decimal += decimalStep;
@@ -489,7 +477,6 @@ class WikiSorter<D> {
                         decimalStep++;
                     }
                 } else {
-                    numerator = decimal = 0;
                     while (decimal < size) {
                         AStart = decimal;
                         decimal += decimalStep;
@@ -520,10 +507,10 @@ class WikiSorter<D> {
                 }
             } else {
 
-                int block_size = (int) Math.sqrt(decimalStep);
-                int buffer_size = decimalStep / block_size + 1;
+                int blockSize = (int) Math.sqrt(decimalStep);
+                int bufferSize = decimalStep / blockSize + 1;
 
-                int index, last, count, pull_index = 0;
+                int index, last, count, pullIndex = 0;
                 buffer1Start = 0;
                 buffer1End = 0;
                 buffer2Start = 0;
@@ -532,14 +519,14 @@ class WikiSorter<D> {
                 pull[0] = pull[0].withFirst(0).withSecond(0).withThird(0).withFourth(0).withFifth(0);
                 pull[1] = pull[1].withFirst(0).withSecond(0).withThird(0).withFourth(0).withFifth(0);
 
-                int find = buffer_size + buffer_size;
-                boolean find_separately = false;
+                int find = bufferSize + bufferSize;
+                boolean findSeparate = false;
 
-                if (block_size <= 512) {
-                    find = buffer_size;
+                if (blockSize <= 512) {
+                    find = bufferSize;
                 } else if (find > decimalStep) {
-                    find = buffer_size;
-                    find_separately = true;
+                    find = bufferSize;
+                    findSeparate = true;
                 }
 
                 numerator = decimal = 0;
@@ -569,37 +556,37 @@ class WikiSorter<D> {
                     }
                     index = last;
 
-                    if (count >= buffer_size) {
-                        pull[pull_index] = pull[pull_index].withFirst(AStart).withSecond(BEnd).withThird(count).withFourth(index).withFifth(AStart);
-                        pull_index = 1;
+                    if (count >= bufferSize) {
+                        pull[pullIndex] = pull[pullIndex].withFirst(AStart).withSecond(BEnd).withThird(count).withFourth(index).withFifth(AStart);
+                        pullIndex = 1;
 
-                        if (count == buffer_size + buffer_size) {
+                        if (count == bufferSize + bufferSize) {
                             buffer1Start = AStart;
-                            buffer1End = AStart + buffer_size;
-                            buffer2Start = AStart + buffer_size;
+                            buffer1End = AStart + bufferSize;
+                            buffer2Start = AStart + bufferSize;
                             buffer2End = AStart + count;
                             break;
-                        } else if (find == buffer_size + buffer_size) {
+                        } else if (find == bufferSize + bufferSize) {
                             buffer1Start = AStart;
                             buffer1End = AStart + count;
-                            find = buffer_size;
-                        } else if (block_size <= 512) {
+                            find = bufferSize;
+                        } else if (blockSize <= 512) {
                             buffer1Start = AStart;
                             buffer1End = AStart + count;
                             break;
-                        } else if (find_separately) {
+                        } else if (findSeparate) {
                             buffer1Start = AStart;
                             buffer1End = AStart + count;
-                            find_separately = false;
+                            findSeparate = false;
                         } else {
                             buffer2Start = AStart;
                             buffer2End = AStart + count;
                             break;
                         }
-                    } else if (pull_index == 0 && count > buffer1End - buffer1Start) {
+                    } else if (pullIndex == 0 && count > buffer1End - buffer1Start) {
                         buffer1Start = AStart;
                         buffer1End = AStart + count;
-                        pull[pull_index] = pull[pull_index].withFirst(AStart).withSecond(BEnd).withThird(count).withFourth(index).withFifth(AStart);
+                        pull[pullIndex] = pull[pullIndex].withFirst(AStart).withSecond(BEnd).withThird(count).withFourth(index).withFifth(AStart);
                     }
 
                     for (last = BEnd - 1, count = 1; count < find; last = index - 1, count++) {
@@ -608,28 +595,28 @@ class WikiSorter<D> {
                     }
                     index = last;
 
-                    if (count >= buffer_size) {
-                        pull[pull_index] = pull[pull_index].withFirst(AStart).withSecond(BEnd).withThird(count).withFourth(index).withFifth(BEnd);
-                        pull_index = 1;
+                    if (count >= bufferSize) {
+                        pull[pullIndex] = pull[pullIndex].withFirst(AStart).withSecond(BEnd).withThird(count).withFourth(index).withFifth(BEnd);
+                        pullIndex = 1;
 
-                        if (count == buffer_size + buffer_size) {
+                        if (count == bufferSize + bufferSize) {
                             buffer1Start = BEnd - count;
-                            buffer1End = BEnd - buffer_size;
-                            buffer2Start = BEnd - buffer_size;
+                            buffer1End = BEnd - bufferSize;
+                            buffer2Start = BEnd - bufferSize;
                             buffer2End = BEnd;
                             break;
-                        } else if (find == buffer_size + buffer_size) {
+                        } else if (find == bufferSize + bufferSize) {
                             buffer1Start = BEnd - count;
                             buffer1End = BEnd;
-                            find = buffer_size;
-                        } else if (block_size <= 512) {
+                            find = bufferSize;
+                        } else if (blockSize <= 512) {
                             buffer1Start = BEnd - count;
                             buffer1End = BEnd;
                             break;
-                        } else if (find_separately) {
+                        } else if (findSeparate) {
                             buffer1Start = BEnd - count;
                             buffer1End = BEnd;
-                            find_separately = false;
+                            findSeparate = false;
                         } else {
                             if (pull[0].first() == AStart) pull[0] = pull[0].withSecond((pull[0].second() - pull[1].third()));
 
@@ -637,40 +624,40 @@ class WikiSorter<D> {
                             buffer2End = BEnd;
                             break;
                         }
-                    } else if (pull_index == 0 && count > buffer1End - buffer1Start) {
+                    } else if (pullIndex == 0 && count > buffer1End - buffer1Start) {
                         buffer1Start = BEnd - count;
                         buffer1End = BEnd;
-                        pull[pull_index] = pull[pull_index].withFirst(AStart).withSecond(BEnd).withThird(count).withFourth(index).withFifth(BEnd);
+                        pull[pullIndex] = pull[pullIndex].withFirst(AStart).withSecond(BEnd).withThird(count).withFourth(index).withFifth(BEnd);
                     }
                 }
 
-                for (pull_index = 0; pull_index < 2; pull_index++) {
-                    int length = pull[pull_index].third();
+                for (pullIndex = 0; pullIndex < 2; pullIndex++) {
+                    int length = pull[pullIndex].third();
 
-                    if (pull[pull_index].fifth() < pull[pull_index].fourth()) {
-                        index = pull[pull_index].fourth();
+                    if (pull[pullIndex].fifth() < pull[pullIndex].fourth()) {
+                        index = pull[pullIndex].fourth();
 
                         for (count = 1; count < length; count++) {
-                            index = FindFirstBackward(data, comparator, data.get(index - 1), pull[pull_index].fifth(), pull[pull_index].fourth() - (count - 1), length - count);
+                            index = FindFirstBackward(data, comparator, data.get(index - 1), pull[pullIndex].fifth(), pull[pullIndex].fourth() - (count - 1), length - count);
                             var rangeStart = index + 1;
-                            var rangeEnd = pull[pull_index].fourth() + 1;
+                            var rangeEnd = pull[pullIndex].fourth() + 1;
                             Rotate(data, rangeEnd - rangeStart - count, rangeStart, rangeEnd, cache);
-                            pull[pull_index] = pull[pull_index].withFourth(index + count);
+                            pull[pullIndex] = pull[pullIndex].withFourth(index + count);
                         }
-                    } else if (pull[pull_index].fifth() > pull[pull_index].fourth()) {
-                        index = pull[pull_index].fourth() + 1;
+                    } else if (pull[pullIndex].fifth() > pull[pullIndex].fourth()) {
+                        index = pull[pullIndex].fourth() + 1;
                         for (count = 1; count < length; count++) {
-                            index = FindLastForward(data, comparator, data.get(index), index, pull[pull_index].fifth(), length - count);
-                            var rangeStart = pull[pull_index].fourth();
+                            index = FindLastForward(data, comparator, data.get(index), index, pull[pullIndex].fifth(), length - count);
+                            var rangeStart = pull[pullIndex].fourth();
                             var rangeEnd = index - 1;
                             Rotate(data, count, rangeStart, rangeEnd, cache);
-                            pull[pull_index] = pull[pull_index].withFourth(index - 1 - count);
+                            pull[pullIndex] = pull[pullIndex].withFourth(index - 1 - count);
                         }
                     }
                 }
 
-                buffer_size = buffer1End - buffer1Start;
-                block_size = decimalStep / buffer_size + 1;
+                bufferSize = buffer1End - buffer1Start;
+                blockSize = decimalStep / bufferSize + 1;
 
                 numerator = decimal = 0;
                 while (decimal < size) {
@@ -720,9 +707,9 @@ class WikiSorter<D> {
                         blockAStart = AStart;
                         blockAEnd = AEnd;
                         firstAStart = AStart;
-                        firstAEnd = AStart + (blockAEnd - blockAStart) % block_size;
+                        firstAEnd = AStart + (blockAEnd - blockAStart) % blockSize;
                         int indexA = buffer1Start;
-                        for (index = firstAEnd; index < blockAEnd; index += block_size) {
+                        for (index = firstAEnd; index < blockAEnd; index += blockSize) {
                             swap(data, indexA, index);
                             indexA++;
                         }
@@ -732,7 +719,7 @@ class WikiSorter<D> {
                         lastBStart = 0;
                         lastBEnd = 0;
                         blockBStart = BStart;
-                        blockBEnd = BStart + Math.min(block_size, BEnd - BStart);
+                        blockBEnd = BStart + Math.min(blockSize, BEnd - BStart);
                         blockAStart += firstAEnd - firstAStart;
                         indexA = buffer1Start;
 
@@ -744,46 +731,46 @@ class WikiSorter<D> {
                         if (blockAEnd - blockAStart > 0) {
                             while (true) {
                                 if ((lastBEnd - lastBStart > 0 && comparator.compare(data.get(lastBEnd - 1), data.get(indexA)) >= 0) || blockBEnd - blockBStart == 0) {
-                                    int B_split = BinaryFirst(data, comparator, data.get(indexA), lastBStart, lastBEnd);
-                                    int B_remaining = lastBEnd - B_split;
+                                    int BSplit = BinaryFirst(data, comparator, data.get(indexA), lastBStart, lastBEnd);
+                                    int BRemaining = lastBEnd - BSplit;
 
                                     int minA = blockAStart;
-                                    for (int findA = minA + block_size; findA < blockAEnd; findA += block_size)
+                                    for (int findA = minA + blockSize; findA < blockAEnd; findA += blockSize)
                                         if (comparator.compare(data.get(findA), data.get(minA)) < 0)
                                             minA = findA;
-                                    BlockSwap(data, blockAStart, minA, block_size);
+                                    BlockSwap(data, blockAStart, minA, blockSize);
 
                                     swap(data, blockAStart, indexA);
                                     indexA++;
 
                                     if (lastAEnd - lastAStart <= 512)
-                                        MergeExternal(data, comparator, lastAStart, lastAEnd, lastAEnd, B_split, cache);
+                                        MergeExternal(data, comparator, lastAStart, lastAEnd, lastAEnd, BSplit, cache);
                                     else if (buffer2End - buffer2Start > 0)
-                                        MergeInternal(data, comparator, lastAStart, lastAEnd, lastAEnd, B_split, buffer2Start, buffer2End);
+                                        MergeInternal(data, comparator, lastAStart, lastAEnd, lastAEnd, BSplit, buffer2Start);
                                     else
-                                        MergeInPlace(data, comparator, lastAStart, lastAEnd, lastAEnd, B_split, cache);
+                                        MergeInPlace(data, comparator, lastAStart, lastAEnd, lastAEnd, BSplit, cache);
 
-                                    if (buffer2End - buffer2Start > 0 || block_size <= 512) {
-                                        if (block_size <= 512)
-                                            copy(data, blockAStart, cache, 0, block_size);
+                                    if (buffer2End - buffer2Start > 0 || blockSize <= 512) {
+                                        if (blockSize <= 512)
+                                            copy(data, blockAStart, cache, 0, blockSize);
                                         else
-                                            BlockSwap(data, blockAStart, buffer2Start, block_size);
+                                            BlockSwap(data, blockAStart, buffer2Start, blockSize);
 
-                                        BlockSwap(data, B_split, blockAStart + block_size - B_remaining, B_remaining);
+                                        BlockSwap(data, BSplit, blockAStart + blockSize - BRemaining, BRemaining);
                                     } else {
-                                        Rotate(data, blockAStart - B_split, B_split, blockAStart + block_size, cache);
+                                        Rotate(data, blockAStart - BSplit, BSplit, blockAStart + blockSize, cache);
                                     }
 
-                                    lastAStart = blockAStart - B_remaining;
-                                    lastAEnd = blockAStart - B_remaining + block_size;
+                                    lastAStart = blockAStart - BRemaining;
+                                    lastAEnd = blockAStart - BRemaining + blockSize;
                                     lastBStart = lastAEnd;
-                                    lastBEnd = lastAEnd + B_remaining;
+                                    lastBEnd = lastAEnd + BRemaining;
 
-                                    blockAStart += block_size;
+                                    blockAStart += blockSize;
                                     if (blockAEnd - blockAStart == 0)
                                         break;
 
-                                } else if (blockBEnd - blockBStart < block_size) {
+                                } else if (blockBEnd - blockBStart < blockSize) {
                                     Rotate(data, -blockBEnd + blockBStart, blockAStart, blockBEnd, null);
 
                                     lastBStart = blockAStart;
@@ -792,14 +779,14 @@ class WikiSorter<D> {
                                     blockAEnd += blockBEnd - blockBStart;
                                     blockBEnd = blockBStart;
                                 } else {
-                                    BlockSwap(data, blockAStart, blockBStart, block_size);
+                                    BlockSwap(data, blockAStart, blockBStart, blockSize);
                                     lastBStart = blockAStart;
-                                    lastBEnd = blockAStart + block_size;
+                                    lastBEnd = blockAStart + blockSize;
 
-                                    blockAStart += block_size;
-                                    blockAEnd += block_size;
-                                    blockBStart += block_size;
-                                    blockBEnd += block_size;
+                                    blockAStart += blockSize;
+                                    blockAEnd += blockSize;
+                                    blockBStart += blockSize;
+                                    blockBEnd += blockSize;
 
                                     if (blockBEnd > BEnd)
                                         blockBEnd = BEnd;
@@ -810,7 +797,7 @@ class WikiSorter<D> {
                         if (lastAEnd - lastAStart <= 512)
                             MergeExternal(data, comparator, lastAStart, lastAEnd, lastAEnd, BEnd, cache);
                         else if (buffer2End - buffer2Start > 0)
-                            MergeInternal(data, comparator, lastAStart, lastAEnd, lastAEnd, BEnd, buffer2Start, buffer2End);
+                            MergeInternal(data, comparator, lastAStart, lastAEnd, lastAEnd, BEnd, buffer2Start);
                         else
                             MergeInPlace(data, comparator, lastAStart, lastAEnd, lastAEnd, BEnd, cache);
                     }
@@ -818,24 +805,24 @@ class WikiSorter<D> {
 
                 Sort.insertion(data, comparator, buffer2Start, buffer2End);
 
-                for (pull_index = 0; pull_index < 2; pull_index++) {
-                    int unique = pull[pull_index].third() * 2;
-                    if (pull[pull_index].fourth() > pull[pull_index].fifth()) {
-                        var bufferStart = pull[pull_index].first();
-                        var bufferEnd = pull[pull_index].first() + pull[pull_index].third();
+                for (pullIndex = 0; pullIndex < 2; pullIndex++) {
+                    int unique = pull[pullIndex].third() * 2;
+                    if (pull[pullIndex].fourth() > pull[pullIndex].fifth()) {
+                        var bufferStart = pull[pullIndex].first();
+                        var bufferEnd = pull[pullIndex].first() + pull[pullIndex].third();
                         while (bufferEnd - bufferStart > 0) {
-                            index = FindFirstForward(data, comparator, data.get(bufferStart), bufferEnd, pull[pull_index].second(), unique);
+                            index = FindFirstForward(data, comparator, data.get(bufferStart), bufferEnd, pull[pullIndex].second(), unique);
                             int amount = index - bufferEnd;
                             Rotate(data, bufferEnd - bufferStart, bufferStart, index, cache);
                             bufferStart += (amount + 1);
                             bufferEnd += amount;
                             unique -= 2;
                         }
-                    } else if (pull[pull_index].fourth() < pull[pull_index].fifth()) {
-                        var bufferStart = pull[pull_index].second() - pull[pull_index].third();
-                        var bufferEnd = pull[pull_index].second();
+                    } else if (pull[pullIndex].fourth() < pull[pullIndex].fifth()) {
+                        var bufferStart = pull[pullIndex].second() - pull[pullIndex].third();
+                        var bufferEnd = pull[pullIndex].second();
                         while (bufferEnd - bufferStart > 0) {
-                            index = FindLastBackward(data, comparator, data.get(bufferEnd - 1), pull[pull_index].first(), bufferStart, unique);
+                            index = FindLastBackward(data, comparator, data.get(bufferEnd - 1), pull[pullIndex].first(), bufferStart, unique);
                             int amount = bufferStart - index;
                             Rotate(data, amount, index, bufferEnd, cache);
                             bufferStart -= amount;
