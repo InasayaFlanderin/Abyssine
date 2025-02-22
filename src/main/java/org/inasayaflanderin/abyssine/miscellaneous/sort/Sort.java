@@ -646,8 +646,9 @@ public class Sort {
         var decimalStep = data.size() / denominator;
         var numerator = 0;
         var decimal = 0;
+        List<Callable<Void>> tasks = new ArrayList<>();
 
-        while (decimal < data.size()) {
+        while(decimal < data.size()) {
             int[] order = { 0, 1, 2, 3, 4, 5, 6, 7 };
             var rangeStart = decimal;
             decimal += decimalStep;
@@ -660,83 +661,95 @@ public class Sort {
 
             var rangeEnd = decimal;
 
-            switch(rangeEnd - rangeStart) {
-                case 8 -> {
-                    netSwap(data, comparator, order, rangeStart, 0, 1);
-                    netSwap(data, comparator, order, rangeStart, 2, 3);
-                    netSwap(data, comparator, order, rangeStart, 4, 5);
-                    netSwap(data, comparator, order, rangeStart, 6, 7);
-                    netSwap(data, comparator, order, rangeStart, 0, 2);
-                    netSwap(data, comparator, order, rangeStart, 1, 3);
-                    netSwap(data, comparator, order, rangeStart, 4, 6);
-                    netSwap(data, comparator, order, rangeStart, 5, 7);
-                    netSwap(data, comparator, order, rangeStart, 1, 2);
-                    netSwap(data, comparator, order, rangeStart, 5, 6);
-                    netSwap(data, comparator, order, rangeStart, 0, 4);
-                    netSwap(data, comparator, order, rangeStart, 3, 7);
-                    netSwap(data, comparator, order, rangeStart, 1, 5);
-                    netSwap(data, comparator, order, rangeStart, 2, 6);
-                    netSwap(data, comparator, order, rangeStart, 1, 4);
-                    netSwap(data, comparator, order, rangeStart, 3, 6);
-                    netSwap(data, comparator, order, rangeStart, 2, 4);
-                    netSwap(data, comparator, order, rangeStart, 3, 5);
-                    netSwap(data, comparator, order, rangeStart, 3, 4);
+            tasks.add(() -> {
+                switch(rangeEnd - rangeStart) {
+                    case 8 -> {
+                        netSwap(data, comparator, order, rangeStart, 0, 1);
+                        netSwap(data, comparator, order, rangeStart, 2, 3);
+                        netSwap(data, comparator, order, rangeStart, 4, 5);
+                        netSwap(data, comparator, order, rangeStart, 6, 7);
+                        netSwap(data, comparator, order, rangeStart, 0, 2);
+                        netSwap(data, comparator, order, rangeStart, 1, 3);
+                        netSwap(data, comparator, order, rangeStart, 4, 6);
+                        netSwap(data, comparator, order, rangeStart, 5, 7);
+                        netSwap(data, comparator, order, rangeStart, 1, 2);
+                        netSwap(data, comparator, order, rangeStart, 5, 6);
+                        netSwap(data, comparator, order, rangeStart, 0, 4);
+                        netSwap(data, comparator, order, rangeStart, 3, 7);
+                        netSwap(data, comparator, order, rangeStart, 1, 5);
+                        netSwap(data, comparator, order, rangeStart, 2, 6);
+                        netSwap(data, comparator, order, rangeStart, 1, 4);
+                        netSwap(data, comparator, order, rangeStart, 3, 6);
+                        netSwap(data, comparator, order, rangeStart, 2, 4);
+                        netSwap(data, comparator, order, rangeStart, 3, 5);
+                        netSwap(data, comparator, order, rangeStart, 3, 4);
+                    }
+
+                    case 7 -> {
+                        netSwap(data, comparator, order, rangeStart, 1, 2);
+                        netSwap(data, comparator, order, rangeStart, 3, 4);
+                        netSwap(data, comparator, order, rangeStart, 5, 6);
+                        netSwap(data, comparator, order, rangeStart, 0, 2);
+                        netSwap(data, comparator, order, rangeStart, 3, 5);
+                        netSwap(data, comparator, order, rangeStart, 4, 6);
+                        netSwap(data, comparator, order, rangeStart, 0, 1);
+                        netSwap(data, comparator, order, rangeStart, 4, 5);
+                        netSwap(data, comparator, order, rangeStart, 2, 6);
+                        netSwap(data, comparator, order, rangeStart, 0, 4);
+                        netSwap(data, comparator, order, rangeStart, 1, 5);
+                        netSwap(data, comparator, order, rangeStart, 0, 3);
+                        netSwap(data, comparator, order, rangeStart, 2, 5);
+                        netSwap(data, comparator, order, rangeStart, 1, 3);
+                        netSwap(data, comparator, order, rangeStart, 2, 4);
+                        netSwap(data, comparator, order, rangeStart, 2, 3);
+                    }
+
+                    case 6 -> {
+                        netSwap(data, comparator, order, rangeStart, 1, 2);
+                        netSwap(data, comparator, order, rangeStart, 4, 5);
+                        netSwap(data, comparator, order, rangeStart, 0, 2);
+                        netSwap(data, comparator, order, rangeStart, 3, 5);
+                        netSwap(data, comparator, order, rangeStart, 0, 1);
+                        netSwap(data, comparator, order, rangeStart, 3, 4);
+                        netSwap(data, comparator, order, rangeStart, 2, 5);
+                        netSwap(data, comparator, order, rangeStart, 0, 3);
+                        netSwap(data, comparator, order, rangeStart, 1, 4);
+                        netSwap(data, comparator, order, rangeStart, 2, 4);
+                        netSwap(data, comparator, order, rangeStart, 1, 3);
+                        netSwap(data, comparator, order, rangeStart, 2, 3);
+                    }
+
+                    case 5 -> {
+                        netSwap(data, comparator, order, rangeStart, 0, 1);
+                        netSwap(data, comparator, order, rangeStart, 3, 4);
+                        netSwap(data, comparator, order, rangeStart, 2, 4);
+                        netSwap(data, comparator, order, rangeStart, 2, 3);
+                        netSwap(data, comparator, order, rangeStart, 1, 4);
+                        netSwap(data, comparator, order, rangeStart, 0, 3);
+                        netSwap(data, comparator, order, rangeStart, 0, 2);
+                        netSwap(data, comparator, order, rangeStart, 1, 3);
+                        netSwap(data, comparator, order, rangeStart, 1, 2);
+                    }
+
+                    case 4 -> {
+                        netSwap(data, comparator, order, rangeStart, 0, 1);
+                        netSwap(data, comparator, order, rangeStart, 2, 3);
+                        netSwap(data, comparator, order, rangeStart, 0, 2);
+                        netSwap(data, comparator, order, rangeStart, 1, 3);
+                        netSwap(data, comparator, order, rangeStart, 1, 2);
+                    }
                 }
 
-                case 7 -> {
-                    netSwap(data, comparator, order, rangeStart, 1, 2);
-                    netSwap(data, comparator, order, rangeStart, 3, 4);
-                    netSwap(data, comparator, order, rangeStart, 5, 6);
-                    netSwap(data, comparator, order, rangeStart, 0, 2);
-                    netSwap(data, comparator, order, rangeStart, 3, 5);
-                    netSwap(data, comparator, order, rangeStart, 4, 6);
-                    netSwap(data, comparator, order, rangeStart, 0, 1);
-                    netSwap(data, comparator, order, rangeStart, 4, 5);
-                    netSwap(data, comparator, order, rangeStart, 2, 6);
-                    netSwap(data, comparator, order, rangeStart, 0, 4);
-                    netSwap(data, comparator, order, rangeStart, 1, 5);
-                    netSwap(data, comparator, order, rangeStart, 0, 3);
-                    netSwap(data, comparator, order, rangeStart, 2, 5);
-                    netSwap(data, comparator, order, rangeStart, 1, 3);
-                    netSwap(data, comparator, order, rangeStart, 2, 4);
-                    netSwap(data, comparator, order, rangeStart, 2, 3);
-                }
+                return null;
+            });
+        }
 
-                case 6 -> {
-                    netSwap(data, comparator, order, rangeStart, 1, 2);
-                    netSwap(data, comparator, order, rangeStart, 4, 5);
-                    netSwap(data, comparator, order, rangeStart, 0, 2);
-                    netSwap(data, comparator, order, rangeStart, 3, 5);
-                    netSwap(data, comparator, order, rangeStart, 0, 1);
-                    netSwap(data, comparator, order, rangeStart, 3, 4);
-                    netSwap(data, comparator, order, rangeStart, 2, 5);
-                    netSwap(data, comparator, order, rangeStart, 0, 3);
-                    netSwap(data, comparator, order, rangeStart, 1, 4);
-                    netSwap(data, comparator, order, rangeStart, 2, 4);
-                    netSwap(data, comparator, order, rangeStart, 1, 3);
-                    netSwap(data, comparator, order, rangeStart, 2, 3);
-                }
+        try {
+            executors.invokeAll(tasks);
+        } catch (InterruptedException e) {
+            log.error("Thread got interrupted!");
 
-                case 5 -> {
-                    netSwap(data, comparator, order, rangeStart, 0, 1);
-                    netSwap(data, comparator, order, rangeStart, 3, 4);
-                    netSwap(data, comparator, order, rangeStart, 2, 4);
-                    netSwap(data, comparator, order, rangeStart, 2, 3);
-                    netSwap(data, comparator, order, rangeStart, 1, 4);
-                    netSwap(data, comparator, order, rangeStart, 0, 3);
-                    netSwap(data, comparator, order, rangeStart, 0, 2);
-                    netSwap(data, comparator, order, rangeStart, 1, 3);
-                    netSwap(data, comparator, order, rangeStart, 1, 2);
-                }
-
-                case 4 -> {
-                    netSwap(data, comparator, order, rangeStart, 0, 1);
-                    netSwap(data, comparator, order, rangeStart, 2, 3);
-                    netSwap(data, comparator, order, rangeStart, 0, 2);
-                    netSwap(data, comparator, order, rangeStart, 1, 3);
-                    netSwap(data, comparator, order, rangeStart, 1, 2);
-                }
-            }
+            throw new ParallelExecutionException(e.getMessage());
         }
 
         if (data.size() < 8) return;
