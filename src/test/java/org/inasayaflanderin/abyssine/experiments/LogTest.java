@@ -1,4 +1,4 @@
-package org.inasayaflanderin.abyssine;
+package org.inasayaflanderin.abyssine.experiments;
 
 import lombok.extern.slf4j.Slf4j;
 
