@@ -22,6 +22,12 @@ public class GrailSort {
         while(currentKey < data.size() && keyFound < idealKey) {
             var insertPos = 0;
             var right = keyFound;
+
+            while(insertPos < right) {
+                var middle = (insertPos + right) >>> 1;
+
+
+            }
         }
     }
 }

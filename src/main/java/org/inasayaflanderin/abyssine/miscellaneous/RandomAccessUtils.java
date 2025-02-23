@@ -65,8 +65,7 @@ public class RandomAccessUtils {
 
         while(low <= high) {
             var mid = (low + high) >>> 1;
-            var midDatum = list.get(mid);
-            var compare = comparator.compare(midDatum, key);
+            var compare = comparator.compare(list.get(mid), key);
 
             if(compare < 0) low = mid + 1;
             else if(compare > 0) high = mid - 1;
