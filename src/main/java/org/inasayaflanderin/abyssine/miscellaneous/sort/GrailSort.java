@@ -9,7 +9,7 @@ public class GrailSort {
             Sort.binaryInsertion(data, comparator);
         }
 
-        var blockLength = 4;
+        var blockLength = ;
 
         while(blockLength * blockLength < data.size()) blockLength *= 2;
 
