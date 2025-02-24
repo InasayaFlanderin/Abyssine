@@ -1,6 +1,11 @@
 package org.inasayaflanderin.abyssine.miscellaneous.sort;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils.swap;
 
@@ -127,25 +132,39 @@ public class GrailSort {
         return keysFound;
     }
 
-    private static <D> void grailPairwiseSwaps(D[] array, Comparator<D> cmp, int start, int length) {
+    private static <T> void grailPairwiseSwaps(T[] array, Comparator<T> cmp, int start, int length) {
+        // first, save the keys to stack memory
+        T  firstKey = array[start - 1];
+        T secondKey = array[start - 2];
+
+        // move all the items down two indices, sorting them simultaneously
+        sortPairs(array, start, length, cmp);
+
+        // finally, stamp the saved keys (remember: order doesn't matter!)
+        // to the end of the array
+        array[start + length - 2] =  firstKey;
+        array[start + length - 1] = secondKey;
+    }
+
+    private static <T> void sortPairs(T[] array, int start, int length, Comparator<T> cmp) {
         int index;
         for(index = 1; index < length; index += 2) {
             int  left = start + index - 1;
             int right = start + index;
 
             if(cmp.compare(array[left], array[right]) > 0) {
-                swap(array,  left - 2, right);
-                swap(array, right - 2,  left);
+                array[ left - 2] = array[right];
+                array[right - 2] = array[ left];
             }
             else {
-                swap(array,  left - 2,  left);
-                swap(array, right - 2, right);
+                array[ left - 2] = array[ left];
+                array[right - 2] = array[right];
             }
         }
 
         int left = start + index - 1;
         if(left < start + length) {
-            swap(array, left - 2, left);
+            array[left - 2] = array[left];
         }
     }
 
@@ -203,8 +222,8 @@ public class GrailSort {
         }
     }
 
-    private static <D> void grailBuildInPlace(D[] array, Comparator<D> cmp, int start, int length, int currentLen, int bufferLen) {
-        for(int mergeLen = currentLen; mergeLen < bufferLen; mergeLen *= 2) {
+    private static <D> void grailBuildInPlace(D[] array, Comparator<D> cmp, int start, int length, int bufferLen) {
+        for(int mergeLen = 2; mergeLen < bufferLen; mergeLen *= 2) {
             int fullMerge = 2 * mergeLen;
 
             int mergeIndex;
@@ -244,7 +263,7 @@ public class GrailSort {
 
     private static <D> void grailBuildBlocks(D[] array, int start, int length, int bufferLen, Comparator<D> cmp) {
         grailPairwiseSwaps(array, cmp, start, length);
-        grailBuildInPlace(array, cmp, start - 2, length, 2, bufferLen);
+        grailBuildInPlace(array, cmp, start - 2, length, bufferLen);
     }
 
     private static <D> int grailBlockSelectSort(D[] array, int start, int medianKey,
@@ -509,14 +528,12 @@ public class GrailSort {
         }
     }
 
-
-    //TODO: Double-check "Merge Blocks" arguments
     private static <D> void grailCombineInPlace(D[] array, Comparator<D> cmp, int start, int length,
                                      int subarrayLen, int blockLen,
                                      int mergeCount, int lastSubarrays,
-                                     boolean buffer) { //TODO: Do collisions with hanging indents like these affect readability?
+                                     boolean buffer) {
         int fullMerge  = 2 * subarrayLen;
-        int blockCount = fullMerge / blockLen;
+        final int blockCount = fullMerge / blockLen;
 
         for(int mergeIndex = 0; mergeIndex < mergeCount; mergeIndex++) {
             int offset = start + (mergeIndex * fullMerge);
@@ -534,41 +551,40 @@ public class GrailSort {
         }
 
         if(lastSubarrays != 0) {
-            int offset = start + (mergeCount * fullMerge);
-            blockCount = lastSubarrays / blockLen;
+            int offsetFull = start + (mergeCount * fullMerge);
+            var blockCountFull = lastSubarrays / blockLen;
 
-            grailInsertSort(array, cmp, blockCount + 1);
+            grailInsertSort(array, cmp, blockCountFull + 1);
 
             int medianKey = subarrayLen / blockLen;
-            medianKey = grailBlockSelectSort(array, offset, medianKey, blockCount, blockLen, cmp);
-            int lastFragment = lastSubarrays - (blockCount * blockLen);
+            medianKey = grailBlockSelectSort(array, offsetFull, medianKey, blockCountFull, blockLen, cmp);
+            int lastFragment = lastSubarrays - (blockCountFull * blockLen);
             int lastMergeBlocks;
             if(lastFragment != 0) {
-                lastMergeBlocks = grailCountLastMergeBlocks(array, cmp, offset, blockCount, blockLen);
+                lastMergeBlocks = grailCountLastMergeBlocks(array, cmp, offsetFull, blockCountFull, blockLen);
             }
             else {
                 lastMergeBlocks = 0;
             }
 
-            int smartMerges = blockCount - lastMergeBlocks;
+            int smartMerges = blockCountFull - lastMergeBlocks;
 
-            //TODO: Double-check if this micro-optimization works correctly like the original
             if(smartMerges == 0) {
                 int leftLen = lastMergeBlocks * blockLen;
                 if(buffer) {
-                    grailMergeForwards(array, cmp, offset, leftLen, lastFragment, blockLen);
+                    grailMergeForwards(array, cmp, offsetFull, leftLen, lastFragment, blockLen);
                 }
                 else {
-                    grailLazyMerge(array, cmp, offset, leftLen, lastFragment);
+                    grailLazyMerge(array, cmp, offsetFull, leftLen, lastFragment);
                 }
             }
             else {
                 if(buffer) {
-                    grailMergeBlocks(array, cmp, medianKey, offset,
+                    grailMergeBlocks(array, cmp, medianKey, offsetFull,
                             smartMerges, blockLen, lastMergeBlocks, lastFragment);
                 }
                 else {
-                    grailLazyMergeBlocks(array, cmp, medianKey, offset,
+                    grailLazyMergeBlocks(array, cmp, medianKey, offsetFull,
                             smartMerges, blockLen, lastMergeBlocks, lastFragment);
                 }
             }
@@ -691,7 +707,6 @@ public class GrailSort {
 
         int idealKeys = keyLen + blockLen;
 
-        //TODO: Clean up `start +` offsets
         int keysFound = grailCollectKeys(array, cmp, array.length, idealKeys);
 
         boolean idealBuffer;
