@@ -2,19 +2,15 @@ package org.inasayaflanderin.abyssine.miscellaneous.sort;
 
 import java.util.Comparator;
 
+import static org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils.swap;
+
 public class GrailSort<D> {
     private int currBlockLen;
     private boolean currBlockOrigin;
 
-    private static <D> void grailSwap(D[] array, int a, int b) {
-        D temp   = array[a];
-        array[a] = array[b];
-        array[b] = temp;
-    }
-
     private static <D> void grailBlockSwap(D[] array, int a, int b, int blockLen) {
         for(int i = 0; i < blockLen; i++) {
-            grailSwap(array, a + i, b + i);
+            swap(array, a + i, b + i);
         }
     }
 
@@ -39,7 +35,7 @@ public class GrailSort<D> {
 
             while(left >= 0 && cmp.compare(array[ left],
                     array[right]) > 0) {
-                grailSwap(array, left, right);
+                swap(array, left, right);
                 left--;
                 right--;
             }
@@ -110,18 +106,18 @@ public class GrailSort<D> {
             int right = start + index;
 
             if(cmp.compare(array[left], array[right]) > 0) {
-                grailSwap(array,  left - 2, right);
-                grailSwap(array, right - 2,  left);
+                swap(array,  left - 2, right);
+                swap(array, right - 2,  left);
             }
             else {
-                grailSwap(array,  left - 2,  left);
-                grailSwap(array, right - 2, right);
+                swap(array,  left - 2,  left);
+                swap(array, right - 2, right);
             }
         }
 
         int left = start + index - 1;
         if(left < start + length) {
-            grailSwap(array, left - 2, left);
+            swap(array, left - 2, left);
         }
     }
 
@@ -136,11 +132,11 @@ public class GrailSort<D> {
         while(right < end) {
             if(left == middle || cmp.compare(array[ left],
                     array[right]) > 0) {
-                grailSwap(array, buffer, right);
+                swap(array, buffer, right);
                 right++;
             }
             else {
-                grailSwap(array, buffer,  left);
+                swap(array, buffer,  left);
                 left++;
             }
             buffer++;
@@ -161,11 +157,11 @@ public class GrailSort<D> {
         while(left > end) {
             if(right == middle || cmp.compare(array[ left],
                     array[right]) > 0) {
-                grailSwap(array, buffer,  left);
+                swap(array, buffer,  left);
                 left--;
             }
             else {
-                grailSwap(array, buffer, right);
+                swap(array, buffer, right);
                 right--;
             }
             buffer--;
@@ -173,7 +169,7 @@ public class GrailSort<D> {
 
         if(right != buffer) {
             while(right > middle) {
-                grailSwap(array, buffer, right);
+                swap(array, buffer, right);
                 buffer--;
                 right--;
             }
@@ -241,7 +237,7 @@ public class GrailSort<D> {
 
             if(selectBlock != firstBlock) {
                 grailBlockSwap(array, start + (firstBlock * blockLen), start + (selectBlock * blockLen), blockLen);
-                grailSwap(array, firstBlock, selectBlock);
+                swap(array, firstBlock, selectBlock);
 
                 if(medianKey == firstBlock) {
                     medianKey = selectBlock;
@@ -260,7 +256,7 @@ public class GrailSort<D> {
         int  index = buffer - bufferOffset;
 
         while(buffer >= start) {
-            grailSwap(array, index, buffer);
+            swap(array, index, buffer);
             buffer--;
             index--;
         }
@@ -268,7 +264,7 @@ public class GrailSort<D> {
 
     private static <D> void grailInPlaceBufferRewind(D[] array, int start, int leftBlock, int buffer) {
         while(leftBlock >= start) {
-            grailSwap(array, buffer, leftBlock);
+            swap(array, buffer, leftBlock);
             leftBlock--;
             buffer--;
         }
@@ -313,11 +309,11 @@ public class GrailSort<D> {
         if (leftOrigin) {
             while(left < middle && right < end) {
                 if(cmp.compare(array[left], array[right]) <  0) {
-                    grailSwap(array, buffer, left);
+                    swap(array, buffer, left);
                     left++;
                 }
                 else {
-                    grailSwap(array, buffer, right);
+                    swap(array, buffer, right);
                     right++;
                 }
                 buffer++;
@@ -325,11 +321,11 @@ public class GrailSort<D> {
         } else {
             while(left < middle && right < end) {
                 if(cmp.compare(array[left], array[right]) <= 0) {
-                    grailSwap(array, buffer, left);
+                    swap(array, buffer, left);
                     left++;
                 }
                 else {
-                    grailSwap(array, buffer, right);
+                    swap(array, buffer, right);
                     right++;
                 }
                 buffer++;
@@ -640,7 +636,7 @@ public class GrailSort<D> {
             int  left = index - 1;
 
             if(cmp.compare(array[left], array[index]) > 0) {
-                grailSwap(array, left, index);
+                swap(array, left, index);
             }
         }
         for(int mergeLen = 2; mergeLen < length; mergeLen *= 2) {
