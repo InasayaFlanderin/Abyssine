@@ -13,7 +13,7 @@ public class GrailTest {
             array[i] = random.nextInt();
         }
 
-        grailSort.grailSortInPlace(array, Integer::compareTo);
+        grailSort.grailCommonSort(array, Integer::compareTo);
         System.out.println("Sorted: " + isSort(array, Integer::compareTo));
     }
 }
