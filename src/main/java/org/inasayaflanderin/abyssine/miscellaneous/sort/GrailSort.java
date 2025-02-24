@@ -1,11 +1,6 @@
 package org.inasayaflanderin.abyssine.miscellaneous.sort;
 
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import static org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils.swap;
 
@@ -133,20 +128,16 @@ public class GrailSort {
     }
 
     private static <T> void grailPairwiseSwaps(T[] array, Comparator<T> cmp, int start, int length) {
-        // first, save the keys to stack memory
         T  firstKey = array[start - 1];
         T secondKey = array[start - 2];
 
-        // move all the items down two indices, sorting them simultaneously
-        sortPairs(array, start, length, cmp);
+        sortPairs(array, cmp, start, length);
 
-        // finally, stamp the saved keys (remember: order doesn't matter!)
-        // to the end of the array
         array[start + length - 2] =  firstKey;
         array[start + length - 1] = secondKey;
     }
 
-    private static <T> void sortPairs(T[] array, int start, int length, Comparator<T> cmp) {
+    private static <T> void sortPairs(T[] array, Comparator<T> cmp, int start, int length) {
         int index;
         for(index = 1; index < length; index += 2) {
             int  left = start + index - 1;
@@ -261,13 +252,13 @@ public class GrailSort {
         }
     }
 
-    private static <D> void grailBuildBlocks(D[] array, int start, int length, int bufferLen, Comparator<D> cmp) {
+    private static <D> void grailBuildBlocks(D[] array, Comparator<D> cmp, int start, int length, int bufferLen) {
         grailPairwiseSwaps(array, cmp, start, length);
         grailBuildInPlace(array, cmp, start - 2, length, bufferLen);
     }
 
-    private static <D> int grailBlockSelectSort(D[] array, int start, int medianKey,
-                                                int blockCount, int blockLen, Comparator<D> cmp) {
+    private static <D> int grailBlockSelectSort(D[] array, Comparator<D> cmp, int start, int medianKey,
+                                                int blockCount, int blockLen) {
         for(int  firstBlock = 0; firstBlock < blockCount; firstBlock++) {
             int selectBlock = firstBlock;
 
@@ -540,7 +531,7 @@ public class GrailSort {
 
             grailInsertSort(array, cmp, blockCount);
             int medianKey = subarrayLen / blockLen;
-            medianKey = grailBlockSelectSort(array, offset, medianKey, blockCount, blockLen, cmp);
+            medianKey = grailBlockSelectSort(array, cmp, offset, medianKey, blockCount, blockLen);
 
             if(buffer) {
                 grailMergeBlocks(array, cmp, medianKey, offset, blockCount, blockLen, 0, 0);
@@ -557,7 +548,7 @@ public class GrailSort {
             grailInsertSort(array, cmp, blockCountFull + 1);
 
             int medianKey = subarrayLen / blockLen;
-            medianKey = grailBlockSelectSort(array, offsetFull, medianKey, blockCountFull, blockLen, cmp);
+            medianKey = grailBlockSelectSort(array, cmp, offsetFull, medianKey, blockCountFull, blockLen);
             int lastFragment = lastSubarrays - (blockCountFull * blockLen);
             int lastMergeBlocks;
             if(lastFragment != 0) {
@@ -740,7 +731,7 @@ public class GrailSort {
             subarrayLen = keyLen;
         }
 
-        grailBuildBlocks(array, bufferEnd, array.length - bufferEnd, subarrayLen, cmp);
+        grailBuildBlocks(array, cmp, bufferEnd, array.length - bufferEnd, subarrayLen);
 
         while((array.length - bufferEnd) > (2 * subarrayLen)) {
             subarrayLen *= 2;
