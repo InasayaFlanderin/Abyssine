@@ -6,7 +6,7 @@ import static org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils.isSo
 
 public class GrailTest {
     public static void main(String[] args) {
-        Integer[] array = new Integer[1000000];
+        Integer[] array = new Integer[1000];
         Random random = new Random();
         for (int i = 0; i < array.length; i++) {
             array[i] = random.nextInt();

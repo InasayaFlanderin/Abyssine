@@ -1674,7 +1674,7 @@ public class Sort {
         return pivot + 1;
     }
 
-    private static <D> void insertion(List<D> data, Comparator<D> comparator, int start, int stop) {
+    public static <D> void insertion(List<D> data, Comparator<D> comparator, int start, int stop) {
         for (int i = start + 1; i < stop; i++) {
             var pos = Math.abs(RandomAccessUtils.binarySearch(data, comparator, start, i, data.get(i)) + 1);
             var datum = data.get(i);
