@@ -146,7 +146,7 @@ public class ParallelGrailSort<D> {
         int b1 = b - (b - m) % bLen;
         int i = a1, l = i - bLen, r = m;
 
-        D mKey = array[t + (m - i) / bLen]; // median key
+        D mKey = array[t + (m - i) / bLen];
         int f = a;
         boolean frag = true;
 
