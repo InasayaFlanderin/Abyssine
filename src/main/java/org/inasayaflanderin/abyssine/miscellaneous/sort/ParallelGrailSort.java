@@ -28,20 +28,41 @@ public class ParallelGrailSort {
         boolean strategy1 = nKeys >= idl;
         if (!strategy1) idl = nKeys;
 
-        int keys = findKeys(array, comparator, start, end, idl);
+        //int keys = findKeys(array, comparator, start, end, idl);
+        int p = start, keys = 1, pEnd = start + keys;
+
+        for (int i = pEnd; i < end && keys < idl; i++) {
+            int loc = leftBinSearch(array, comparator, p, pEnd, array[i]);
+
+            if (pEnd == loc || comparator.compare(array[i], array[loc]) != 0) {
+                rotate(array, p, pEnd, i);
+                int inc = i - pEnd;
+                loc += inc;
+                p += inc;
+                pEnd += inc;
+
+                insertTo(array, pEnd, loc);
+                keys++;
+                pEnd++;
+            }
+        }
+
+        rotate(array, start, p, pEnd);
+
         int start1 = start + keys;
         int mid = (start1 + end) / 2;
 
         if (strategy1 && keys == idl) {
             int finalMid = mid;
+            int keysFinal = keys;
             List<Callable<Void>> tasks = List.of(
                     () -> {
-                        grailCommonSort(array, comparator, start1, finalMid, keys);
+                        grailCommonSort(array, comparator, start1, finalMid, keysFinal);
 
                         return null;
                     },
                     () -> {
-                        grailCommonSort(array, comparator, finalMid, end, keys);
+                        grailCommonSort(array, comparator, finalMid, end, keysFinal);
 
                         return null;
                     }
@@ -57,11 +78,9 @@ public class ParallelGrailSort {
             int start2 = start1 + (mid - start1) % bLen;
             int end1 = end - (end - mid) % bLen;
             int i = start2, l = i - bLen, r = mid;
-
             D mKey = array[t + (mid - i) / bLen];
             int f = start1;
             boolean frag = true;
-
             blockSelect(array, comparator, start2, end1, t, bLen);
 
             while (l < mid && r < end1) {
@@ -134,13 +153,14 @@ public class ParallelGrailSort {
                 bLen = (end - start1 - 1) / (keys - keys % 2) + 1;
 
                 int finalM2 = mid;
+                int keysFinal = keys;
                 List<Callable<Void>> tasks = List.of(
                         () -> {
-                            grailCommonSort(array, comparator, start1, finalM2, keys);
+                            grailCommonSort(array, comparator, start1, finalM2, keysFinal);
                             return null;
                         },
                         () -> {
-                            grailCommonSort(array, comparator, finalM2, end, keys);
+                            grailCommonSort(array, comparator, finalM2, end, keysFinal);
                             return null;
                         }
                 );
@@ -234,58 +254,6 @@ public class ParallelGrailSort {
         inPlaceMergeFW(array, comparator, start, mid, end, true);
     }
 
-    private static <D> void blockMerge(D[] array, Comparator<D> comparator, int t, int start1, int mid, int end, int bLen) {
-        int start2 = start1 + (mid - start1) % bLen;
-        int end1 = end - (end - mid) % bLen;
-        int i = start2, l = i - bLen, r = mid;
-
-        D mKey = array[t + (mid - i) / bLen];
-        int f = start1;
-        boolean frag = true;
-
-        blockSelect(array, comparator, start2, end1, t, bLen);
-
-        while (l < mid && r < end1) {
-            boolean curr = comparator.compare(array[t++], mKey) < 0;
-
-            if (frag != curr) {
-                f = mergeFW(array, comparator, f - bLen, f, i, i + bLen, frag);
-
-                if (f < i) {
-                    shiftBW(array, f, i, i + bLen);
-                    f += bLen;
-                } else {
-                    frag = curr;
-                }
-
-                if (frag) {
-                    r += bLen;
-                } else {
-                    l += bLen;
-                }
-            } else {
-                shiftFW(array, f - bLen, f, i);
-                f = i;
-
-                if (frag) {
-                    l += bLen;
-                } else {
-                    r += bLen;
-                }
-            }
-            i += bLen;
-        }
-
-        if (l < mid) {
-            f = mergeFW(array, comparator, f - bLen, f, end1, end, true);
-            if (f >= end1) {
-                shiftFW(array, f - bLen, f, end);
-            }
-        } else {
-            shiftFW(array, f - bLen, f, end);
-        }
-    }
-
     private static <D> void blockSelect(D[] array, Comparator<D> comparator, int start, int end, int t, int bLen) {
         for (int j = start; j < end; j += bLen) {
             int min = j;
@@ -303,29 +271,6 @@ public class ParallelGrailSort {
                 swap(array, t + (j - start) / bLen, t + (min - start) / bLen);
             }
         }
-    }
-
-    private static <D> int findKeys(D[] array, Comparator<D> comparator, int start, int end, int n) {
-        int p = start, nKeys = 1, pEnd = start + nKeys;
-
-        for (int i = pEnd; i < end && nKeys < n; i++) {
-            int loc = leftBinSearch(array, comparator, p, pEnd, array[i]);
-
-            if (pEnd == loc || comparator.compare(array[i], array[loc]) != 0) {
-                rotate(array, p, pEnd, i);
-                int inc = i - pEnd;
-                loc += inc;
-                p += inc;
-                pEnd += inc;
-
-                insertTo(array, pEnd, loc);
-                nKeys++;
-                pEnd++;
-            }
-        }
-
-        rotate(array, start, p, pEnd);
-        return nKeys;
     }
 
     private static <D> int inPlaceMergeFW(D[] array, Comparator<D> comparator, int start, int mid, int end, boolean fwEq) {
