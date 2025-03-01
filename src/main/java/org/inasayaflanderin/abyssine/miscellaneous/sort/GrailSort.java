@@ -263,60 +263,6 @@ public class GrailSort {
         }
     }
 
-    private static <D> void grailCombineInPlace(D[] data, Comparator<D> comparator, int start, int length, int subarrayLen, int blockLen, int mergeCount, int lastSubData, boolean buffer) {
-        var fullMerge  = 2 * subarrayLen;
-        final var blockCount = fullMerge / blockLen;
-
-        for(int mergeIndex = 0; mergeIndex < mergeCount; mergeIndex++) {
-            var offset = start + (mergeIndex * fullMerge);
-            Sort.insertion(Arrays.asList(data), comparator, 0, blockCount);
-            var medianKey = subarrayLen / blockLen;
-            medianKey = grailBlockSelectSort(data, comparator, offset, medianKey, blockCount, blockLen);
-
-            if(buffer) grailMergeBlocks(data, comparator, medianKey, offset, blockCount, blockLen, 0, 0);
-            else grailLazyMergeBlocks(data, comparator, medianKey, offset, blockCount, blockLen, 0, 0);
-        }
-
-        if(lastSubData != 0) {
-            var offsetFull = start + (mergeCount * fullMerge);
-            var blockCountFull = lastSubData / blockLen;
-            Sort.insertion(Arrays.asList(data), comparator, 0, blockCountFull + 1);
-            var medianKey = subarrayLen / blockLen;
-            medianKey = grailBlockSelectSort(data, comparator, offsetFull, medianKey, blockCountFull, blockLen);
-            var lastFragment = lastSubData - (blockCountFull * blockLen);
-            int lastMergeBlocks = 0;
-
-            if(lastFragment != 0) {
-                var lastRightFrag = offsetFull + (blockCountFull * blockLen);
-                var prevLeftBlock = lastRightFrag - blockLen;
-
-                while(lastMergeBlocks < blockCountFull && comparator.compare(data[lastRightFrag], data[prevLeftBlock]) < 0) {
-                    lastMergeBlocks++;
-                    prevLeftBlock -= blockLen;
-                }
-            }
-
-            var smartMerges = blockCountFull - lastMergeBlocks;
-
-            if(smartMerges == 0) {
-                var leftLen = lastMergeBlocks * blockLen;
-
-                if(buffer) grailMergeForwards(data, comparator, offsetFull, leftLen, lastFragment, blockLen);
-                else grailLazyMerge(data, comparator, offsetFull, leftLen, lastFragment);
-            } else {
-                if(buffer) grailMergeBlocks(data, comparator, medianKey, offsetFull, smartMerges, blockLen, lastMergeBlocks, lastFragment);
-                else grailLazyMergeBlocks(data, comparator, medianKey, offsetFull, smartMerges, blockLen, lastMergeBlocks, lastFragment);
-            }
-        }
-
-        if(buffer) {
-            var bufferR = start + length - 1;
-            var index = bufferR - blockLen;
-
-            while(bufferR >= start) swap(data, index--, bufferR--);
-        }
-    }
-
     private static <D> void grailLazyMerge(D[] data, Comparator<D> comparator, int start, int leftLen, int rightLen) {
         if(leftLen < rightLen) {
             var middle = start + leftLen;
@@ -505,7 +451,57 @@ public class GrailSort {
                 lastSubData = 0;
             }
 
-            grailCombineInPlace(data, comparator, bufferEnd, length, subarrayLen, currentBlockLen, mergeCount, lastSubData, scrollingBuffer);
+            var fullMergeInPlace  = 2 * subarrayLen;
+            var blockCount = fullMergeInPlace / blockLen;
+
+            for(int mergeIndex = 0; mergeIndex < mergeCount; mergeIndex++) {
+                var offset = bufferEnd + (mergeIndex * fullMergeInPlace);
+                Sort.insertion(Arrays.asList(data), comparator, 0, blockCount);
+                var medianKey = subarrayLen / currentBlockLen;
+                medianKey = grailBlockSelectSort(data, comparator, offset, medianKey, blockCount, currentBlockLen);
+
+                if(scrollingBuffer) grailMergeBlocks(data, comparator, medianKey, offset, blockCount, currentBlockLen, 0, 0);
+                else grailLazyMergeBlocks(data, comparator, medianKey, offset, blockCount, currentBlockLen, 0, 0);
+            }
+
+            if(lastSubData != 0) {
+                var offsetFull = bufferEnd + (mergeCount * fullMergeInPlace);
+                var blockCountFull = lastSubData / currentBlockLen;
+                Sort.insertion(Arrays.asList(data), comparator, 0, blockCountFull + 1);
+                var medianKey = subarrayLen / currentBlockLen;
+                medianKey = grailBlockSelectSort(data, comparator, offsetFull, medianKey, blockCountFull, currentBlockLen);
+                var lastFragment = lastSubData - (blockCountFull * currentBlockLen);
+                var lastMergeBlocks = 0;
+
+                if(lastFragment != 0) {
+                    var lastRightFrag = offsetFull + (blockCountFull * currentBlockLen);
+                    var prevLeftBlock = lastRightFrag - currentBlockLen;
+
+                    while(lastMergeBlocks < blockCountFull && comparator.compare(data[lastRightFrag], data[prevLeftBlock]) < 0) {
+                        lastMergeBlocks++;
+                        prevLeftBlock -= currentBlockLen;
+                    }
+                }
+
+                var smartMerges = blockCountFull - lastMergeBlocks;
+
+                if(smartMerges == 0) {
+                    var leftLen = lastMergeBlocks * currentBlockLen;
+
+                    if(scrollingBuffer) grailMergeForwards(data, comparator, offsetFull, leftLen, lastFragment, currentBlockLen);
+                    else grailLazyMerge(data, comparator, offsetFull, leftLen, lastFragment);
+                } else {
+                    if(scrollingBuffer) grailMergeBlocks(data, comparator, medianKey, offsetFull, smartMerges, currentBlockLen, lastMergeBlocks, lastFragment);
+                    else grailLazyMergeBlocks(data, comparator, medianKey, offsetFull, smartMerges, currentBlockLen, lastMergeBlocks, lastFragment);
+                }
+            }
+
+            if(scrollingBuffer) {
+                var bufferR = bufferEnd + length - 1;
+                var index = bufferR - currentBlockLen;
+
+                while(bufferR >= bufferEnd) swap(data, index--, bufferR--);
+            }
         }
 
         Sort.insertion(Arrays.asList(data), comparator, 0, bufferEnd);
