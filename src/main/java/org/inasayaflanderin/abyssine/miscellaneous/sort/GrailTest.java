@@ -16,10 +16,8 @@ public class GrailTest {
             array[i] = random.nextDouble();
         }
 
-        GrailSort.grailCommonSort(array, Double::compareTo);
-
-        //ParallelGrailSort<Integer> prs = new ParallelGrailSort<>();
-        //prs.runSort(array, array.length, Integer::compareTo);
+        ParallelGrailSort<Double> prs = new ParallelGrailSort<>();
+        prs.runSort(array, Double::compareTo);
         System.out.println("Sorted: " + isSort(array, Double::compareTo));
     }
 
