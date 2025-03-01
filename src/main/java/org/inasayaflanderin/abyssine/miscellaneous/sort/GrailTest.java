@@ -1,8 +1,12 @@
 package org.inasayaflanderin.abyssine.miscellaneous.sort;
 
+import net.jqwik.api.ForAll;
+import net.jqwik.api.Property;
+
 import java.util.Random;
 
 import static org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils.isSort;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class GrailTest {
     public static void main(String[] args) {
@@ -17,5 +21,11 @@ public class GrailTest {
         //ParallelGrailSort<Integer> prs = new ParallelGrailSort<>();
         //prs.runSort(array, array.length, Integer::compareTo);
         System.out.println("Sorted: " + isSort(array, Double::compareTo));
+    }
+
+    @Property(tries = 1000)
+    public void testGrailSort(@ForAll Double[] array) {
+        GrailSort.grailCommonSort(array, Double::compareTo);
+        assertTrue(isSort(array, Double::compareTo));
     }
 }
