@@ -40,8 +40,14 @@ public class ParallelGrailSort {
                 loc += inc;
                 p += inc;
                 pEnd += inc;
+                var move = pEnd;
+                D temp = array[move];
 
-                insertTo(array, pEnd, loc);
+                while(move > loc) {
+                    array[move] = array[--move];
+                }
+
+                array[loc] = temp;
                 keys++;
                 pEnd++;
             }
@@ -90,7 +96,13 @@ public class ParallelGrailSort {
                     f = mergeFW(array, comparator, f - bLen, f, i, i + bLen, frag);
 
                     if (f < i) {
-                        shiftBW(array, f, i, i + bLen);
+                        var midShift = i;
+                        var endShift = i + bLen;
+
+                        while(midShift > f) {
+                            swap(array, --endShift, --midShift);
+                        }
+
                         f += bLen;
                     } else {
                         frag = curr;
@@ -130,7 +142,7 @@ public class ParallelGrailSort {
             int startFinal = start;
             List<Callable<Void>> tasks1 = List.of(
                     () -> {
-                        redistFW(array, comparator, startFinal, startFinal + tLen, finalM1);
+                        redistributeFW(array, comparator, startFinal, startFinal + tLen, finalM1);
 
                         return null;
                     },
@@ -214,7 +226,7 @@ public class ParallelGrailSort {
                     inPlaceMergeBW(array, comparator, f, end1, end, true);
                 }
 
-                redistFW(array, comparator, start, start2, end);
+                redistributeFW(array, comparator, start, start2, end);
             } else if (keys > 1) {
                 lazyStableSort(array, comparator, start, end);
             }
@@ -249,7 +261,7 @@ public class ParallelGrailSort {
         inPlaceMergeFW(array, comparator, start, mid, end, true);
     }
 
-    private static <D> void redistFW(D[] array, Comparator<D> comparator, int start, int mid, int end) {
+    private static <D> void redistributeFW(D[] array, Comparator<D> comparator, int start, int mid, int end) {
         Sort.insertion(Arrays.asList(array), comparator, start, mid);
         inPlaceMergeFW(array, comparator, start, mid, end, true);
     }
@@ -330,14 +342,6 @@ public class ParallelGrailSort {
         return f;
     }
 
-    private static <D> void insertTo(D[] array, int start, int end) {
-        D temp = array[start];
-        while (start > end) {
-            array[start] = array[--start];
-        }
-        array[end] = temp;
-    }
-
     private static <D> int leftBinSearch(D[] array, Comparator<D> comparator, int start, int end, D value) {
         while (start < end) {
             int mid = start + (end - start) / 2;
@@ -383,12 +387,6 @@ public class ParallelGrailSort {
     private static <D> void shiftFW(D[] array, int start, int mid, int end) {
         while (mid < end) {
             swap(array, start++, mid++);
-        }
-    }
-
-    private static <D> void shiftBW(D[] array, int start, int mid, int end) {
-        while (mid > start) {
-            swap(array, --end, --mid);
         }
     }
 
