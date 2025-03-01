@@ -1,37 +1,28 @@
 package org.inasayaflanderin.abyssine.miscellaneous.sort;
 
+import java.util.Arrays;
 import java.util.Comparator;
 
 import static org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils.copy;
 import static org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils.swap;
 
 public class GrailSort {
-    private static <D> void grailBlockSwap(D[] data, int a, int b, int blockLen) {
-        for(int i = 0; i < blockLen; i++) swap(data, a + i, b + i);
+    private static <D> void blockSwap(D[] data, int start, int end, int blockLen) {
+        for(int i = 0; i < blockLen; i++) swap(data, start + i, end + i);
     }
 
-    private static <D> void grailRotate(D[] data, int start, int leftLen, int rightLen) {
+    private static <D> void rotate(D[] data, int start, int leftLen, int rightLen) {
         while(leftLen > 0 && rightLen > 0) {
             if(leftLen <= rightLen) {
-                grailBlockSwap(data, start, start + leftLen, leftLen);
+                blockSwap(data, start, start + leftLen, leftLen);
                 start += leftLen;
                 rightLen -= leftLen;
             } else {
-                grailBlockSwap(data, start + leftLen - rightLen, start + leftLen, rightLen);
+                blockSwap(data, start + leftLen - rightLen, start + leftLen, rightLen);
                 leftLen -= rightLen;
             }
         }
     }
-
-    private static <D> void grailInsertSort(D[] data, Comparator<D> comparator, int length) {
-        for(int item = 1; item < length; item++) {
-            var left = item - 1;
-            var right = item;
-
-            while(left >= 0 && comparator.compare(data[left], data[right]) > 0) swap(data, left--, right--);
-        }
-    }
-
 
     private static <D> int grailBinarySearchLeft(D[] data, Comparator<D> comparator, int start, int length, D target) {
         var left = 0;
@@ -92,7 +83,7 @@ public class GrailSort {
             var insertPos = binarySearchExclusive(data, comparator, firstKey, keysFound, data[currKey]);
 
             if(insertPos != -1) {
-                grailRotate(data, firstKey, keysFound, currKey - (firstKey + keysFound));
+                rotate(data, firstKey, keysFound, currKey - (firstKey + keysFound));
                 firstKey = currKey - keysFound;
 
                 if(keysFound != insertPos) insertBackwards(data, firstKey + insertPos, keysFound - insertPos);
@@ -103,7 +94,7 @@ public class GrailSort {
             currKey++;
         }
 
-        grailRotate(data, 0, firstKey, keysFound);
+        rotate(data, 0, firstKey, keysFound);
 
         return keysFound;
     }
@@ -151,7 +142,7 @@ public class GrailSort {
             buffer++;
         }
 
-        if(buffer != left) grailBlockSwap(data, buffer, left, middle - left);
+        if(buffer != left) blockSwap(data, buffer, left, middle - left);
     }
 
     private static <D> void grailMergeBackwards(D[] data, Comparator<D> comparator, int start, int leftLen, int rightLen, int bufferOffset) {
@@ -182,7 +173,7 @@ public class GrailSort {
             var leftOver = length - (mergeIndex - start);
 
             if(leftOver > mergeLen) grailMergeForwards(data, comparator, mergeIndex, mergeLen, leftOver - mergeLen, mergeLen);
-            else grailRotate(data, mergeIndex - mergeLen, mergeLen, leftOver);
+            else rotate(data, mergeIndex - mergeLen, mergeLen, leftOver);
 
             start -= mergeLen;
         }
@@ -191,7 +182,7 @@ public class GrailSort {
         var lastBlock  = length % fullMerge;
         var lastOffset = start + length - lastBlock;
 
-        if(lastBlock <= bufferLen) grailRotate(data, lastOffset, lastBlock, bufferLen);
+        if(lastBlock <= bufferLen) rotate(data, lastOffset, lastBlock, bufferLen);
         else grailMergeBackwards(data, comparator, lastOffset, bufferLen, lastBlock - bufferLen, bufferLen);
 
         for(int mergeIndex = lastOffset - fullMerge; mergeIndex >= start; mergeIndex -= fullMerge) grailMergeBackwards(data, comparator, mergeIndex, bufferLen, bufferLen, bufferLen);
@@ -213,7 +204,7 @@ public class GrailSort {
             }
 
             if(selectBlock != firstBlock) {
-                grailBlockSwap(data, start + (firstBlock * blockLen), start + (selectBlock * blockLen), blockLen);
+                blockSwap(data, start + (firstBlock * blockLen), start + (selectBlock * blockLen), blockLen);
                 swap(data, firstBlock, selectBlock);
 
                 if(medianKey == firstBlock) medianKey = selectBlock;
@@ -293,7 +284,7 @@ public class GrailSort {
                     var mergeLen = grailBinarySearchLeft(data, comparator, middle, rightLen, data[start]);
 
                     if(mergeLen != 0) {
-                        grailRotate(data, start, leftLen, mergeLen);
+                        rotate(data, start, leftLen, mergeLen);
                         start    += mergeLen;
                         middle   += mergeLen;
                         rightLen -= mergeLen;
@@ -316,7 +307,7 @@ public class GrailSort {
                     var mergeLen = grailBinarySearchRight(data, comparator, middle, rightLen, data[start]);
 
                     if(mergeLen != 0) {
-                        grailRotate(data, start, leftLen, mergeLen);
+                        rotate(data, start, leftLen, mergeLen);
                         start    += mergeLen;
                         middle   += mergeLen;
                         rightLen -= mergeLen;
@@ -352,7 +343,7 @@ public class GrailSort {
 
             if(nextBlockOrigin == currBlockOrigin[0]) {
                 buffer = currBlock - blockLen;
-                grailBlockSwap(data, buffer, currBlock, currBlockLen[0]);
+                blockSwap(data, buffer, currBlock, currBlockLen[0]);
                 currBlockLen[0] = blockLen;
             } else grailSmartMerge(data, comparator, currBlock, currBlockLen[0], currBlockOrigin[0], blockLen, blockLen, currBlockLen, currBlockOrigin);
         }
@@ -362,14 +353,14 @@ public class GrailSort {
 
         if(lastLen != 0) {
             if(currBlockOrigin[0]) {
-                grailBlockSwap(data, buffer, currBlock, currBlockLen[0]);
+                blockSwap(data, buffer, currBlock, currBlockLen[0]);
                 currBlock = nextBlock;
                 currBlockLen[0] = blockLen * lastMergeBlocks;
                 currBlockOrigin[0] = false;
             } else currBlockLen[0] += blockLen * lastMergeBlocks;
 
             grailMergeForwards(data, comparator, currBlock, currBlockLen[0], lastLen, blockLen);
-        } else grailBlockSwap(data, buffer, currBlock, currBlockLen[0]);
+        } else blockSwap(data, buffer, currBlock, currBlockLen[0]);
     }
 
     private static <D> void grailLazyMergeBlocks(D[] data, Comparator<D> comparator, int medianKey, int start, int blockCount, int blockLen, int lastMergeBlocks, int lastLen) {
@@ -400,13 +391,13 @@ public class GrailSort {
         }
     }
 
-    private static <D> void grailCombineInPlace(D[] data, Comparator<D> comparator, int start, int length, int subarrayLen, int blockLen, int mergeCount, int lastSubarrays, boolean buffer) {
+    private static <D> void grailCombineInPlace(D[] data, Comparator<D> comparator, int start, int length, int subarrayLen, int blockLen, int mergeCount, int lastSubData, boolean buffer) {
         var fullMerge  = 2 * subarrayLen;
         final var blockCount = fullMerge / blockLen;
 
         for(int mergeIndex = 0; mergeIndex < mergeCount; mergeIndex++) {
             var offset = start + (mergeIndex * fullMerge);
-            grailInsertSort(data, comparator, blockCount);
+            Sort.insertion(Arrays.asList(data), comparator, 0, blockCount);
             var medianKey = subarrayLen / blockLen;
             medianKey = grailBlockSelectSort(data, comparator, offset, medianKey, blockCount, blockLen);
 
@@ -414,13 +405,13 @@ public class GrailSort {
             else grailLazyMergeBlocks(data, comparator, medianKey, offset, blockCount, blockLen, 0, 0);
         }
 
-        if(lastSubarrays != 0) {
+        if(lastSubData != 0) {
             var offsetFull = start + (mergeCount * fullMerge);
-            var blockCountFull = lastSubarrays / blockLen;
-            grailInsertSort(data, comparator, blockCountFull + 1);
+            var blockCountFull = lastSubData / blockLen;
+            Sort.insertion(Arrays.asList(data), comparator, 0, blockCountFull + 1);
             var medianKey = subarrayLen / blockLen;
             medianKey = grailBlockSelectSort(data, comparator, offsetFull, medianKey, blockCountFull, blockLen);
-            var lastFragment = lastSubarrays - (blockCountFull * blockLen);
+            var lastFragment = lastSubData - (blockCountFull * blockLen);
             var lastMergeBlocks = lastFragment != 0 ? grailCountLastMergeBlocks(data, comparator, offsetFull, blockCountFull, blockLen) : 0;
             var smartMerges = blockCountFull - lastMergeBlocks;
 
@@ -441,14 +432,14 @@ public class GrailSort {
     private static <D> void grailCombineBlocks(D[] data, Comparator<D> comparator, int start, int length, int subarrayLen, int blockLen, boolean buffer) {
         var fullMerge = 2 * subarrayLen;
         var mergeCount = length /  fullMerge;
-        var lastSubarrays = length - (fullMerge * mergeCount);
+        var lastSubData = length - (fullMerge * mergeCount);
 
-        if(lastSubarrays <= subarrayLen) {
-            length -= lastSubarrays;
-            lastSubarrays = 0;
+        if(lastSubData <= subarrayLen) {
+            length -= lastSubData;
+            lastSubData = 0;
         }
 
-        grailCombineInPlace(data, comparator, start, length, subarrayLen, blockLen, mergeCount, lastSubarrays, buffer);
+        grailCombineInPlace(data, comparator, start, length, subarrayLen, blockLen, mergeCount, lastSubData, buffer);
     }
 
     private static <D> void grailLazyMerge(D[] data, Comparator<D> comparator, int start, int leftLen, int rightLen) {
@@ -459,7 +450,7 @@ public class GrailSort {
                 var mergeLen = grailBinarySearchLeft(data, comparator, middle, rightLen, data[start]);
 
                 if(mergeLen != 0) {
-                    grailRotate(data, start, leftLen, mergeLen);
+                    rotate(data, start, leftLen, mergeLen);
                     start    += mergeLen;
                     middle   += mergeLen;
                     rightLen -= mergeLen;
@@ -480,7 +471,7 @@ public class GrailSort {
                 var mergeLen = grailBinarySearchRight(data, comparator, start, leftLen, data[end]);
 
                 if(mergeLen != leftLen) {
-                    grailRotate(data, start + mergeLen, leftLen - mergeLen, rightLen);
+                    rotate(data, start + mergeLen, leftLen - mergeLen, rightLen);
                     end -=  leftLen - mergeLen;
                     leftLen = mergeLen;
                 }
@@ -530,7 +521,11 @@ public class GrailSort {
 
         var keyLen = (data.length - 1) / blockLen + 1;
         var idealKeys = keyLen + blockLen;
-        var keysFound = grailCollectKeys(data, comparator, data.length, idealKeys);
+        var keysFound = 1;
+        var firstKey = 0;
+        var currKey = 1;
+
+        while(currKey < data.length)
 
         boolean idealBuffer;
         if(keysFound < idealKeys) {
@@ -569,7 +564,7 @@ public class GrailSort {
             grailCombineBlocks(data, comparator, bufferEnd, data.length - bufferEnd, subarrayLen, currentBlockLen, scrollingBuffer);
         }
 
-        grailInsertSort(data, comparator, bufferEnd);
+        Sort.insertion(Arrays.asList(data), comparator, 0, bufferEnd);
         grailLazyMerge(data, comparator, 0, bufferEnd, data.length - bufferEnd);
     }
 }

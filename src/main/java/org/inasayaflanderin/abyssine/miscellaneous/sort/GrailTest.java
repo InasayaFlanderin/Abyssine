@@ -12,10 +12,10 @@ public class GrailTest {
             array[i] = random.nextInt();
         }
 
-        //GrailSort.grailCommonSort(array, Integer::compareTo);
+        GrailSort.grailCommonSort(array, Integer::compareTo);
 
-        ParallelGrailSort<Integer> prs = new ParallelGrailSort<>();
-        prs.runSort(array, array.length, Integer::compareTo);
+        //ParallelGrailSort<Integer> prs = new ParallelGrailSort<>();
+        //prs.runSort(array, array.length, Integer::compareTo);
         System.out.println("Sorted: " + isSort(array, Integer::compareTo));
     }
 }
