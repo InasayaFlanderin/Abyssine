@@ -53,9 +53,56 @@ public class ParallelGrailSort {
                 Thread.currentThread().interrupt();
             }
 
-            blockMerge(array, comparator, start, start1, mid, end, bLen);
-            //TODO t = start, start = start1, mid = mid, end = end, bLen = bLen
             var t = start;
+            int start2 = start1 + (mid - start1) % bLen;
+            int end1 = end - (end - mid) % bLen;
+            int i = start2, l = i - bLen, r = mid;
+
+            D mKey = array[t + (mid - i) / bLen];
+            int f = start1;
+            boolean frag = true;
+
+            blockSelect(array, comparator, start2, end1, t, bLen);
+
+            while (l < mid && r < end1) {
+                boolean curr = comparator.compare(array[t++], mKey) < 0;
+
+                if (frag != curr) {
+                    f = mergeFW(array, comparator, f - bLen, f, i, i + bLen, frag);
+
+                    if (f < i) {
+                        shiftBW(array, f, i, i + bLen);
+                        f += bLen;
+                    } else {
+                        frag = curr;
+                    }
+
+                    if (frag) {
+                        r += bLen;
+                    } else {
+                        l += bLen;
+                    }
+                } else {
+                    shiftFW(array, f - bLen, f, i);
+                    f = i;
+
+                    if (frag) {
+                        l += bLen;
+                    } else {
+                        r += bLen;
+                    }
+                }
+                i += bLen;
+            }
+
+            if (l < mid) {
+                f = mergeFW(array, comparator, f - bLen, f, end1, end, true);
+                if (f >= end1) {
+                    shiftFW(array, f - bLen, f, end);
+                }
+            } else {
+                shiftFW(array, f - bLen, f, end);
+            }
 
             mid = leftBinSearch(array, comparator, start + tLen, end - bLen, array[start + tLen - 1]);
 
@@ -187,16 +234,16 @@ public class ParallelGrailSort {
         inPlaceMergeFW(array, comparator, start, mid, end, true);
     }
 
-    private static <D> void blockMerge(D[] array, Comparator<D> comparator, int t, int start, int mid, int end, int bLen) {
-        int start1 = start + (mid - start) % bLen;
+    private static <D> void blockMerge(D[] array, Comparator<D> comparator, int t, int start1, int mid, int end, int bLen) {
+        int start2 = start1 + (mid - start1) % bLen;
         int end1 = end - (end - mid) % bLen;
-        int i = start1, l = i - bLen, r = mid;
+        int i = start2, l = i - bLen, r = mid;
 
         D mKey = array[t + (mid - i) / bLen];
-        int f = start;
+        int f = start1;
         boolean frag = true;
 
-        blockSelect(array, comparator, start1, end1, t, bLen);
+        blockSelect(array, comparator, start2, end1, t, bLen);
 
         while (l < mid && r < end1) {
             boolean curr = comparator.compare(array[t++], mKey) < 0;
