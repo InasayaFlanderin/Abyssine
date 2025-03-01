@@ -12,11 +12,11 @@ import static org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils.swap
 public class ParallelGrailSort<D> {
     ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
 
-    private void grailCommonSort(D[] array, Comparator<D> comparator, int a, int b, int nKeys) {
-        int len = b - a;
+    private void grailCommonSort(D[] array, Comparator<D> comparator, int start, int end, int nKeys) {
+        int len = end - start;
 
         if (len <= 16) {
-            Sort.insertion(Arrays.asList(array), comparator, a, b);
+            Sort.insertion(Arrays.asList(array), comparator, start, end);
 
             return;
         }
@@ -28,20 +28,20 @@ public class ParallelGrailSort<D> {
         boolean strat1 = nKeys >= idl;
         if (!strat1) idl = nKeys;
 
-        int keys = this.findKeys(array, comparator, a, b, idl);
-        int a1 = a + keys;
-        int m = (a1 + b) / 2;
+        int keys = this.findKeys(array, comparator, start, end, idl);
+        int start1 = start + keys;
+        int mid = (start1 + end) / 2;
 
         if (strat1 && keys == idl) {
-            int finalM = m;
+            int finalMid = mid;
             List<Callable<Void>> tasks = List.of(
                     () -> {
-                        this.grailCommonSort(array, comparator, a1, finalM, keys);
+                        this.grailCommonSort(array, comparator, start1, finalMid, keys);
 
                         return null;
                     },
                     () -> {
-                        this.grailCommonSort(array, comparator, finalM, b, keys);
+                        this.grailCommonSort(array, comparator, finalMid, end, keys);
 
                         return null;
                     }
@@ -53,19 +53,19 @@ public class ParallelGrailSort<D> {
                 Thread.currentThread().interrupt();
             }
 
-            this.blockMerge(array, comparator, a, a1, m, b, bLen);
+            this.blockMerge(array, comparator, start, start1, mid, end, bLen);
 
-            m = this.leftBinSearch(array, comparator, a + tLen, b - bLen, array[a + tLen - 1]);
+            mid = this.leftBinSearch(array, comparator, start + tLen, end - bLen, array[start + tLen - 1]);
 
             int finalBLen = bLen;
-            int finalM1 = m;
+            int finalM1 = mid;
             List<Callable<Void>> tasks1 = List.of(
                     () -> {
-                        this.redistFW(array, comparator, a, a + tLen, finalM1);
+                        this.redistFW(array, comparator, start, start + tLen, finalM1);
                         return null;
                     },
                     () -> {
-                        this.redistBW(array, comparator, finalM1, b - finalBLen, b);
+                        this.redistBW(array, comparator, finalM1, end - finalBLen, end);
                         return null;
                     }
             );
@@ -76,18 +76,18 @@ public class ParallelGrailSort<D> {
                 Thread.currentThread().interrupt();
             }
         } else {
-            m = (a1 + b) / 2;
+            mid = (start1 + end) / 2;
             if (keys > 4) {
-                bLen = (b - a1 - 1) / (keys - keys % 2) + 1;
+                bLen = (end - start1 - 1) / (keys - keys % 2) + 1;
 
-                int finalM2 = m;
+                int finalM2 = mid;
                 List<Callable<Void>> tasks = List.of(
                         () -> {
-                            this.grailCommonSort(array, comparator, a1, finalM2, keys);
+                            this.grailCommonSort(array, comparator, start1, finalM2, keys);
                             return null;
                         },
                         () -> {
-                            this.grailCommonSort(array, comparator, finalM2, b, keys);
+                            this.grailCommonSort(array, comparator, finalM2, end, keys);
                             return null;
                         }
                 );
@@ -98,29 +98,29 @@ public class ParallelGrailSort<D> {
                     throw new RuntimeException(e);
                 }
 
-                this.blockMergeFewKeys(array, comparator, a, a1, m, b, bLen);
-                this.redistFW(array, comparator, a, a1, b);
+                this.blockMergeFewKeys(array, comparator, start, start1, mid, end, bLen);
+                this.redistFW(array, comparator, start, start1, end);
             } else if (keys > 1) {
-                this.lazyStableSort(array, comparator, a, b);
+                this.lazyStableSort(array, comparator, start, end);
             }
         }
     }
 
-    private void lazyStableSort(D[] array, Comparator<D> comparator, int a, int b) {
-        if (b - a <= 16) {
-            Sort.insertion(Arrays.asList(array), comparator, a, b);
+    private void lazyStableSort(D[] array, Comparator<D> comparator, int start, int end) {
+        if (end - start <= 16) {
+            Sort.insertion(Arrays.asList(array), comparator, start, end);
             return;
         }
 
-        int m = (a + b) / 2;
+        int mid = (start + end) / 2;
 
         List<Callable<Void>> tasks = List.of(
                 () -> {
-                    this.lazyStableSort(array, comparator, a, m);
+                    this.lazyStableSort(array, comparator, start, mid);
                     return null;
                 },
                 () -> {
-                    this.lazyStableSort(array, comparator, m, b);
+                    this.lazyStableSort(array, comparator, mid, end);
                     return null;
                 }
         );
@@ -131,30 +131,30 @@ public class ParallelGrailSort<D> {
             throw new RuntimeException(e);
         }
 
-        this.inPlaceMergeFW(array, comparator, a, m, b, true);
+        this.inPlaceMergeFW(array, comparator, start, mid, end, true);
     }
 
-    private void redistFW(D[] array, Comparator<D> comparator, int a, int m, int b) {
-        Sort.insertion(Arrays.asList(array), comparator, a, m);
-        this.inPlaceMergeFW(array, comparator, a, m, b, true);
+    private void redistFW(D[] array, Comparator<D> comparator, int start, int mid, int end) {
+        Sort.insertion(Arrays.asList(array), comparator, start, mid);
+        this.inPlaceMergeFW(array, comparator, start, mid, end, true);
     }
-    private void redistBW(D[] array, Comparator<D> comparator, int a, int m, int b) {
-        Sort.insertion(Arrays.asList(array), comparator, m, b);
-        this.inPlaceMergeBW(array, comparator, a, m, b, false);
+    private void redistBW(D[] array, Comparator<D> comparator, int start, int mid, int end) {
+        Sort.insertion(Arrays.asList(array), comparator, mid, end);
+        this.inPlaceMergeBW(array, comparator, start, mid, end, false);
     }
 
-    private void blockMergeFewKeys(D[] array, Comparator<D> comparator, int t, int a, int m, int b, int bLen) {
-        int a1 = a + (m - a) % bLen;
-        int b1 = b - (b - m) % bLen;
-        int i = a1, l = i - bLen, r = m;
+    private void blockMergeFewKeys(D[] array, Comparator<D> comparator, int t, int start, int mid, int end, int bLen) {
+        int start1 = start + (mid - start) % bLen;
+        int end1 = end - (end - mid) % bLen;
+        int i = start1, l = i - bLen, r = mid;
 
-        D mKey = array[t + (m - i) / bLen];
-        int f = a;
+        D mKey = array[t + (mid - i) / bLen];
+        int f = start;
         boolean frag = true;
 
-        this.blockSelect(array, comparator, a1, b1, t, bLen);
+        this.blockSelect(array, comparator, start1, end1, t, bLen);
 
-        while (l < m && r < b1) {
+        while (l < mid && r < end1) {
             boolean curr = comparator.compare(array[t++], mKey) < 0;
 
             if (frag != curr) {
@@ -183,23 +183,23 @@ public class ParallelGrailSort<D> {
             i += bLen;
         }
 
-        if (l < m) {
-            this.inPlaceMergeBW(array, comparator, f, b1, b, true);
+        if (l < mid) {
+            this.inPlaceMergeBW(array, comparator, f, end1, end, true);
         }
     }
 
-    private void blockMerge(D[] array, Comparator<D> comparator, int t, int a, int m, int b, int bLen) {
-        int a1 = a + (m - a) % bLen;
-        int b1 = b - (b - m) % bLen;
-        int i = a1, l = i - bLen, r = m;
+    private void blockMerge(D[] array, Comparator<D> comparator, int t, int start, int mid, int end, int bLen) {
+        int start1 = start + (mid - start) % bLen;
+        int end1 = end - (end - mid) % bLen;
+        int i = start1, l = i - bLen, r = mid;
 
-        D mKey = array[t + (m - i) / bLen];
-        int f = a;
+        D mKey = array[t + (mid - i) / bLen];
+        int f = start;
         boolean frag = true;
 
-        this.blockSelect(array, comparator, a1, b1, t, bLen);
+        this.blockSelect(array, comparator, start1, end1, t, bLen);
 
-        while (l < m && r < b1) {
+        while (l < mid && r < end1) {
             boolean curr = comparator.compare(array[t++], mKey) < 0;
 
             if (frag != curr) {
@@ -230,39 +230,39 @@ public class ParallelGrailSort<D> {
             i += bLen;
         }
 
-        if (l < m) {
-            f = this.mergeFW(array, comparator, f - bLen, f, b1, b, true);
-            if (f >= b1) {
-                this.shiftFW(array, f - bLen, f, b);
+        if (l < mid) {
+            f = this.mergeFW(array, comparator, f - bLen, f, end1, end, true);
+            if (f >= end1) {
+                this.shiftFW(array, f - bLen, f, end);
             }
         } else {
-            this.shiftFW(array, f - bLen, f, b);
+            this.shiftFW(array, f - bLen, f, end);
         }
     }
 
-    private void blockSelect(D[] array, Comparator<D> comparator, int a, int b, int t, int bLen) {
-        for (int j = a; j < b; j += bLen) {
+    private void blockSelect(D[] array, Comparator<D> comparator, int start, int end, int t, int bLen) {
+        for (int j = start; j < end; j += bLen) {
             int min = j;
 
-            for (int i = min + bLen; i < b; i += bLen) {
+            for (int i = min + bLen; i < end; i += bLen) {
                 int cmp = comparator.compare(array[i], array[min]);
 
-                if (cmp < 0 || (cmp == 0 && comparator.compare(array[t + (i - a) / bLen], array[t + (min - a) / bLen]) < 0)) {
+                if (cmp < 0 || (cmp == 0 && comparator.compare(array[t + (i - start) / bLen], array[t + (min - start) / bLen]) < 0)) {
                     min = i;
                 }
             }
 
             if (min != j) {
                 this.multiSwap(array, j, min, bLen);
-                swap(array, t + (j - a) / bLen, t + (min - a) / bLen);
+                swap(array, t + (j - start) / bLen, t + (min - start) / bLen);
             }
         }
     }
 
-    private int findKeys(D[] array, Comparator<D> comparator, int a, int b, int n) {
-        int p = a, nKeys = 1, pEnd = a + nKeys;
+    private int findKeys(D[] array, Comparator<D> comparator, int start, int end, int n) {
+        int p = start, nKeys = 1, pEnd = start + nKeys;
 
-        for (int i = pEnd; i < b && nKeys < n; i++) {
+        for (int i = pEnd; i < end && nKeys < n; i++) {
             int loc = this.leftBinSearch(array, comparator, p, pEnd, array[i]);
 
             if (pEnd == loc || comparator.compare(array[i], array[loc]) != 0) {
@@ -278,17 +278,17 @@ public class ParallelGrailSort<D> {
             }
         }
 
-        this.rotate(array, a, p, pEnd);
+        this.rotate(array, start, p, pEnd);
         return nKeys;
     }
 
-    private int inPlaceMergeFW(D[] array, Comparator<D> comparator, int a, int m, int b, boolean fwEq) {
-        int i = a, j = m, k;
+    private int inPlaceMergeFW(D[] array, Comparator<D> comparator, int start, int mid, int end, boolean fwEq) {
+        int i = start, j = mid, k;
 
-        while (i < j && j < b) {
+        while (i < j && j < end) {
             if (comparator.compare(array[i], array[j]) > (fwEq ? 0 : -1)) {
-                k = fwEq ? this.leftBinSearch(array, comparator, j + 1, b, array[i])
-                        : this.rightBinSearch(array, comparator, j + 1, b, array[i]);
+                k = fwEq ? this.leftBinSearch(array, comparator, j + 1, end, array[i])
+                        : this.rightBinSearch(array, comparator, j + 1, end, array[i]);
 
                 this.rotate(array, i, j, k);
 
@@ -302,13 +302,13 @@ public class ParallelGrailSort<D> {
         return i;
     }
 
-    private void inPlaceMergeBW(D[] array, Comparator<D> comparator, int a, int m, int b, boolean fwEq) {
-        int i = m - 1, j = b - 1, k;
+    private void inPlaceMergeBW(D[] array, Comparator<D> comparator, int start, int mid, int end, boolean fwEq) {
+        int i = mid - 1, j = end - 1, k;
 
-        while (j > i && i >= a) {
+        while (j > i && i >= start) {
             if (comparator.compare(array[i], array[j]) > (fwEq ? 0 : -1)) {
-                k = fwEq ? this.rightBinSearch(array, comparator, a, i, array[j])
-                        : this.leftBinSearch(array, comparator, a, i, array[j]);
+                k = fwEq ? this.rightBinSearch(array, comparator, start, i, array[j])
+                        : this.leftBinSearch(array, comparator, start, i, array[j]);
 
                 this.rotate(array, k, i + 1, j + 1);
 
@@ -320,10 +320,10 @@ public class ParallelGrailSort<D> {
         }
     }
 
-    private int mergeFW(D[] array, Comparator<D> comparator, int p, int a, int m, int b, boolean fwEq) {
-        int i = a, j = m;
+    private int mergeFW(D[] array, Comparator<D> comparator, int p, int start, int mid, int end, boolean fwEq) {
+        int i = start, j = mid;
 
-        while (i < m && j < b) {
+        while (i < mid && j < end) {
             if (comparator.compare(array[i], array[j]) < (fwEq ? 1 : 0)) {
                 swap(array, p++, i++);
             } else {
@@ -331,79 +331,79 @@ public class ParallelGrailSort<D> {
             }
         }
 
-        int f = (i < m) ? i : j;
-        if (i < m && p < i) {
-            this.shiftFW(array, p, i, m);
+        int f = (i < mid) ? i : j;
+        if (i < mid && p < i) {
+            this.shiftFW(array, p, i, mid);
         }
 
         return f;
     }
 
-    private void insertTo(D[] array, int a, int b) {
-        D temp = array[a];
-        while (a > b) {
-            array[a] = array[--a];
+    private void insertTo(D[] array, int start, int end) {
+        D temp = array[start];
+        while (start > end) {
+            array[start] = array[--start];
         }
-        array[b] = temp;
+        array[end] = temp;
     }
 
-    private int leftBinSearch(D[] array, Comparator<D> comparator, int a, int b, D value) {
-        while (a < b) {
-            int m = a + (b - a) / 2;
-            if (comparator.compare(value, array[m]) <= 0) {
-                b = m;
+    private int leftBinSearch(D[] array, Comparator<D> comparator, int start, int end, D value) {
+        while (start < end) {
+            int mid = start + (end - start) / 2;
+            if (comparator.compare(value, array[mid]) <= 0) {
+                end = mid;
             } else {
-                a = m + 1;
+                start = mid + 1;
             }
         }
-        return a;
+        return start;
     }
 
-    private int rightBinSearch(D[] array, Comparator<D> comparator, int a, int b, D value) {
-        while (a < b) {
-            int m = a + (b - a) / 2;
-            if (comparator.compare(value, array[m]) < 0) {
-                b = m;
+    private int rightBinSearch(D[] array, Comparator<D> comparator, int start, int end, D value) {
+        while (start < end) {
+            int mid = start + (end - start) / 2;
+            if (comparator.compare(value, array[mid]) < 0) {
+                end = mid;
             } else {
-                a = m + 1;
+                start = mid + 1;
             }
         }
-        return a;
+        return start;
     }
 
-    private void rotate(D[] array, int a, int m, int b) {
-        int l = m - a, r = b - m;
+    private void rotate(D[] array, int start, int mid, int end) {
+        int l = mid - start, r = end - mid;
 
         while (l > 0 && r > 0) {
             if (r < l) {
-                this.multiSwap(array, m - r, m, r);
-                b -= r;
-                m -= r;
+                this.multiSwap(array, mid - r, mid, r);
+                end -= r;
+                mid -= r;
                 l -= r;
             } else {
-                this.multiSwap(array, a, m, l);
-                a += l;
-                m += l;
+                this.multiSwap(array, start, mid, l);
+                start += l;
+                mid += l;
                 r -= l;
             }
         }
     }
 
-    private void shiftFW(D[] array, int a, int m, int b) {
-        while (m < b) {
-            swap(array, a++, m++);
+    private void shiftFW(D[] array, int start, int mid, int end) {
+        while (mid < end) {
+            swap(array, start++, mid++);
         }
     }
 
-    private void shiftBW(D[] array, int a, int m, int b) {
-        while (m > a) {
-            swap(array, --b, --m);
+    private void shiftBW(D[] array, int start, int mid, int end) {
+        while (mid > start) {
+            swap(array, --end, --mid);
         }
     }
 
-    private void multiSwap(D[] array, int a, int b, int len) {
+    private void multiSwap(D[] array, int start, int end, int len) {
         for (int i = 0; i < len; i++) {
-            swap(array, a + i, b + i);
+            swap(array, start + i, end + i);
         }
     }
 
