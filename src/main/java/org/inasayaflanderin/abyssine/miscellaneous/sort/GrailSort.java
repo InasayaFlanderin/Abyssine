@@ -52,12 +52,6 @@ public class GrailSort {
         return right;
     }
 
-    private static <D> void insertBackwards(D[] data, int start, int length) {
-        var item = data[start + length];
-        copy(data, start, data, start + 1, length);
-        data[start] = item;
-    }
-
     private static <D> void grailMergeForwards(D[] data, Comparator<D> comparator, int start, int leftLen, int rightLen, int bufferOffset) {
         var buffer = start - bufferOffset;
         var left = start;
@@ -92,32 +86,6 @@ public class GrailSort {
         if(right != buffer) while(right > middle) swap(data, buffer--, right--);
     }
 
-    private static <D> void grailBuildInPlace(D[] data, Comparator<D> comparator, int start, int length, int bufferLen) {
-        for(int mergeLen = 2; mergeLen < bufferLen; mergeLen *= 2) {
-            var fullMerge = 2 * mergeLen;
-            int mergeIndex;
-            var mergeEnd = start + length - fullMerge;
-
-            for(mergeIndex = start; mergeIndex <= mergeEnd; mergeIndex += fullMerge) grailMergeForwards(data, comparator, mergeIndex, mergeLen, mergeLen, mergeLen);
-
-            var leftOver = length - (mergeIndex - start);
-
-            if(leftOver > mergeLen) grailMergeForwards(data, comparator, mergeIndex, mergeLen, leftOver - mergeLen, mergeLen);
-            else rotate(data, mergeIndex - mergeLen, mergeLen, leftOver);
-
-            start -= mergeLen;
-        }
-
-        var fullMerge  = 2 * bufferLen;
-        var lastBlock  = length % fullMerge;
-        var lastOffset = start + length - lastBlock;
-
-        if(lastBlock <= bufferLen) rotate(data, lastOffset, lastBlock, bufferLen);
-        else grailMergeBackwards(data, comparator, lastOffset, bufferLen, lastBlock - bufferLen, bufferLen);
-
-        for(int mergeIndex = lastOffset - fullMerge; mergeIndex >= start; mergeIndex -= fullMerge) grailMergeBackwards(data, comparator, mergeIndex, bufferLen, bufferLen, bufferLen);
-    }
-
     private static <D> int grailBlockSelectSort(D[] data, Comparator<D> comparator, int start, int medianKey, int blockCount, int blockLen) {
         for(int firstBlock = 0; firstBlock < blockCount; firstBlock++) {
             var selectBlock = firstBlock;
@@ -140,32 +108,8 @@ public class GrailSort {
         return medianKey;
     }
 
-    private static <D> void grailInPlaceBufferReset(D[] data, int start, int length, int bufferOffset) {
-        var buffer = start + length - 1;
-        var index = buffer - bufferOffset;
-
-        while(buffer >= start) swap(data, index--, buffer--);
-    }
-
-    private static <D> void grailInPlaceBufferRewind(D[] data, int start, int leftBlock, int buffer) {
-        while(leftBlock >= start) swap(data, buffer--, leftBlock--);
-    }
-
     private static <D> boolean grailGetSubarray(D[] data, Comparator<D> comparator, int currentKey, int medianKey) {
         return comparator.compare(data[currentKey], data[medianKey]) >= 0;
-    }
-
-    private static <D> int grailCountLastMergeBlocks(D[] data, Comparator<D> comparator, int offset, int blockCount, int blockLen) {
-        var blocksToMerge = 0;
-        var lastRightFrag = offset + (blockCount * blockLen);
-        var prevLeftBlock = lastRightFrag - blockLen;
-
-        while(blocksToMerge < blockCount && comparator.compare(data[lastRightFrag], data[prevLeftBlock]) < 0) {
-            blocksToMerge++;
-            prevLeftBlock -= blockLen;
-        }
-
-        return blocksToMerge;
     }
 
     private static <D> void grailSmartMerge(D[] data, Comparator<D> comparator, int start, int leftLen, boolean leftOrigin, int rightLen, int bufferOffset, int[] currBlockLen, boolean[] currBlockOrigin) {
@@ -193,7 +137,10 @@ public class GrailSort {
 
         if(left < middle) {
             currBlockLen[0] = middle - left;
-            grailInPlaceBufferRewind(data, left, middle - 1, end - 1);
+            var leftBlock = middle - 1;
+            var bufferR = end - 1;
+
+            while(leftBlock >= left) swap(data, bufferR--, leftBlock--);
         } else {
             currBlockLen[0] = end - right;
             currBlockOrigin[0] = !leftOrigin;
@@ -337,7 +284,18 @@ public class GrailSort {
             var medianKey = subarrayLen / blockLen;
             medianKey = grailBlockSelectSort(data, comparator, offsetFull, medianKey, blockCountFull, blockLen);
             var lastFragment = lastSubData - (blockCountFull * blockLen);
-            var lastMergeBlocks = lastFragment != 0 ? grailCountLastMergeBlocks(data, comparator, offsetFull, blockCountFull, blockLen) : 0;
+            int lastMergeBlocks = 0;
+
+            if(lastFragment != 0) {
+                var lastRightFrag = offsetFull + (blockCountFull * blockLen);
+                var prevLeftBlock = lastRightFrag - blockLen;
+
+                while(lastMergeBlocks < blockCountFull && comparator.compare(data[lastRightFrag], data[prevLeftBlock]) < 0) {
+                    lastMergeBlocks++;
+                    prevLeftBlock -= blockLen;
+                }
+            }
+
             var smartMerges = blockCountFull - lastMergeBlocks;
 
             if(smartMerges == 0) {
@@ -351,7 +309,12 @@ public class GrailSort {
             }
         }
 
-        if(buffer) grailInPlaceBufferReset(data, start, length, blockLen);
+        if(buffer) {
+            var bufferR = start + length - 1;
+            var index = bufferR - blockLen;
+
+            while(bufferR >= start) swap(data, index--, bufferR--);
+        }
     }
 
     private static <D> void grailLazyMerge(D[] data, Comparator<D> comparator, int start, int leftLen, int rightLen) {
@@ -437,7 +400,11 @@ public class GrailSort {
                 rotate(data, firstKey, keysFound, currKey - (firstKey + keysFound));
                 firstKey = currKey - keysFound;
 
-                if(keysFound != insertPos) insertBackwards(data, firstKey + insertPos, keysFound - insertPos);
+                if(keysFound != insertPos) {
+                    var item = data[firstKey + keysFound];
+                    copy(data, firstKey + insertPos, data, firstKey + insertPos + 1, keysFound - insertPos);
+                    data[firstKey + insertPos] = item;
+                }
 
                 keysFound++;
             }
