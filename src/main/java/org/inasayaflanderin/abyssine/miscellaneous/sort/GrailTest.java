@@ -6,16 +6,16 @@ import static org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils.isSo
 
 public class GrailTest {
     public static void main(String[] args) {
-        Integer[] array = new Integer[1000000];
+        Double[] array = new Double[1000000];
         Random random = new Random();
         for (int i = 0; i < array.length; i++) {
-            array[i] = random.nextInt();
+            array[i] = random.nextDouble();
         }
 
-        GrailSort.grailCommonSort(array, Integer::compareTo);
+        GrailSort.grailCommonSort(array, Double::compareTo);
 
         //ParallelGrailSort<Integer> prs = new ParallelGrailSort<>();
         //prs.runSort(array, array.length, Integer::compareTo);
-        System.out.println("Sorted: " + isSort(array, Integer::compareTo));
+        System.out.println("Sorted: " + isSort(array, Double::compareTo));
     }
 }

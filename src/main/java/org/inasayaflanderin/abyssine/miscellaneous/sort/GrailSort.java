@@ -147,61 +147,6 @@ public class GrailSort {
         }
     }
 
-    private static <D> void grailSmartLazyMerge(D[] data, Comparator<D> comparator, int start, int leftLen, boolean leftOrigin, int rightLen, int[] currBlockLen, boolean[] currBlockOrigin) {
-        var middle = start + leftLen;
-
-        if(!leftOrigin) {
-            if(comparator.compare(data[middle - 1], data[middle]) >  0) {
-                while(leftLen != 0) {
-                    var mergeLen = grailBinarySearchLeft(data, comparator, middle, rightLen, data[start]);
-
-                    if(mergeLen != 0) {
-                        rotate(data, start, leftLen, mergeLen);
-                        start    += mergeLen;
-                        middle   += mergeLen;
-                        rightLen -= mergeLen;
-                    }
-                    if(rightLen == 0) {
-                        currBlockLen[0] = leftLen;
-
-                        return;
-                    } else {
-                        do {
-                            start++;
-                            leftLen--;
-                        } while(leftLen != 0 && comparator.compare(data[start ], data[middle]) <= 0);
-                    }
-                }
-            }
-        } else {
-            if(comparator.compare(data[middle - 1], data[middle]) >= 0) {
-                while(leftLen != 0) {
-                    var mergeLen = grailBinarySearchRight(data, comparator, middle, rightLen, data[start]);
-
-                    if(mergeLen != 0) {
-                        rotate(data, start, leftLen, mergeLen);
-                        start    += mergeLen;
-                        middle   += mergeLen;
-                        rightLen -= mergeLen;
-                    }
-                    if(rightLen == 0) {
-                        currBlockLen[0] = leftLen;
-
-                        return;
-                    } else {
-                        do {
-                            start++;
-                            leftLen--;
-                        } while(leftLen != 0 && comparator.compare(data[start ], data[middle]) < 0);
-                    }
-                }
-            }
-        }
-
-        currBlockLen[0] = rightLen;
-        currBlockOrigin[0] = !leftOrigin;
-    }
-
     private static <D> void grailMergeBlocks(D[] data, Comparator<D> comparator, int medianKey, int start, int blockCount, int blockLen, int lastMergeBlocks, int lastLen) {
         int buffer, currBlock;
         var nextBlock = start + blockLen;
@@ -238,7 +183,7 @@ public class GrailSort {
     private static <D> void grailLazyMergeBlocks(D[] data, Comparator<D> comparator, int medianKey, int start, int blockCount, int blockLen, int lastMergeBlocks, int lastLen) {
         int currBlock;
         var nextBlock = start + blockLen;
-        int[] currBlockLen    = {blockLen};
+        int[] currBlockLen = {blockLen};
         boolean[] currBlockOrigin = {grailGetSubarray(data, comparator, 0, medianKey)};
 
         for(int keyIndex = 1; keyIndex < blockCount; keyIndex++, nextBlock += blockLen) {
@@ -247,7 +192,62 @@ public class GrailSort {
             nextBlockOrigin = grailGetSubarray(data, comparator, keyIndex, medianKey);
 
             if(nextBlockOrigin == currBlockOrigin[0]) currBlockLen[0] = blockLen;
-            else if(blockLen != 0 && currBlockLen[0] != 0) grailSmartLazyMerge(data, comparator, currBlock, currBlockLen[0], currBlockOrigin[0], blockLen, currBlockLen, currBlockOrigin);
+            else if(blockLen != 0 && currBlockLen[0] != 0) {
+                //grailSmartLazyMerge(data, comparator, currBlock, currBlockLen[0], currBlockOrigin[0], blockLen, currBlockLen, currBlockOrigin);
+
+                var middle = currBlock + currBlockLen[0];
+
+                if(currBlockOrigin[0]) {
+                    if(comparator.compare(data[middle - 1], data[middle]) > 0) {
+                        while(currBlockOrigin[0]) {
+                            var mergeLen = grailBinarySearchRight(data, comparator, middle, blockLen, data[currBlock]);
+
+                            if(mergeLen != 0) {
+                                rotate(data, currBlock, currBlockLen[0], mergeLen);
+                                currBlock += mergeLen;
+                                middle    += mergeLen;
+                                blockLen  -= mergeLen;
+                            }
+                            if(blockLen == 0) {
+                                currBlockLen[0] = currBlock - start;
+
+                                return;
+                            } else {
+                                do {
+                                    currBlock++;
+                                    currBlockLen[0]--;
+                                } while(currBlockLen[0] != 0 && comparator.compare(data[currBlock], data[middle]) <= 0);
+                            }
+                        }
+                    }
+                } else {
+                    if(comparator.compare(data[middle - 1], data[middle]) > 0) {
+                        while(currBlockLen[0] != 0) {
+                            var mergeLen = grailBinarySearchLeft(data, comparator, middle, blockLen, data[currBlock]);
+
+                            if(mergeLen != 0) {
+                                rotate(data, currBlock, currBlockLen[0], mergeLen);
+                                currBlock += mergeLen;
+                                middle    += mergeLen;
+                                blockLen  -= mergeLen;
+                            }
+                            if(blockLen == 0) {
+                                currBlockLen[0] = currBlock - start;
+
+                                return;
+                            } else {
+                                do {
+                                    currBlock++;
+                                    currBlockLen[0]--;
+                                } while(currBlockLen[0] != 0 && comparator.compare(data[currBlock], data[middle]) <= 0);
+                            }
+                        }
+                    }
+                }
+
+                currBlockLen[0] = blockLen;
+                currBlockOrigin[0] = nextBlockOrigin;
+            }
         }
 
         currBlock = nextBlock - currBlockLen[0];
