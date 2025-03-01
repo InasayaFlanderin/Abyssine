@@ -489,7 +489,31 @@ public class GrailSort {
 
         data[data.length - 2] = firstSwapKey;
         data[data.length - 1] = secondSwapKey;
-        grailBuildInPlace(data, comparator, bufferEnd - 2, data.length - bufferEnd, subarrayLen);
+        var start = bufferEnd - 2;
+
+        for(int mergeLen = 2; mergeLen < subarrayLen; mergeLen *= 2) {
+            var fullMerge = 2 * mergeLen;
+            int mergeIndex;
+            var mergeEnd = start + data.length - bufferEnd - fullMerge;
+
+            for(mergeIndex = start; mergeIndex <= mergeEnd; mergeIndex += fullMerge) grailMergeForwards(data, comparator, mergeIndex, mergeLen, mergeLen, mergeLen);
+
+            var leftOver = data.length - bufferEnd - (mergeIndex - start);
+
+            if(leftOver > mergeLen) grailMergeForwards(data, comparator, mergeIndex, mergeLen, leftOver - mergeLen, mergeLen);
+            else rotate(data, mergeIndex - mergeLen, mergeLen, leftOver);
+
+            start -= mergeLen;
+        }
+
+        var fullMerge = 2 * subarrayLen;
+        var lastBlock = (data.length - bufferEnd) % fullMerge;
+        var lastOffset = start + data.length - bufferEnd - lastBlock;
+
+        if(lastBlock <= subarrayLen) rotate(data, lastOffset, lastBlock, subarrayLen);
+        else grailMergeBackwards(data, comparator, lastOffset, subarrayLen, lastBlock - subarrayLen, subarrayLen);
+
+        for(int mergeIndex = lastOffset - fullMerge; mergeIndex >= start; mergeIndex -= fullMerge) grailMergeBackwards(data, comparator, mergeIndex, subarrayLen, subarrayLen, subarrayLen);
 
         while((data.length - bufferEnd) > (2 * subarrayLen)) {
             subarrayLen *= 2;
