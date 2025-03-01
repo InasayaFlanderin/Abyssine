@@ -25,14 +25,14 @@ public class ParallelGrailSort {
         int tLen = len / bLen;
 
         int idl = bLen + tLen;
-        boolean strat1 = nKeys >= idl;
-        if (!strat1) idl = nKeys;
+        boolean strategy1 = nKeys >= idl;
+        if (!strategy1) idl = nKeys;
 
         int keys = findKeys(array, comparator, start, end, idl);
         int start1 = start + keys;
         int mid = (start1 + end) / 2;
 
-        if (strat1 && keys == idl) {
+        if (strategy1 && keys == idl) {
             int finalMid = mid;
             List<Callable<Void>> tasks = List.of(
                     () -> {
@@ -54,18 +54,24 @@ public class ParallelGrailSort {
             }
 
             blockMerge(array, comparator, start, start1, mid, end, bLen);
+            //TODO t = start, start = start1, mid = mid, end = end, bLen = bLen
+            var t = start;
 
             mid = leftBinSearch(array, comparator, start + tLen, end - bLen, array[start + tLen - 1]);
 
             int finalBLen = bLen;
             int finalM1 = mid;
+            int startFinal = start;
             List<Callable<Void>> tasks1 = List.of(
                     () -> {
-                        redistFW(array, comparator, start, start + tLen, finalM1);
+                        redistFW(array, comparator, startFinal, startFinal + tLen, finalM1);
+
                         return null;
                     },
                     () -> {
-                        redistBW(array, comparator, finalM1, end - finalBLen, end);
+                        Sort.insertion(Arrays.asList(array), comparator, end - finalBLen, end);
+                        inPlaceMergeBW(array, comparator, finalM1, end - finalBLen, end, false);
+
                         return null;
                     }
             );
@@ -98,8 +104,50 @@ public class ParallelGrailSort {
                     throw new RuntimeException(e);
                 }
 
-                blockMergeFewKeys(array, comparator, start, start1, mid, end, bLen);
-                redistFW(array, comparator, start, start1, end);
+                int start2 = start + (mid - start) % bLen;
+                int end1 = end - (end - mid) % bLen;
+                int i = start2, l = i - bLen, r = mid;
+
+                D mKey = array[start + (mid - i) / bLen];
+                int f = start;
+                boolean frag = true;
+
+                blockSelect(array, comparator, start2, end1, start, bLen);
+
+                while (l < mid && r < end1) {
+                    boolean curr = comparator.compare(array[start++], mKey) < 0;
+
+                    if (frag != curr) {
+                        boolean tmp = frag;
+
+                        if (f == i || comparator.compare(array[i - 1], array[i + bLen - 1]) < (frag ? 1 : 0)) {
+                            frag = curr;
+                        }
+
+                        f = inPlaceMergeFW(array, comparator, f, i, i + bLen, tmp);
+
+                        if (frag) {
+                            r += bLen;
+                        } else {
+                            l += bLen;
+                        }
+                    } else {
+                        f = i;
+
+                        if (frag) {
+                            l += bLen;
+                        } else {
+                            r += bLen;
+                        }
+                    }
+                    i += bLen;
+                }
+
+                if (l < mid) {
+                    inPlaceMergeBW(array, comparator, f, end1, end, true);
+                }
+
+                redistFW(array, comparator, start, start2, end);
             } else if (keys > 1) {
                 lazyStableSort(array, comparator, start, end);
             }
@@ -137,55 +185,6 @@ public class ParallelGrailSort {
     private static <D> void redistFW(D[] array, Comparator<D> comparator, int start, int mid, int end) {
         Sort.insertion(Arrays.asList(array), comparator, start, mid);
         inPlaceMergeFW(array, comparator, start, mid, end, true);
-    }
-    private static <D> void redistBW(D[] array, Comparator<D> comparator, int start, int mid, int end) {
-        Sort.insertion(Arrays.asList(array), comparator, mid, end);
-        inPlaceMergeBW(array, comparator, start, mid, end, false);
-    }
-
-    private static <D> void blockMergeFewKeys(D[] array, Comparator<D> comparator, int t, int start, int mid, int end, int bLen) {
-        int start1 = start + (mid - start) % bLen;
-        int end1 = end - (end - mid) % bLen;
-        int i = start1, l = i - bLen, r = mid;
-
-        D mKey = array[t + (mid - i) / bLen];
-        int f = start;
-        boolean frag = true;
-
-        blockSelect(array, comparator, start1, end1, t, bLen);
-
-        while (l < mid && r < end1) {
-            boolean curr = comparator.compare(array[t++], mKey) < 0;
-
-            if (frag != curr) {
-                boolean tmp = frag;
-
-                if (f == i || comparator.compare(array[i - 1], array[i + bLen - 1]) < (frag ? 1 : 0)) {
-                    frag = curr;
-                }
-
-                f = inPlaceMergeFW(array, comparator, f, i, i + bLen, tmp);
-
-                if (frag) {
-                    r += bLen;
-                } else {
-                    l += bLen;
-                }
-            } else {
-                f = i;
-
-                if (frag) {
-                    l += bLen;
-                } else {
-                    r += bLen;
-                }
-            }
-            i += bLen;
-        }
-
-        if (l < mid) {
-            inPlaceMergeBW(array, comparator, f, end1, end, true);
-        }
     }
 
     private static <D> void blockMerge(D[] array, Comparator<D> comparator, int t, int start, int mid, int end, int bLen) {
