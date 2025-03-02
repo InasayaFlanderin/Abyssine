@@ -20,9 +20,15 @@ public class GrailTest {
         System.out.println("Sorted: " + isSort(array, Double::compareTo));
     }
 
-    @Property(tries = 1000)
+    @Property(tries = 100000)
     public void testGrailSort(@ForAll Double[] array) {
         GrailSort.grailCommonSort(array, Double::compareTo);
+        assertTrue(isSort(array, Double::compareTo));
+    }
+
+    @Property(tries = 100000)
+    public void testGrailSortParallel(@ForAll Double[] array) {
+        ParallelGrailSort.grail(array, Double::compareTo);
         assertTrue(isSort(array, Double::compareTo));
     }
 }
