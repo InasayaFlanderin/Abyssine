@@ -302,18 +302,9 @@ public class GrailSort {
             return;
         }
 
-        //var blockLen = 4;
+        var blockLen = 4;
 
-        //while((blockLen * blockLen) < data.length) blockLen *= 2;
-
-        var blockLen = (int) Math.ceil(Math.sqrt(data.length));
-        blockLen--;
-        blockLen|= blockLen >> 1;
-        blockLen|= blockLen>> 2;
-        blockLen|= blockLen>> 4;
-        blockLen|= blockLen>> 8;
-        blockLen|= blockLen>> 16;
-        blockLen++;
+        while((blockLen * blockLen) < data.length) blockLen *= 2;
 
         var keyLen = (data.length - 1) / blockLen + 1;
         var idealKeys = keyLen + blockLen;
@@ -356,7 +347,7 @@ public class GrailSort {
 
         boolean idealBuffer;
         if(keysFound < idealKeys) {
-            if(keysFound < 4) {
+            /*if(keysFound < 4) {
                 if(keysFound == 1) return;
 
                 Sort.tim(data, comparator);
@@ -368,7 +359,11 @@ public class GrailSort {
                 idealBuffer = false;
 
                 while(keyLen > keysFound) keyLen /= 2;
-            }
+            }*/
+
+            Sort.tim(data, comparator);
+
+            return;
         } else idealBuffer = true;
 
         var bufferEnd = blockLen + keyLen;
@@ -445,8 +440,8 @@ public class GrailSort {
                 lastSubData = 0;
             }
 
-            var fullMergeInPlace  = 2 * subarrayLen;
-            var blockCount = fullMergeInPlace / blockLen;
+            var fullMergeInPlace = 2 * subarrayLen;
+            var blockCount = fullMergeInPlace / currentBlockLen;
 
             for(int mergeIndex = 0; mergeIndex < mergeCount; mergeIndex++) {
                 var offset = bufferEnd + (mergeIndex * fullMergeInPlace);

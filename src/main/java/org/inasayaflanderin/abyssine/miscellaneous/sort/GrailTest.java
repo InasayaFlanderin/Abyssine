@@ -10,13 +10,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class GrailTest {
     public static void main(String[] args) {
-        Double[] array = new Double[1000000];
+        Double[] array = new Double[10000000];
+        //Byte[] array = new Byte[Integer.MAX_VALUE/4];
         Random random = new Random();
         for (int i = 0; i < array.length; i++) {
             array[i] = random.nextDouble();
         }
 
-        ParallelGrailSort.grail(array, Double::compareTo);
+        //ParallelGrailSort.grail(array, Double::compareTo);
+        GrailSort.grailCommonSort(array, Double::compareTo);
         System.out.println("Sorted: " + isSort(array, Double::compareTo));
     }
 

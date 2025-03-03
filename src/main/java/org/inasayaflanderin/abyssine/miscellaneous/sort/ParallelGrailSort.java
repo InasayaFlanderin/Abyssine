@@ -75,7 +75,7 @@ public class ParallelGrailSort {
             try {
                 executorService.invokeAll(tasks);
             } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+                e.printStackTrace();
             }
 
             var t = start;
@@ -144,7 +144,7 @@ public class ParallelGrailSort {
             try {
                 executorService.invokeAll(tasks1);
             } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+                e.printStackTrace();
             }
         } else {
             mid = (start1 + end) / 2;
@@ -167,7 +167,7 @@ public class ParallelGrailSort {
                 try {
                     executorService.invokeAll(tasks);
                 } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                    e.printStackTrace();
                 }
 
                 var start2 = start + (mid - start) % bLen;
@@ -233,7 +233,7 @@ public class ParallelGrailSort {
         try {
             executorService.invokeAll(tasks);
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
 
         inPlaceMergeFW(array, comparator, start, mid, end, true);
