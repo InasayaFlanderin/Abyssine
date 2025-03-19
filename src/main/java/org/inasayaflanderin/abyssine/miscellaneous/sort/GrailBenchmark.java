@@ -28,13 +28,23 @@ public class GrailBenchmark {
         ParallelGrailSort.grail(data, Double::compareTo);
     }
 
+    @Benchmark
+    public void grailSortParallel2() {
+        ParallelGrailSort2.grail(data, Double::compareTo);
+    }
+
+    @Benchmark
+    public void grailSortCircular() {
+        CircularGrailSort.grail(data, Double::compareTo);
+    }
+
     public static void main(String[] args) throws Exception {
         Options options = new OptionsBuilder()
                 .include(GrailBenchmark.class.getSimpleName())
                 .forks(1)
                 .warmupIterations(10)
                 .warmupTime(TimeValue.milliseconds(1))
-                .measurementIterations(100)
+                .measurementIterations(1000)
                 .measurementTime(TimeValue.milliseconds(1))
                 .mode(Mode.All)
                 .build();

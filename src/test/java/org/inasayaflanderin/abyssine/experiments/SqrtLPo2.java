@@ -1,7 +1,6 @@
 package org.inasayaflanderin.abyssine.experiments;
 
 import net.jqwik.api.*;
-import net.jqwik.api.constraints.Positive;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 import org.openjdk.jmh.runner.Runner;
@@ -41,14 +40,21 @@ public class SqrtLPo2 {
         return result;
     }
 
-    @Property(tries = 100)
-    public void test(@ForAll @Positive int value) {
+    @Provide
+    Arbitrary<Integer> provider() {
+        return Arbitraries.integers().greaterOrEqual(17).filter(i -> i < 1 << 30);
+    }
+
+    @Property(tries = 1 << 29)
+    public void test(@ForAll("provider") int value) {
         assertEquals(sqrtlpo21(value), sqrtlpo22(value));
     }
 
     @Setup
     public void setUp() {
-        value = Math.abs(rng.nextInt());
+        do {
+            value = Math.abs(rng.nextInt());
+        } while(value < 16 || value >= 1 << 30);
     }
 
     @Benchmark
@@ -65,11 +71,12 @@ public class SqrtLPo2 {
         Options options = new OptionsBuilder()
                 .include(SqrtLPo2.class.getSimpleName())
                 .forks(1)
-                .warmupIterations(10)
+                .warmupIterations(100)
                 .warmupTime(TimeValue.milliseconds(1))
-                .measurementIterations(1000)
+                .measurementIterations(10000)
                 .measurementTime(TimeValue.milliseconds(1))
                 .timeUnit(TimeUnit.NANOSECONDS)
+                .mode(Mode.All)
                 .build();
 
         new Runner(options).run();
