@@ -1,0 +1,1 @@
+package org.inasayaflanderin.abyssine.miscellaneous;
