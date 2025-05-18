@@ -4,3 +4,4 @@
 <p>Just a simple tool for everyone, work for fun and improving my skill.
 It might be more focused on mathematics tool.</p>
 <p>P/s: Currently use javadoc tool for making java docs</p>
+<p>Look at https://inasayaflanderin.github.io/Abyssine/org/inasayaflanderin/abyssine/miscellaneous/package-summary.html for docs</p>
