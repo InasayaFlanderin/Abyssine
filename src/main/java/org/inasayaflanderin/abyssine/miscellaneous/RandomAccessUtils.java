@@ -23,9 +23,6 @@ public class RandomAccessUtils {
         array[j] = temp;
     }
 
-    /**
-     * @see #swap(D[], int, int)
-     */
     public static <D> void swap(List<D> list, int i, int j) {
         var temp = list.get(i);
         list.set(i, list.get(j));
@@ -45,9 +42,6 @@ public class RandomAccessUtils {
         return isSort(Arrays.asList(array), comparator, start, end);
     }
 
-    /**
-     * @see #isSort(D[], Comparator, int, int)
-     */
     public static <D> boolean isSort(List<D> list, Comparator<D> comparator, int start, int end) {
         return IntStream.range(start, end - 1).parallel()
                 .noneMatch(i -> comparator.compare(list.get(i), list.get(i + 1)) > 0);
@@ -64,9 +58,6 @@ public class RandomAccessUtils {
         reverse(Arrays.asList(array), start, end);
     }
 
-    /**
-     * @see #reverse(D[], int, int)
-     */
     public static <D> void reverse(List<D> list, int start, int end) {
         var left = start;
         var right = end - 1;
@@ -88,9 +79,6 @@ public class RandomAccessUtils {
         System.arraycopy(src, srcPos, dest, destPos, length);
     }
 
-    /**
-     * @see #copy(D[], int, D[], int, int)
-     */
     @SuppressWarnings("unchecked")
     public static <D> void copy(List<D> src, int srcPos, List<D> dest, int destPos, int length) {
         var temp = (D[]) new Object[length];
@@ -99,16 +87,10 @@ public class RandomAccessUtils {
         for(var i = 0; i < length; i++) dest.set(destPos + i, temp[i]);
     }
 
-    /**
-     * @see #copy(D[], int, D[], int, int)
-     */
     public static <D> void copy(D[] src, int srcPos, List<D> dest, int destPos, int length) {
         copy(Arrays.asList(src), srcPos, dest, destPos, length);
     }
 
-    /**
-     * @see #copy(D[], int, D[], int, int)
-     */
     public static <D> void copy(List<D> src, int srcPos, D[] dest, int destPos, int length) {
         copy(src, srcPos, Arrays.asList(dest), destPos, length);
     }

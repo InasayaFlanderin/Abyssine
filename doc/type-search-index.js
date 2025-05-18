@@ -1,0 +1,1 @@
+typeSearchIndex = [{"l":"All Classes and Interfaces","u":"allclasses-index.html"},{"p":"org.inasayaflanderin.abyssine.miscellaneous","l":"RandomAccessUtils"},{"p":"org.inasayaflanderin.abyssine.miscellaneous","l":"Search"},{"p":"org.inasayaflanderin.abyssine.miscellaneous","l":"Sort"}];updateSearchResults();
