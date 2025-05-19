@@ -1,9 +1,6 @@
 package org.inasayaflanderin.abyssine.miscellaneous;
 
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ForkJoinPool;
 
@@ -186,7 +183,7 @@ public class Sort {
     }
 
     /**
-     * @throws InterruptedException upon interruption because of the use of ForkJoinPool
+     * @throws InterruptedException
      */
     public static <D> void quickParallel(D[] array, Comparator<D> comparator, int start, int end) throws InterruptedException {
         quickParallel(Arrays.asList(array), comparator, start, end);
@@ -205,7 +202,6 @@ public class Sort {
                         return null;
                     }
             );
-
             fjp.invokeAll(tasks);
         }
     }
@@ -223,7 +219,34 @@ public class Sort {
     }
 
     public static <D> void mergeRecursive(List<D> list, Comparator<D> comparator, int start, int end) {
+        if(start < end) {
+            var mid = (start + end) >>> 1;
+            mergeRecursive(list, comparator, start, mid);
+            mergeRecursive(list, comparator, mid + 1, end);
+            merge(list, new LinkedList<D>(list.subList(start, mid + 1)), new LinkedList<D>(list.subList(mid + 1, end)), comparator, start);
+        }
+    }
 
+    public static <D> void mergeParallel(D[] array, Comparator<D> comparator, int start, int end) throws InterruptedException {
+        mergeParallel(Arrays.asList(array), comparator, start, end);
+    }
+
+    public static <D> void mergeParallel(List<D> list, Comparator<D> comparator, int start, int end) throws InterruptedException {
+        if(start < end) {
+            var mid = (start + end) >>> 1;
+            List<Callable<Void>> tasks = List.of(
+                    () -> {
+                        mergeParallel(list, comparator, start, mid);
+                        return null;
+                    },
+                    () -> {
+                        mergeParallel(list, comparator, mid + 1, end);
+                        return null;
+                    }
+            );
+            fjp.invokeAll(tasks);
+            merge(list, new LinkedList<D>(list.subList(start, mid + 1)), new LinkedList<D>(list.subList(mid + 1, end)), comparator, start);
+        }
     }
 
     private static <D> int partition(List<D> list, Comparator<D> comparator, int start, int end) {
@@ -235,5 +258,19 @@ public class Sort {
         swap(list, i + 1, end - 1);
 
         return i + 1;
+    }
+
+    private static <D> void merge(List<D> data, List<D> leftCopy, List<D> rightCopy, Comparator<D> comparator, int left) {
+        var dataIndex = left;
+
+        while(!leftCopy.isEmpty() && !rightCopy.isEmpty()) {
+            if(comparator.compare(leftCopy.getFirst(), rightCopy.getFirst()) < 0) data.set(dataIndex, leftCopy.removeFirst());
+            else data.set(dataIndex, rightCopy.removeFirst());
+
+            dataIndex++;
+        }
+
+        while(!leftCopy.isEmpty()) data.set(dataIndex++, leftCopy.removeFirst());
+        while(!rightCopy.isEmpty()) data.set(dataIndex++, rightCopy.removeFirst());
     }
 }
