@@ -19,6 +19,7 @@ import static org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils.swap
  * <p>{@code start} the start index (inclusive) of the array</p>
  * <p>{@code end} the end index (exclusive) of the array</p>
  * <p>{@code <D>} the type of the elements in the array</p>
+ * <p>The parallelism part is performed through ForkJoinPool currently</p>
  */
 public class Sort {
     private static final ForkJoinPool fjp = ForkJoinPool.commonPool();
@@ -182,9 +183,6 @@ public class Sort {
         }
     }
 
-    /**
-     * @throws InterruptedException
-     */
     public static <D> void quickParallel(D[] array, Comparator<D> comparator, int start, int end) throws InterruptedException {
         quickParallel(Arrays.asList(array), comparator, start, end);
     }
@@ -211,7 +209,13 @@ public class Sort {
     }
 
     public static <D> void mergeIterative(List<D> list, Comparator<D> comparator, int start, int end) {
-
+        for (int size = 1; size < end - start; size *= 2) {
+            for (int startIndex = start; startIndex < end; startIndex += 2 * size) {
+                int mid = Math.min(startIndex + size, end);
+                int endIndex = Math.min(startIndex + 2 * size, end);
+                merge(list, new LinkedList<>(list.subList(startIndex, mid)), new LinkedList<>(list.subList(mid, endIndex)), comparator, startIndex);
+            }
+        }
     }
 
     public static <D> void mergeRecursive(D[] array, Comparator<D> comparator, int start, int end) {
@@ -219,11 +223,11 @@ public class Sort {
     }
 
     public static <D> void mergeRecursive(List<D> list, Comparator<D> comparator, int start, int end) {
-        if(start < end) {
+        if (end - start > 1) {
             var mid = (start + end) >>> 1;
             mergeRecursive(list, comparator, start, mid);
-            mergeRecursive(list, comparator, mid + 1, end);
-            merge(list, new LinkedList<D>(list.subList(start, mid + 1)), new LinkedList<D>(list.subList(mid + 1, end)), comparator, start);
+            mergeRecursive(list, comparator, mid, end);
+            merge(list, new LinkedList<>(list.subList(start, mid)), new LinkedList<>(list.subList(mid, end)), comparator, start);
         }
     }
 
@@ -232,7 +236,7 @@ public class Sort {
     }
 
     public static <D> void mergeParallel(List<D> list, Comparator<D> comparator, int start, int end) throws InterruptedException {
-        if(start < end) {
+        if(end - start > 1) {
             var mid = (start + end) >>> 1;
             List<Callable<Void>> tasks = List.of(
                     () -> {
@@ -240,12 +244,12 @@ public class Sort {
                         return null;
                     },
                     () -> {
-                        mergeParallel(list, comparator, mid + 1, end);
+                        mergeParallel(list, comparator, mid, end);
                         return null;
                     }
             );
             fjp.invokeAll(tasks);
-            merge(list, new LinkedList<D>(list.subList(start, mid + 1)), new LinkedList<D>(list.subList(mid + 1, end)), comparator, start);
+            merge(list, new LinkedList<D>(list.subList(start, mid)), new LinkedList<D>(list.subList(mid, end)), comparator, start);
         }
     }
 
@@ -260,17 +264,14 @@ public class Sort {
         return i + 1;
     }
 
-    private static <D> void merge(List<D> data, List<D> leftCopy, List<D> rightCopy, Comparator<D> comparator, int left) {
-        var dataIndex = left;
-
+    private static <D> void merge(List<D> data, List<D> leftCopy, List<D> rightCopy, Comparator<D> comparator, int start) {
         while(!leftCopy.isEmpty() && !rightCopy.isEmpty()) {
-            if(comparator.compare(leftCopy.getFirst(), rightCopy.getFirst()) < 0) data.set(dataIndex, leftCopy.removeFirst());
-            else data.set(dataIndex, rightCopy.removeFirst());
+            if(comparator.compare(leftCopy.getFirst(), rightCopy.getFirst()) <= 0) data.set(start, leftCopy.removeFirst());
+            else data.set(start, rightCopy.removeFirst());
 
-            dataIndex++;
+            start++;
         }
-
-        while(!leftCopy.isEmpty()) data.set(dataIndex++, leftCopy.removeFirst());
-        while(!rightCopy.isEmpty()) data.set(dataIndex++, rightCopy.removeFirst());
+        while(!leftCopy.isEmpty()) data.set(start++, leftCopy.removeFirst());
+        while(!rightCopy.isEmpty()) data.set(start++, rightCopy.removeFirst());
     }
 }
