@@ -249,7 +249,22 @@ public class Sort {
                     }
             );
             fjp.invokeAll(tasks);
-            merge(list, new LinkedList<D>(list.subList(start, mid)), new LinkedList<D>(list.subList(mid, end)), comparator, start);
+            merge(list, new LinkedList<>(list.subList(start, mid)), new LinkedList<>(list.subList(mid, end)), comparator, start);
+        }
+    }
+
+    public static <D> void heap(D[] array, Comparator<D> comparator, int start, int end) {
+        heap(Arrays.asList(array), comparator, start, end);
+    }
+
+    public static <D> void heap(List<D> list, Comparator<D> comparator, int start, int end) {
+        var length = end - start;
+
+        for(var i = start + (length >>> 1) - 1; i >= start; i--) heapify(list, comparator, start, end, i);
+
+        for(var i = end - 1; i > start; i--) {
+            swap(list, start, i);
+            heapify(list, comparator, start, i, start);
         }
     }
 
@@ -273,5 +288,18 @@ public class Sort {
         }
         while(!leftCopy.isEmpty()) data.set(start++, leftCopy.removeFirst());
         while(!rightCopy.isEmpty()) data.set(start++, rightCopy.removeFirst());
+    }
+
+    private static <D> void heapify(List<D> list, Comparator<D> comparator, int start, int end, int i) {
+        var largest = i;
+        var left = -start + 2 * i + 1;
+        var right = -start + 2 * i + 2;
+
+        if(left < end && comparator.compare(list.get(left), list.get(largest)) > 0) largest = left;
+        if(right < end && comparator.compare(list.get(right), list.get(largest)) > 0) largest = right;
+        if(largest != i) {
+            swap(list, i, largest);
+            heapify(list, comparator, start, end, largest);
+        }
     }
 }
