@@ -3,11 +3,15 @@ package org.inasayaflanderin.abyssine.miscellaneous;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Stack;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ForkJoinPool;
 
 import static org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils.copy;
 import static org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils.swap;
 
 //TODO: Replace binarySearch with faster search algorithm with same result
+//TODO: Replace ForkJoinPool when using parallel stream with our own implementation
 
 /**
  * <p>This class hold of sorting algorithms that Abyssine supported, it doesn't contain non-comparable sorting algorithms such as Radix sort</p>
@@ -20,6 +24,8 @@ import static org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils.swap
  * <p>{@code <D>} the type of the elements in the array</p>
  */
 public class Sort {
+    private static final ForkJoinPool fjp = ForkJoinPool.commonPool();
+
     public static <D> void selection(D[] array, Comparator<D> comparator, int start, int end) {
         selection(Arrays.asList(array), comparator, start, end);
     }
@@ -81,11 +87,8 @@ public class Sort {
     public static <D> void binaryInsertion(List<D> list, Comparator<D> comparator, int start, int end) {
         for(var i = start + 1; i < end; i++) {
             var key = list.get(i);
-
-            int j = Math.abs(Search.binarySearch(list, comparator, key, start, i) + 1);
-
+            var j = Math.abs(Search.binarySearch(list, comparator, key, start, i) + 1);
             copy(list, j, list, j + 1, i - j);
-
             list.set(j, key);
         }
     }
@@ -96,7 +99,7 @@ public class Sort {
 
     public static <D> void bubble(List<D> list, Comparator<D> comparator, int start, int end) {
         for (var i = start; i < end - 1; i++) {
-            boolean swapped = false;
+            var swapped = false;
 
             for (var j = start; j < end - i - 1; j++) {
                 if (comparator.compare(list.get(j), list.get(j + 1)) > 0) {
@@ -109,12 +112,15 @@ public class Sort {
         }
     }
 
+    /**
+     * Also known as cocktail shaker sort
+     */
     public static <D> void shaker(D[] array, Comparator<D> comparator, int start, int end) {
         shaker(Arrays.asList(array), comparator, start, end);
     }
 
     public static <D> void shaker(List<D> list, Comparator<D> comparator, int start, int end) {
-        boolean swapped = true;
+        var swapped = true;
 
         while (swapped) {
             swapped = false;
@@ -137,5 +143,97 @@ public class Sort {
                 }
             }
         }
+    }
+
+    public static <D> void quickIterative(D[] array, Comparator<D> comparator, int start, int end) {
+        quickIterative(Arrays.asList(array), comparator, start, end);
+    }
+
+    public static <D> void quickIterative(List<D> list, Comparator<D> comparator, int start, int end) {
+        var stack = new Stack<Integer>();
+        stack.push(start);
+        stack.push(end);
+
+        while (!stack.isEmpty()) {
+            var endIndex = stack.pop();
+            var startIndex = stack.pop();
+
+            if (endIndex - startIndex <= 1) continue;
+
+            var pivotIndex = partition(list, comparator, startIndex, endIndex);
+
+            if (pivotIndex > startIndex) {
+                stack.push(startIndex);
+                stack.push(pivotIndex);
+            }
+            if (pivotIndex + 1 < endIndex) {
+                stack.push(pivotIndex + 1);
+                stack.push(endIndex);
+            }
+        }
+    }
+
+    public static <D> void quickRecursive(D[] array, Comparator<D> comparator, int start, int end) {
+        quickRecursive(Arrays.asList(array), comparator, start, end);
+    }
+
+    public static <D> void quickRecursive(List<D> list, Comparator<D> comparator, int start, int end) {
+        if (start < end) {
+            var pivotIndex = partition(list, comparator, start, end);
+            quickRecursive(list, comparator, start, pivotIndex);
+            quickRecursive(list, comparator, pivotIndex + 1, end);
+        }
+    }
+
+    /**
+     * @throws InterruptedException upon interruption because of the use of ForkJoinPool
+     */
+    public static <D> void quickParallel(D[] array, Comparator<D> comparator, int start, int end) throws InterruptedException {
+        quickParallel(Arrays.asList(array), comparator, start, end);
+    }
+
+    public static <D> void quickParallel(List<D> list, Comparator<D> comparator, int start, int end) throws InterruptedException {
+        if(start < end) {
+            var pivotIndex = partition(list, comparator, start, end);
+            List<Callable<Void>> tasks = List.of(
+                    () -> {
+                        quickParallel(list, comparator, start, pivotIndex);
+                        return null;
+                    },
+                    () -> {
+                        quickParallel(list, comparator, pivotIndex + 1, end);
+                        return null;
+                    }
+            );
+
+            fjp.invokeAll(tasks);
+        }
+    }
+
+    public static <D> void mergeIterative(D[] array, Comparator<D> comparator, int start, int end) {
+        mergeIterative(Arrays.asList(array), comparator, start, end);
+    }
+
+    public static <D> void mergeIterative(List<D> list, Comparator<D> comparator, int start, int end) {
+
+    }
+
+    public static <D> void mergeRecursive(D[] array, Comparator<D> comparator, int start, int end) {
+        mergeRecursive(Arrays.asList(array), comparator, start, end);
+    }
+
+    public static <D> void mergeRecursive(List<D> list, Comparator<D> comparator, int start, int end) {
+
+    }
+
+    private static <D> int partition(List<D> list, Comparator<D> comparator, int start, int end) {
+        var pivot = list.get(end - 1);
+        var i = start - 1;
+
+        for (var j = start; j < end - 1; j++) if (comparator.compare(list.get(j), pivot) < 0) swap(list, ++i, j);
+
+        swap(list, i + 1, end - 1);
+
+        return i + 1;
     }
 }

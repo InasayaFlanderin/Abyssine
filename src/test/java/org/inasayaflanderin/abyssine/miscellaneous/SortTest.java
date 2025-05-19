@@ -7,29 +7,64 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SortTest {
     @Property(tries = 1000000)
-    void selectionSortTest(@ForAll Double[] array) {
+    void selection(@ForAll Double[] array) {
         Sort.selection(array, Double::compareTo, 0, array.length);
 
         assertTrue(isSort(array, Double::compareTo, 0, array.length), "Array is not sorted");
     }
 
     @Property(tries = 1000000)
-    void doubleSelectionSortTest(@ForAll Double[] array) {
+    void doubleSelection(@ForAll Double[] array) {
         Sort.doubleSelection(array, Double::compareTo, 0, array.length);
 
         assertTrue(isSort(array, Double::compareTo, 0, array.length), "Array is not sorted");
     }
 
     @Property(tries = 1000000)
-    void insertionSortTest(@ForAll Double[] array) {
+    void insertion(@ForAll Double[] array) {
         Sort.insertion(array, Double::compareTo, 0, array.length);
 
         assertTrue(isSort(array, Double::compareTo, 0, array.length), "Array is not sorted");
     }
 
     @Property(tries = 1000000)
-    void binaryInsertionSortTest(@ForAll Double[] array) {
+    void binaryInsertion(@ForAll Double[] array) {
         Sort.binaryInsertion(array, Double::compareTo, 0, array.length);
+
+        assertTrue(isSort(array, Double::compareTo, 0, array.length), "Array is not sorted");
+    }
+
+    @Property(tries = 1000000)
+    void bubble(@ForAll Double[] array) {
+        Sort.bubble(array, Double::compareTo, 0, array.length);
+
+        assertTrue(isSort(array, Double::compareTo, 0, array.length), "Array is not sorted");
+    }
+
+    @Property(tries = 1000000)
+    void shaker(@ForAll Double[] array) {
+        Sort.shaker(array, Double::compareTo, 0, array.length);
+
+        assertTrue(isSort(array, Double::compareTo, 0, array.length), "Array is not sorted");
+    }
+
+    @Property(tries = 1000000)
+    void quickIterative(@ForAll Double[] array) {
+        Sort.quickIterative(array, Double::compareTo, 0, array.length);
+
+        assertTrue(isSort(array, Double::compareTo, 0, array.length), "Array is not sorted");
+    }
+
+    @Property(tries = 1000000)
+    void quickRecursive(@ForAll Double[] array) {
+        Sort.quickRecursive(array, Double::compareTo, 0, array.length);
+
+        assertTrue(isSort(array, Double::compareTo, 0, array.length), "Array is not sorted");
+    }
+
+    @Property(tries = 1000000)
+    void quickParallel(@ForAll Double[] array) throws InterruptedException {
+        Sort.quickParallel(array, Double::compareTo, 0, array.length);
 
         assertTrue(isSort(array, Double::compareTo, 0, array.length), "Array is not sorted");
     }
