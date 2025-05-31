@@ -96,4 +96,11 @@ public class SortTest {
 
         assertTrue(isSort(array, Double::compareTo, 0, array.length), "Array is not sorted");
     }
+
+    @Property(tries = 1000000)
+    void comb(@ForAll Double[] array) {
+        Sort.comb(array, Double::compareTo, 0, array.length);
+
+        assertTrue(isSort(array, Double::compareTo, 0, array.length), "Array is not sorted");
+    }
 }

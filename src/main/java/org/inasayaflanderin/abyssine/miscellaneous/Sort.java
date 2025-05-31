@@ -268,6 +268,35 @@ public class Sort {
         }
     }
 
+    public static <D> void comb(D[] array, Comparator<D> comparator, int start, int end) {
+        comb(Arrays.asList(array), comparator, start, end);
+    }
+
+    public static <D> void comb(List<D> list, Comparator<D> comparator, int start, int end) {
+        var gap = end - start;
+        var swapped = true;
+
+        while(gap > 1 || swapped) {
+            gap = Math.max(1, gap * 10 / 13);
+            swapped = false;
+
+            for(var i = start; i + gap < end; i++) {
+                if(comparator.compare(list.get(i), list.get(i + gap)) > 0) {
+                    swap(list, i, i + gap);
+                    swapped = true;
+                }
+            }
+        }
+    }
+
+    public static <D> void shell(D[] array, Comparator<D> comparator, int start, int end) {
+        shell(Arrays.asList(array), comparator, start, end);
+    }
+
+    public static <D> void shell(List<D> list, Comparator<D> comparator, int start, int end) {
+        
+    }
+
     private static <D> int partition(List<D> list, Comparator<D> comparator, int start, int end) {
         var pivot = list.get(end - 1);
         var i = start - 1;
