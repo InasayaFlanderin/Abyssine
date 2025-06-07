@@ -294,7 +294,27 @@ public class Sort {
     }
 
     public static <D> void shell(List<D> list, Comparator<D> comparator, int start, int end) {
-        
+        var gap = end - start;
+
+        while (gap > 0) {
+            gap = gap * 10 / 23;
+
+            if (gap < 1) gap = 1;
+
+            for (var i = start + gap; i < end; i++) {
+                var temp = list.get(i);
+                var j = i;
+
+                while(j - gap >= start && comparator.compare(list.get(j - gap), temp) > 0) {
+                    list.set(j, list.get(j - gap));
+                    j -= gap;
+                }
+
+                list.set(j, temp);
+            }
+
+            if(gap == 1) break;
+        }
     }
 
     private static <D> int partition(List<D> list, Comparator<D> comparator, int start, int end) {
