@@ -209,10 +209,10 @@ public class Sort {
     }
 
     public static <D> void mergeIterative(List<D> list, Comparator<D> comparator, int start, int end) {
-        for (int size = 1; size < end - start; size *= 2) {
-            for (int startIndex = start; startIndex < end; startIndex += 2 * size) {
+        for (var size = 1; size < end - start; size <<= 1) {
+            for (var startIndex = start; startIndex < end; startIndex += size << 1) {
                 int mid = Math.min(startIndex + size, end);
-                int endIndex = Math.min(startIndex + 2 * size, end);
+                int endIndex = Math.min(startIndex + (size << 1), end);
                 merge(list, new LinkedList<>(list.subList(startIndex, mid)), new LinkedList<>(list.subList(mid, endIndex)), comparator, startIndex);
             }
         }
@@ -296,25 +296,21 @@ public class Sort {
     public static <D> void shell(List<D> list, Comparator<D> comparator, int start, int end) {
         var gap = end - start;
 
-        while (gap > 0) {
-            gap = gap * 10 / 23;
-
-            if (gap < 1) gap = 1;
+        do {
+            gap = Math.max(1, gap * 10 / 23);
 
             for (var i = start + gap; i < end; i++) {
                 var temp = list.get(i);
                 var j = i;
 
-                while(j - gap >= start && comparator.compare(list.get(j - gap), temp) > 0) {
+                while (j - gap >= start && comparator.compare(list.get(j - gap), temp) > 0) {
                     list.set(j, list.get(j - gap));
                     j -= gap;
                 }
 
                 list.set(j, temp);
             }
-
-            if(gap == 1) break;
-        }
+        } while (gap != 1);
     }
 
     private static <D> int partition(List<D> list, Comparator<D> comparator, int start, int end) {
@@ -341,8 +337,8 @@ public class Sort {
 
     private static <D> void heapify(List<D> list, Comparator<D> comparator, int start, int end, int i) {
         var largest = i;
-        var left = -start + 2 * i + 1;
-        var right = -start + 2 * i + 2;
+        var left = -start + (i << 1) + 1;
+        var right = -start + (i << 1) + 2;
 
         if(left < end && comparator.compare(list.get(left), list.get(largest)) > 0) largest = left;
         if(right < end && comparator.compare(list.get(right), list.get(largest)) > 0) largest = right;
