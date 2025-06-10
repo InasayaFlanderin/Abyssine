@@ -313,6 +313,20 @@ public class Sort {
         } while (gap != 1);
     }
 
+    public static <D> void cycle(D[] array, Comparator<D> comparator, int start, int end) {
+        cycle(Arrays.asList(array), comparator, start, end);
+    }
+
+    public static <D> void cycle(List<D> list, Comparator<D> comparator, int start, int end) {
+        for(var cycleStart = start; cycleStart < end - 1; cycleStart++) {
+            var pos = cycleFindSwap(list, comparator, start, end, cycleStart);
+
+            if(pos == -1) continue;
+
+            while(pos != cycleStart) pos = cycleFindSwap(list, comparator, start, end, cycleStart);
+        }
+    }
+
     private static <D> int partition(List<D> list, Comparator<D> comparator, int start, int end) {
         var pivot = list.get(end - 1);
         var i = start - 1;
@@ -346,5 +360,17 @@ public class Sort {
             swap(list, i, largest);
             heapify(list, comparator, start, end, largest);
         }
+    }
+
+    private static <D> int cycleFindSwap(List<D> list, Comparator<D> comparator, int start, int end, int cycleStart) {
+        var pos = cycleStart + (int) list.subList(start + 1, end).stream().filter(d -> comparator.compare(d, list.get(cycleStart)) < 0).count();
+
+        if(pos == cycleStart) return -1;
+
+        while(comparator.compare(list.get(cycleStart), list.get(pos)) == 0) pos++;
+
+        swap(list, cycleStart, pos);
+
+        return pos;
     }
 }
