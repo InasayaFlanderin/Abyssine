@@ -319,11 +319,12 @@ public class Sort {
 
     public static <D> void cycle(List<D> list, Comparator<D> comparator, int start, int end) {
         for(var cycleStart = start; cycleStart < end - 1; cycleStart++) {
-            var pos = cycleFindSwap(list, comparator, start, end, cycleStart);
+            D datum = list.get(cycleStart);
+            var pos = cycleFindSwap(list, comparator, start, end, cycleStart, datum);
 
             if(pos == -1) continue;
 
-            while(pos != cycleStart) pos = cycleFindSwap(list, comparator, start, end, cycleStart);
+            while(pos != -1) pos = cycleFindSwap(list, comparator, start, end, cycleStart, datum);
         }
     }
 
@@ -362,12 +363,12 @@ public class Sort {
         }
     }
 
-    private static <D> int cycleFindSwap(List<D> list, Comparator<D> comparator, int start, int end, int cycleStart) {
-        var pos = cycleStart + (int) list.subList(start + 1, end).stream().filter(d -> comparator.compare(d, list.get(cycleStart)) < 0).count();
+    private static <D> int cycleFindSwap(List<D> list, Comparator<D> comparator, int start, int end, int cycleStart, D datum) {
+        var pos = cycleStart + (int) list.subList(start + 1, end).stream().filter(d -> comparator.compare(d, datum) < 0).count();
 
         if(pos == cycleStart) return -1;
 
-        while(comparator.compare(list.get(cycleStart), list.get(pos)) == 0) pos++;
+        while(comparator.compare(datum, list.get(pos)) == 0) pos++;
 
         swap(list, cycleStart, pos);
 
