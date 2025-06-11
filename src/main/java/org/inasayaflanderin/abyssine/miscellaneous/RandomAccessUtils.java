@@ -24,8 +24,7 @@ public class RandomAccessUtils {
     }
 
     public static <D> void swap(List<D> list, int i, int j) {
-        var temp = list.get(i);
-        list.set(i, list.get(j));
+        var temp = list.set(i, list.get(j));
         list.set(j, temp);
     }
 

@@ -1,5 +1,7 @@
 package org.inasayaflanderin.abyssine.miscellaneous;
 
+import org.inasayaflanderin.abyssine.primitives.Pair;
+
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ForkJoinPool;
@@ -319,12 +321,19 @@ public class Sort {
 
     public static <D> void cycle(List<D> list, Comparator<D> comparator, int start, int end) {
         for(var cycleStart = start; cycleStart < end - 1; cycleStart++) {
-            D datum = list.get(cycleStart);
-            var pos = cycleFindSwap(list, comparator, start, end, cycleStart, datum);
+            var datum = list.get(cycleStart);
+            var pair = cycle(list, comparator, end, cycleStart, datum, true);
+            var pos = pair.first();
 
             if(pos == -1) continue;
 
-            while(pos != -1) pos = cycleFindSwap(list, comparator, start, end, cycleStart, datum);
+            datum = pair.second();
+
+            while(pos != cycleStart) {
+                pair = cycle(list, comparator, end, cycleStart, datum, false);
+                pos = pair.first();
+                datum = pair.second();
+            }
         }
     }
 
@@ -363,15 +372,13 @@ public class Sort {
         }
     }
 
-    private static <D> int cycleFindSwap(List<D> list, Comparator<D> comparator, int start, int end, int cycleStart, D datum) {
-        var pos = cycleStart + (int) list.subList(start + 1, end).stream().filter(d -> comparator.compare(d, datum) < 0).count();
+    private static <D> Pair<Integer, D> cycle(List<D> list, Comparator<D> comparator, int end, int cycleStart, D datum, boolean check) {
+        var pos = cycleStart + (int) list.subList(cycleStart + 1, end).stream().filter(d -> comparator.compare(d, datum) < 0).count();
 
-        if(pos == cycleStart) return -1;
+        if(pos == cycleStart && check) return new Pair<>(-1, datum);
 
         while(comparator.compare(datum, list.get(pos)) == 0) pos++;
 
-        swap(list, cycleStart, pos);
-
-        return pos;
+        return new Pair<>(pos, list.set(pos, datum));
     }
 }
