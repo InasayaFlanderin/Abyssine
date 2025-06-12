@@ -11,5 +11,4 @@ import java.io.Serializable;
  * @param <S> second element type
  */
 @With
-public record Pair<F, S>(F first, S second) implements Serializable {
-}
+public record Pair<F, S>(F first, S second) implements Serializable {}
