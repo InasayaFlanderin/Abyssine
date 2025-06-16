@@ -23,7 +23,7 @@ import static org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils.swap
  * <p>{@code <D>} the type of the elements in the array</p>
  * <p>The parallelism part is performed through ForkJoinPool currently</p>
  */
-public class Sort {
+public final class Sort {
     private static final ForkJoinPool fjp = ForkJoinPool.commonPool();
 
     public static <D> void selection(D[] array, Comparator<D> comparator, int start, int end) {
@@ -80,6 +80,9 @@ public class Sort {
         }
     }
 
+    /**
+     * <p>Due to the use of regular binary search, the sort is unstable</p>
+     * */
     public static <D> void binaryInsertion(D[] array, Comparator<D> comparator, int start, int end) {
         binaryInsertion(Arrays.asList(array), comparator, start, end);
     }
@@ -335,6 +338,40 @@ public class Sort {
                 datum = pair.second();
             }
         }
+    }
+
+    public static <D> void patience(D[] array, Comparator<D> comparator, int start, int end) {
+        patience(Arrays.asList(array), comparator, start, end);
+    }
+
+    public static <D> void patience(List<D> list, Comparator<D> comparator, int start, int end) {
+        var minQueue = new PriorityQueue<Stack<D>>(Comparator.comparing(Stack::peek, comparator));
+        list.subList(start, end).forEach(datum -> minQueue.stream()
+                .filter(p -> comparator.compare(datum, p.peek()) <= 0)
+                .findFirst().ifPresentOrElse(
+                        p -> p.push(datum),
+                        () -> {
+                            var newPile = new Stack<D>();
+                            newPile.push(datum);
+                            minQueue.add(newPile);
+                        }
+                ));
+
+        for(int i = start; i < end; i++) {
+            var smallestPile = minQueue.poll();
+            assert smallestPile != null;
+            list.set(i, smallestPile.pop());
+
+            if(!smallestPile.isEmpty()) minQueue.add(smallestPile);
+        }
+    }
+
+    public static <D> void exchange(D[] array, Comparator<D> comparator, int start, int end) {
+        exchange(Arrays.asList(array), comparator, start, end);
+    }
+
+    public static <D> void exchange(List<D> list, Comparator<D> comparator, int start, int end) {
+        for(var i = start; i < end; i++) for(var j = i + 1; j < end; j++) if(comparator.compare(list.get(i), list.get(j)) > 0) swap(list, i, j);
     }
 
     private static <D> int partition(List<D> list, Comparator<D> comparator, int start, int end) {
