@@ -465,9 +465,10 @@ public final class Sort {
     }
 
     private static <D> boolean circleExecuteRecursive(List<D> list, Comparator<D> comparator, int start, int end) {
-        if(end - start <= 1) return false;
-
         var continues = false;
+
+        if(start == end - 1) return false;
+
         var i = start;
         var j = end - 1;
 
