@@ -400,11 +400,9 @@ public final class Sort {
     }
 
     public static <D> void circleRecursive(List<D> list, Comparator<D> comparator, int start, int end) {
-        boolean continues;
-
-        do {
-            continues = circleExecuteRecursive(list, comparator, start, end);
-        } while(continues);
+        while(true) {
+            if (!circleExecuteRecursive(list, comparator, start, end - 1)) break;
+        }
     }
 
     public static <D> void circleParallel(D[] array, Comparator<D> comparator, int start, int end) throws InterruptedException, ExecutionException {
@@ -465,12 +463,11 @@ public final class Sort {
     }
 
     private static <D> boolean circleExecuteRecursive(List<D> list, Comparator<D> comparator, int start, int end) {
+        if(end - start <= 0) return false;
+
         var continues = false;
-
-        if(start == end - 1) return false;
-
         var i = start;
-        var j = end - 1;
+        var j = end;
 
         while(i < j) {
             if(comparator.compare(list.get(i), list.get(j)) > 0) {
@@ -489,7 +486,7 @@ public final class Sort {
 
         var mid = (start + end) >>> 1;
 
-        return continues || circleExecuteRecursive(list, comparator, start, mid) || circleExecuteRecursive(list, comparator, mid, end);
+        return continues || circleExecuteRecursive(list, comparator, start, mid) || circleExecuteRecursive(list, comparator, mid + 1, end);
     }
 
     private static <D> boolean circleExecuteParallel(List<D> list, Comparator<D> comparator, int start, int end) throws InterruptedException, ExecutionException {
@@ -497,7 +494,7 @@ public final class Sort {
         var i = start;
         var j = end - 1;
 
-        if(i == j) return false;
+        if(j - i <= 0) return false;
 
         while(i < j) {
             if(comparator.compare(list.get(i), list.get(j)) > 0) {
