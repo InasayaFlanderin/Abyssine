@@ -64,4 +64,10 @@ public class StabilitySortTest {
         Sort.mergeParallel(array, Comparator.comparing(Pair::first), 0, array.length);
         assertTrue(isSort(array, Comparator.comparing((Pair<Integer, Integer> i) -> i.first()).thenComparing(Pair::second), 0, array.length),"Array is not stable");
     }
+
+    @Property(tries = 1000000)
+    void oddEven(@ForAll("duplicator") Pair<Integer, Integer>[] array) {
+        Sort.oddEven(array, Comparator.comparing(Pair::first), 0, array.length);
+        assertTrue(isSort(array, Comparator.comparing((Pair<Integer, Integer> i) -> i.first()).thenComparing(Pair::second), 0, array.length),"Array is not stable");
+    }
 }

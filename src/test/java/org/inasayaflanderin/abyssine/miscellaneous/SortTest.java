@@ -150,4 +150,20 @@ public class SortTest {
         Sort.exchange(array, Double::compareTo, 0, array.length);
         assertArrayEquals(array, copy, "Array is not sorted");
     }
+
+    @Property(tries = 1000000)
+    void oddEven(@ForAll Double[] array) {
+        var copy = Arrays.copyOf(array, array.length);
+        Arrays.sort(copy, Double::compareTo);
+        Sort.oddEven(array, Double::compareTo, 0, array.length);
+        assertArrayEquals(array, copy, "Array is not sorted");
+    }
+
+    @Property(tries = 1000000)
+    void circleRecursive(@ForAll Double[] array) {
+        var copy = Arrays.copyOf(array, array.length);
+        Arrays.sort(copy, Double::compareTo);
+        Sort.circleRecursive(array, Double::compareTo, 0, array.length);
+        assertArrayEquals(array, copy, "Array is not sorted");
+    }
 }

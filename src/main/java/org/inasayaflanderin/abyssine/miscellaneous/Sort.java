@@ -4,10 +4,10 @@ import org.inasayaflanderin.abyssine.primitives.Pair;
 
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 
-import static org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils.copy;
-import static org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils.swap;
+import static org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils.*;
 
 //TODO: Replace binarySearch with faster search algorithm with same result
 //TODO: Replace ForkJoinPool when using parallel stream with our own implementation
@@ -374,6 +374,51 @@ public final class Sort {
         for(var i = start; i < end; i++) for(var j = i + 1; j < end; j++) if(comparator.compare(list.get(i), list.get(j)) > 0) swap(list, i, j);
     }
 
+    public static <D> void oddEven(D[] array, Comparator<D> comparator, int start, int end) {
+        oddEven(Arrays.asList(array), comparator, start, end);
+    }
+
+    public static <D> void oddEven(List<D> list, Comparator<D> comparator, int start, int end) {
+        var swapped = true;
+
+        while(swapped) {
+            swapped = false;
+
+            for(int i = start + 1; i < end - 1; i += 2) if(comparator.compare(list.get(i), list.get(i + 1)) > 0) {
+                swap(list, i, i + 1);
+                swapped = true;
+            }
+            for(int i = start; i < end - 1; i += 2) if(comparator.compare(list.get(i), list.get(i + 1)) > 0) {
+                swap(list, i, i + 1);
+                swapped = true;
+            }
+        }
+    }
+
+    public static <D> void circleRecursive(D[] array, Comparator<D> comparator, int start, int end) {
+        circleRecursive(Arrays.asList(array), comparator, start, end);
+    }
+
+    public static <D> void circleRecursive(List<D> list, Comparator<D> comparator, int start, int end) {
+        boolean continues;
+
+        do {
+            continues = circleExecuteRecursive(list, comparator, start, end);
+        } while(continues);
+    }
+
+    public static <D> void circleParallel(D[] array, Comparator<D> comparator, int start, int end) throws InterruptedException, ExecutionException {
+        circleParallel(Arrays.asList(array), comparator, start, end);
+    }
+
+    public static <D> void circleParallel(List<D> list, Comparator<D> comparator, int start, int end) throws InterruptedException, ExecutionException {
+        boolean continues;
+
+        do {
+            continues = circleExecuteParallel(list, comparator, start, end);
+        } while(continues);
+    }
+
     private static <D> int partition(List<D> list, Comparator<D> comparator, int start, int end) {
         var pivot = list.get(end - 1);
         var i = start - 1;
@@ -417,5 +462,68 @@ public final class Sort {
         while(comparator.compare(datum, list.get(pos)) == 0) pos++;
 
         return new Pair<>(pos, list.set(pos, datum));
+    }
+
+    private static <D> boolean circleExecuteRecursive(List<D> list, Comparator<D> comparator, int start, int end) {
+        var continues = false;
+        var i = start;
+        var j = end - 1;
+
+        if(i == j) return false;
+
+        while(i < j) {
+            if(comparator.compare(list.get(i), list.get(j)) > 0) {
+                swap(list, start, j);
+                continues = true;
+            }
+
+            i++;
+            j--;
+        }
+
+        if(i == j && comparator.compare(list.get(i), list.get(i + 1)) > 0) {
+            swap(list, i, i + 1);
+            continues = true;
+        }
+
+        var mid = (start + end) >>> 1;
+
+        return continues || circleExecuteRecursive(list, comparator, start, mid) || circleExecuteRecursive(list, comparator, mid, end);
+    }
+
+    private static <D> boolean circleExecuteParallel(List<D> list, Comparator<D> comparator, int start, int end) throws InterruptedException, ExecutionException {
+        var continues = false;
+        var i = start;
+        var j = end - 1;
+
+        if(i == j) return false;
+
+        while(i < j) {
+            if(comparator.compare(list.get(i), list.get(j)) > 0) {
+                swap(list, start, j);
+                continues = true;
+            }
+
+            i++;
+            j--;
+        }
+
+        if(i == j && comparator.compare(list.get(i), list.get(i + 1)) > 0) {
+            swap(list, i, i + 1);
+            continues = true;
+        }
+
+        var mid = (start + end) >>> 1;
+
+        List<Callable<Boolean>> tasks = List.of(
+                () -> circleExecuteParallel(list, comparator, start, mid),
+                () -> circleExecuteParallel(list, comparator, mid, end)
+        );
+
+        var results = fjp.invokeAll(tasks);
+
+        for(var result : results) continues |= result.get();
+
+        return continues;
     }
 }
