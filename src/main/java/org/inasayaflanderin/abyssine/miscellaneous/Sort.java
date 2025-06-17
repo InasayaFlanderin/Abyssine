@@ -465,15 +465,15 @@ public final class Sort {
     }
 
     private static <D> boolean circleExecuteRecursive(List<D> list, Comparator<D> comparator, int start, int end) {
+        if(end - start <= 1) return false;
+
         var continues = false;
         var i = start;
         var j = end - 1;
 
-        if(i == j) return false;
-
         while(i < j) {
             if(comparator.compare(list.get(i), list.get(j)) > 0) {
-                swap(list, start, j);
+                swap(list, i, j);
                 continues = true;
             }
 
@@ -500,7 +500,7 @@ public final class Sort {
 
         while(i < j) {
             if(comparator.compare(list.get(i), list.get(j)) > 0) {
-                swap(list, start, j);
+                swap(list, i, j);
                 continues = true;
             }
 
