@@ -3,6 +3,7 @@ package org.inasayaflanderin.abyssine.miscellaneous;
 import net.jqwik.api.*;
 
 import java.util.Arrays;
+import java.util.concurrent.ExecutionException;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
@@ -164,6 +165,14 @@ public class SortTest {
         var copy = Arrays.copyOf(array, array.length);
         Arrays.sort(copy, Double::compareTo);
         Sort.circleRecursive(array, Double::compareTo, 0, array.length);
+        assertArrayEquals(array, copy, "Array is not sorted");
+    }
+
+    @Property(tries = 1000000)
+    void circleParallel(@ForAll Double[] array) throws InterruptedException, ExecutionException {
+        var copy = Arrays.copyOf(array, array.length);
+        Arrays.sort(copy, Double::compareTo);
+        Sort.circleParallel(array, Double::compareTo, 0, array.length);
         assertArrayEquals(array, copy, "Array is not sorted");
     }
 }

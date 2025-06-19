@@ -104,11 +104,9 @@ public final class Sort {
         for (var i = start; i < end - 1; i++) {
             var swapped = false;
 
-            for (var j = start; j < end - i - 1; j++) {
-                if (comparator.compare(list.get(j), list.get(j + 1)) > 0) {
+            for (var j = start; j < end - i - 1; j++) if (comparator.compare(list.get(j), list.get(j + 1)) > 0) {
                     swap(list, j, j + 1);
                     swapped = true;
-                }
             }
 
             if (!swapped) break;
@@ -128,22 +126,18 @@ public final class Sort {
         while (swapped) {
             swapped = false;
 
-            for (var i = start; i < end - 1; i++) {
-                if (comparator.compare(list.get(i), list.get(i + 1)) > 0) {
+            for (var i = start; i < end - 1; i++) if (comparator.compare(list.get(i), list.get(i + 1)) > 0) {
                     swap(list, i, i + 1);
                     swapped = true;
-                }
             }
 
             if (!swapped) break;
 
             swapped = false;
 
-            for (var i = end - 2; i >= start; i--) {
-                if (comparator.compare(list.get(i), list.get(i + 1)) > 0) {
+            for (var i = end - 2; i >= start; i--) if (comparator.compare(list.get(i), list.get(i + 1)) > 0) {
                     swap(list, i, i + 1);
                     swapped = true;
-                }
             }
         }
     }
@@ -195,13 +189,15 @@ public final class Sort {
     public static <D> void quickParallel(List<D> list, Comparator<D> comparator, int start, int end) throws InterruptedException {
         if(start < end) {
             var pivotIndex = partition(list, comparator, start, end);
-            List<Callable<Void>> tasks = List.of(
+            var tasks = List.<Callable<Void>>of(
                     () -> {
                         quickParallel(list, comparator, start, pivotIndex);
+
                         return null;
                     },
                     () -> {
                         quickParallel(list, comparator, pivotIndex + 1, end);
+
                         return null;
                     }
             );
@@ -214,12 +210,10 @@ public final class Sort {
     }
 
     public static <D> void mergeIterative(List<D> list, Comparator<D> comparator, int start, int end) {
-        for (var size = 1; size < end - start; size <<= 1) {
-            for (var startIndex = start; startIndex < end; startIndex += size << 1) {
+        for (var size = 1; size < end - start; size <<= 1) for (var startIndex = start; startIndex < end; startIndex += size << 1) {
                 int mid = Math.min(startIndex + size, end);
                 int endIndex = Math.min(startIndex + (size << 1), end);
                 merge(list, new LinkedList<>(list.subList(startIndex, mid)), new LinkedList<>(list.subList(mid, endIndex)), comparator, startIndex);
-            }
         }
     }
 
@@ -243,13 +237,15 @@ public final class Sort {
     public static <D> void mergeParallel(List<D> list, Comparator<D> comparator, int start, int end) throws InterruptedException {
         if(end - start > 1) {
             var mid = (start + end) >>> 1;
-            List<Callable<Void>> tasks = List.of(
+            var tasks = List.<Callable<Void>>of(
                     () -> {
                         mergeParallel(list, comparator, start, mid);
+
                         return null;
                     },
                     () -> {
                         mergeParallel(list, comparator, mid, end);
+
                         return null;
                     }
             );
@@ -266,7 +262,6 @@ public final class Sort {
         var length = end - start;
 
         for(var i = start + (length >>> 1) - 1; i >= start; i--) heapify(list, comparator, start, end, i);
-
         for(var i = end - 1; i > start; i--) {
             swap(list, start, i);
             heapify(list, comparator, start, i, start);
@@ -285,11 +280,9 @@ public final class Sort {
             gap = Math.max(1, gap * 10 / 13);
             swapped = false;
 
-            for(var i = start; i + gap < end; i++) {
-                if(comparator.compare(list.get(i), list.get(i + gap)) > 0) {
+            for(var i = start; i + gap < end; i++) if(comparator.compare(list.get(i), list.get(i + gap)) > 0) {
                     swap(list, i, i + gap);
                     swapped = true;
-                }
             }
         }
     }
@@ -400,9 +393,7 @@ public final class Sort {
     }
 
     public static <D> void circleRecursive(List<D> list, Comparator<D> comparator, int start, int end) {
-        while(true) {
-            if (!circleExecuteRecursive(list, comparator, start, end - 1)) break;
-        }
+        while(true) if (!circleExecuteRecursive(list, comparator, start, end - 1)) break;
     }
 
     public static <D> void circleParallel(D[] array, Comparator<D> comparator, int start, int end) throws InterruptedException, ExecutionException {
@@ -410,11 +401,7 @@ public final class Sort {
     }
 
     public static <D> void circleParallel(List<D> list, Comparator<D> comparator, int start, int end) throws InterruptedException, ExecutionException {
-        boolean continues;
-
-        do {
-            continues = circleExecuteParallel(list, comparator, start, end);
-        } while(continues);
+        while(true) if(!circleExecuteParallel(list, comparator, start, end - 1)) break;
     }
 
     private static <D> int partition(List<D> list, Comparator<D> comparator, int start, int end) {
@@ -490,11 +477,11 @@ public final class Sort {
     }
 
     private static <D> boolean circleExecuteParallel(List<D> list, Comparator<D> comparator, int start, int end) throws InterruptedException, ExecutionException {
+        if(end - start <= 0) return false;
+
         var continues = false;
         var i = start;
-        var j = end - 1;
-
-        if(j - i <= 0) return false;
+        var j = end;
 
         while(i < j) {
             if(comparator.compare(list.get(i), list.get(j)) > 0) {
@@ -512,12 +499,10 @@ public final class Sort {
         }
 
         var mid = (start + end) >>> 1;
-
-        List<Callable<Boolean>> tasks = List.of(
-                () -> circleExecuteParallel(list, comparator, start, mid),
-                () -> circleExecuteParallel(list, comparator, mid, end)
+        var tasks = List.<Callable<Boolean>>of(
+                () -> circleExecuteRecursive(list, comparator, start, mid),
+                () -> circleExecuteRecursive(list, comparator, mid + 1, end)
         );
-
         var results = fjp.invokeAll(tasks);
 
         for(var result : results) continues |= result.get();
