@@ -1,5 +1,6 @@
 package org.inasayaflanderin.abyssine.miscellaneous;
 
+import lombok.extern.slf4j.Slf4j;
 import org.inasayaflanderin.abyssine.primitives.Pair;
 
 import java.util.*;
@@ -7,7 +8,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 
-import static org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils.*;
+import static org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils.swap;
+import static org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils.copy;
 
 //TODO: Replace binarySearch with faster search algorithm with same result
 //TODO: Replace ForkJoinPool when using parallel stream with our own implementation
@@ -23,9 +25,8 @@ import static org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils.*;
  * <p>{@code <D>} the type of the elements in the array</p>
  * <p>The parallelism part is performed through ForkJoinPool currently</p>
  */
+@Slf4j
 public final class Sort {
-    private static final ForkJoinPool fjp = ForkJoinPool.commonPool();
-
     public static <D> void selection(D[] array, Comparator<D> comparator, int start, int end) {
         selection(Arrays.asList(array), comparator, start, end);
     }
@@ -189,19 +190,21 @@ public final class Sort {
     public static <D> void quickParallel(List<D> list, Comparator<D> comparator, int start, int end) throws InterruptedException {
         if(start < end) {
             var pivotIndex = partition(list, comparator, start, end);
-            var tasks = List.<Callable<Void>>of(
-                    () -> {
-                        quickParallel(list, comparator, start, pivotIndex);
 
-                        return null;
-                    },
-                    () -> {
-                        quickParallel(list, comparator, pivotIndex + 1, end);
+            try(var fjp = ForkJoinPool.commonPool()) {
+                fjp.invokeAll(List.<Callable<Void>>of(
+                        () -> {
+                            quickParallel(list, comparator, start, pivotIndex);
 
-                        return null;
-                    }
-            );
-            fjp.invokeAll(tasks);
+                            return null;
+                        },
+                        () -> {
+                            quickParallel(list, comparator, pivotIndex + 1, end);
+
+                            return null;
+                        }
+                ));
+            }
         }
     }
 
@@ -235,22 +238,25 @@ public final class Sort {
     }
 
     public static <D> void mergeParallel(List<D> list, Comparator<D> comparator, int start, int end) throws InterruptedException {
-        if(end - start > 1) {
+        if (end - start > 1) {
             var mid = (start + end) >>> 1;
-            var tasks = List.<Callable<Void>>of(
-                    () -> {
-                        mergeParallel(list, comparator, start, mid);
 
-                        return null;
-                    },
-                    () -> {
-                        mergeParallel(list, comparator, mid, end);
+            try(var fjp = ForkJoinPool.commonPool()) {
+                fjp.invokeAll(List.<Callable<Void>>of(
+                        () -> {
+                            mergeParallel(list, comparator, start, mid);
 
-                        return null;
-                    }
-            );
-            fjp.invokeAll(tasks);
-            merge(list, new LinkedList<>(list.subList(start, mid)), new LinkedList<>(list.subList(mid, end)), comparator, start);
+                            return null;
+                        },
+                        () -> {
+                            mergeParallel(list, comparator, mid, end);
+
+                            return null;
+                        }
+                ));
+            }
+
+            merge(list, new LinkedList<D>(list.subList(start, mid)), new LinkedList<D>(list.subList(mid, end)), comparator, start);
         }
     }
 
@@ -393,6 +399,8 @@ public final class Sort {
     }
 
     public static <D> void circleRecursive(List<D> list, Comparator<D> comparator, int start, int end) {
+        log.warn("circleRecursive is slow, use it at your own risks");
+
         while(true) if (!circleExecuteRecursive(list, comparator, start, end - 1)) break;
     }
 
@@ -401,7 +409,13 @@ public final class Sort {
     }
 
     public static <D> void circleParallel(List<D> list, Comparator<D> comparator, int start, int end) throws InterruptedException, ExecutionException {
+        log.warn("circleParallel is slow, use it at your own risks");
+
         while(true) if(!circleExecuteParallel(list, comparator, start, end - 1)) break;
+    }
+
+    public static <D> void mergeInsertion(List<D> list, Comparator<D> comparator, int start, int end) {
+        
     }
 
     private static <D> int partition(List<D> list, Comparator<D> comparator, int start, int end) {
@@ -499,13 +513,13 @@ public final class Sort {
         }
 
         var mid = (start + end) >>> 1;
-        var tasks = List.<Callable<Boolean>>of(
-                () -> circleExecuteRecursive(list, comparator, start, mid),
-                () -> circleExecuteRecursive(list, comparator, mid + 1, end)
-        );
-        var results = fjp.invokeAll(tasks);
 
-        for(var result : results) continues |= result.get();
+        try(var fjp = ForkJoinPool.commonPool()) {
+            for(var result : fjp.invokeAll(List.<Callable<Boolean>>of(
+                    () -> circleExecuteParallel(list, comparator, start, mid),
+                    () -> circleExecuteParallel(list, comparator, mid + 1, end)
+            ))) continues |= result.get();
+        }
 
         return continues;
     }
