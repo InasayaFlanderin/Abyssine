@@ -1,6 +1,6 @@
 package org.inasayaflanderin.abyssine.miscellaneous;
 
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.java.Log;
 import org.inasayaflanderin.abyssine.primitives.Pair;
 
 import java.util.*;
@@ -25,7 +25,7 @@ import static org.inasayaflanderin.abyssine.miscellaneous.RandomAccessUtils.copy
  * <p>{@code <D>} the type of the elements in the array</p>
  * <p>The parallelism part is performed through ForkJoinPool currently</p>
  */
-@Slf4j
+@Log
 public final class Sort {
     public static <D> void selection(D[] array, Comparator<D> comparator, int start, int end) {
         selection(Arrays.asList(array), comparator, start, end);
@@ -399,7 +399,7 @@ public final class Sort {
     }
 
     public static <D> void circleRecursive(List<D> list, Comparator<D> comparator, int start, int end) {
-        log.warn("circleRecursive is slow, use it at your own risks");
+        log.info("circleRecursive is slow!");
 
         while(true) if (!circleExecuteRecursive(list, comparator, start, end - 1)) break;
     }
@@ -409,13 +409,17 @@ public final class Sort {
     }
 
     public static <D> void circleParallel(List<D> list, Comparator<D> comparator, int start, int end) throws InterruptedException, ExecutionException {
-        log.warn("circleParallel is slow, use it at your own risks");
+        log.info("circleParallel is slow!");
 
         while(true) if(!circleExecuteParallel(list, comparator, start, end - 1)) break;
     }
 
+    public static <D> void mergeInsertion(D[] array, Comparator<D> comparator, int start, int end) {
+        mergeInsertion(Arrays.asList(array), comparator, start, end);
+    }
+
     public static <D> void mergeInsertion(List<D> list, Comparator<D> comparator, int start, int end) {
-        
+
     }
 
     private static <D> int partition(List<D> list, Comparator<D> comparator, int start, int end) {
