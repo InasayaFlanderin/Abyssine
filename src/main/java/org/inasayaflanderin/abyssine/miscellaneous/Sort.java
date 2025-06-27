@@ -413,7 +413,7 @@ public final class Sort {
 
         while(true) if(!circleExecuteParallel(list, comparator, start, end - 1)) break;
     }
-
+    /*
     public static <D> void mergeInsertion(D[] array, Comparator<D> comparator, int start, int end) {
         mergeInsertion(Arrays.asList(array), comparator, start, end);
     }
@@ -421,7 +421,7 @@ public final class Sort {
     public static <D> void mergeInsertion(List<D> list, Comparator<D> comparator, int start, int end) {
 
     }
-
+    */
     private static <D> int partition(List<D> list, Comparator<D> comparator, int start, int end) {
         var pivot = list.get(end - 1);
         var i = start - 1;
