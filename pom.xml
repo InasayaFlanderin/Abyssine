@@ -15,8 +15,8 @@
 	<dependencies>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter-engine</artifactId>
-			<version>6.0.0-M2</version>
+			<artifactId>junit-jupiter</artifactId>
+			<version>5.13.4</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -67,8 +67,7 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.14.0</version>
 				<configuration>
-					<source>24</source>
-					<target>24</target>
+					<release>24</release>
 					<annotationProcessorPaths>
 						<path>
 							<groupId>org.openjdk.jmh</groupId>
@@ -82,6 +81,10 @@
 						</path>
 					</annotationProcessorPaths>
 				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-sunfire-plugin</artifactId>
+				<version>3.5.3</version>
 			</plugin>
 		</plugins>
 	</build>
