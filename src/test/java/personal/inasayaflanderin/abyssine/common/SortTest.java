@@ -1,9 +1,9 @@
 package personal.inasayaflanderin.abyssine.common;
 
-
 import java.util.LinkedList;
 import java.util.Comparator;
 import java.lang.reflect.Array;
+import java.util.function.Consumer;
 
 import net.jqwik.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -27,14 +27,12 @@ public class SortTest {
 		);
 	}
 
-	@Property(tries = 1000000)
-	void selection(@ForAll("generator") Pair<Double, Integer>[] array) {
+	boolean verify(Pair<Double, Integer>[] array, Consumer<Pair<Double, Integer>[]> function) {
 		var idChecker = new LinkedList<Integer>();
 
 		for(var i = 0; i < array.length; i++) idChecker.add(array[i].second());
 
-		Sort.selection(array, comparator, 0, array.length);
-
+		function.accept(array);
 		var isSorted = isSort(array, comparator, 0, array.length);
 		var uniqueRemain = true;
 
@@ -42,6 +40,16 @@ public class SortTest {
 
 		if(!idChecker.isEmpty()) uniqueRemain = false;
 
-		assertTrue(isSorted && uniqueRemain, "Selection sort has problems");
+		return isSorted && uniqueRemain;
+	}
+
+	@Property(tries = 1000000)
+	void selection(@ForAll("generator") Pair<Double, Integer>[] array) {
+		assertTrue(verify(array, arr -> Sort.selection(arr, comparator, 0, array.length)), "Selection sort has problems");
+	}
+
+	@Property(tries = 1000000)
+	void doubleSelection(@ForAll("generator") Pair<Double, Integer>[] array) {
+		assertTrue(verify(array, arr -> Sort.doubleSelection(arr, comparator, 0, array.length)), "Double selection sort has problems");
 	}
 }
