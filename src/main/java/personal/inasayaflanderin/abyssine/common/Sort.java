@@ -26,4 +26,26 @@ public final class Sort {
 			swap(list, i, min);
 		}
 	}
+
+	public static <D> void doubleSelection(D[] array, Comparator<D> comparator, int start, int end) {
+		doubleSelection(Arrays.asList(array), comparator, start, end);
+	}
+
+	public static <D> void doubleSelection(List<D> list, Comparator<D> comparator, int start, int end) {
+		for(var i = start; i < start + (end - start + 1) >>> 1; i++) {
+			var min = i;
+			var max = i;
+
+			for(int j = i + 1; j < end - i + start; j++) {
+				if(comparator.compare(list.get(j), list.get(min)) < 0) min = j;
+				if(comparator.compare(list.get(j), list.get(max)) > 0) max = j;
+			}
+
+			swap(list, min, i);
+
+			if(max == i) max = min;
+
+			swap(list, max, end - 1 - i + start);
+		}
+	}
 }
