@@ -11,3 +11,7 @@ Tell me if you want to have a copy in rust
 This is the list of feature that has been added, if you see your idea match me or need it, just read the feature list and see the documentation
 ## List of the feature
 Common feature:
+- Pseudo random number generator
+- Sorting algorithms
+Math feature:
+- Math sequence
