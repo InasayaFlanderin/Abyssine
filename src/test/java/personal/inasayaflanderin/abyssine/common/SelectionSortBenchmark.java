@@ -7,7 +7,7 @@ import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 
 @State(Scope.Thread)
-public class SelectionBenchmark {
+public class SelectionSortBenchmark {
 	private final Double[] subject = new Double[32000];
 	private final Random rng = new Random();
 
