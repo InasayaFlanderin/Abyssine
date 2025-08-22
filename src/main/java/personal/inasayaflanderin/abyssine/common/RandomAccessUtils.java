@@ -41,4 +41,24 @@ public final class RandomAccessUtils {
 
 		return isSorted;
 	}
+
+	public static <D> void copy(D[] src, int srcPos, D[] dest, int destPos, int length) {
+		System.arraycopy(src, srcPos, dest, destPos, length);
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <D> void copy(List<D> src, int srcPos, List<D> dest, int destPos, int length) {
+		D[] temporaryStorage = (D[]) new Object[length];
+
+		for(var i = 0; i < length; i++) temporaryStorage[i] = src.get(srcPos + i);
+		for(var i = 0; i < length; i++) dest.set(destPos + i, temporaryStorage[i]);
+	}
+
+	public static <D> void copy(List<D> src, int srcPos, D[] dest, int destPos, int length) {
+		copy(src, srcPos, Arrays.asList(dest), destPos, length);
+	}
+
+	public static <D> void copy(D[] src, int srcPos, List<D> dest, int destPos, int length) {
+		copy(Arrays.asList(src), srcPos, dest, destPos, length);
+	}
 }
