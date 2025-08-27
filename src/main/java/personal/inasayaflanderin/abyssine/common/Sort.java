@@ -31,6 +31,8 @@ public final class Sort {
 		doubleSelection(Arrays.asList(array), comparator, start, end);
 	}
 
+	//PERF:the trade-off of being faster by implicitly pre-incrementing and pre-decrementing directly on while check is decrement start at first
+	//NOTE:while loop is much easier since we can keep track of both beginning of the end without hard calculating
 	public static <D> void doubleSelection(List<D> list, Comparator<D> comparator, int start, int end) {
 		start--;
 
@@ -73,25 +75,22 @@ public final class Sort {
 		binaryInsertion(Arrays.asList(array), comparator, start, end);
 	}
 
+	//NOTE:The binary search used here is right-most binary search, which help ensure the stableness of the algorithm
 	public static <D> void binaryInsertion(List<D> list, Comparator<D> comparator, int start, int end) {
 		for(var i = start + 1; i < end; i++) {
 			var datum = list.get(i);
-			var endSearch = Math.abs(binarySearch(list, comparator, datum, start, i) + 1);
+			var startSearch = start;
+			var endSearch = i;
+
+			while(startSearch < endSearch) {
+				var mid = startSearch + ((endSearch - startSearch) >>> 1);
+
+				if(comparator.compare(datum, list.get(mid)) < 0) endSearch = mid;
+				else startSearch = mid + 1;
+			}
 
 			copy(list, endSearch, list, endSearch + 1, i - endSearch);
 			list.set(endSearch, datum);
 		}
-	}
-
-	private static <D> int binarySearch(List<D> list, Comparator<D> comparator, D key, int start, int end) {
-		while(start < end) {
-			var mid = start + ((end - start) >>> 1);
-
-			if(comparator.compare(key, list.get(mid)) == 0) return mid;
-			else if(comparator.compare(key, list.get(mid)) < 0) end = mid;
-			else start = mid + 1;
-		}
-
-		return -(start+1);
 	}
 }

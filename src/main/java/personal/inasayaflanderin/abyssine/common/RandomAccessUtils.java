@@ -10,7 +10,7 @@ import java.util.Comparator;
 
 public final class RandomAccessUtils {
 	/**
-	 *Check {@link #swap(List, int, int) swap} for more detail
+	 *Check {@link RandomAccessUtils#swap(List, int, int) swap} for more detail
 	 **/
 	public static <D> void swap(D[] array, int i, int j) {
 		var temp = array[i];
@@ -19,7 +19,7 @@ public final class RandomAccessUtils {
 	}
 
 	/**
-	 *@param array array needed to swap
+	 *@param list array needed to swap
 	 *@param i first index to be swapped
 	 *@param j second index to be swapped
 	 **/
@@ -27,10 +27,19 @@ public final class RandomAccessUtils {
 		list.set(i, list.set(j, list.get(i)));
 	}
 
+	/**
+	 *Check {@link RandomAccessUtils#isSort(List, Comparator, int, int)} for more detail
+	 * */
 	public static <D> boolean isSort(D[] array, Comparator<D> comparator, int start, int end) {
 		return isSort(Arrays.asList(array), comparator, start, end);
 	}
 
+	/**
+	 *@param list the list that need to be checked
+	 *@param comparator comparator for the data
+	 *@param start start index (inclusive)
+	 *@param end end index (exclusive)
+	 * */
 	public static <D> boolean isSort(List<D> list, Comparator<D> comparator, int start, int end) {
 		var isSorted = true;
 
@@ -42,10 +51,16 @@ public final class RandomAccessUtils {
 		return isSorted;
 	}
 
+	/**
+	 *Check {@link System#arraycopy(array, int, array, int, int)} for more detail
+	 * */
 	public static <D> void copy(D[] src, int srcPos, D[] dest, int destPos, int length) {
 		System.arraycopy(src, srcPos, dest, destPos, length);
 	}
 
+	/**
+	 *Check {@link System#arraycopy(array, int, array, int, int)} for more detail
+	 * */
 	@SuppressWarnings("unchecked")
 	public static <D> void copy(List<D> src, int srcPos, List<D> dest, int destPos, int length) {
 		D[] temporaryStorage = (D[]) new Object[length];
@@ -54,10 +69,16 @@ public final class RandomAccessUtils {
 		for(var i = 0; i < length; i++) dest.set(destPos + i, temporaryStorage[i]);
 	}
 
+	/**
+	 **Check {@link System#arraycopy(array, int, array, int, int)} for more detail
+	 * */
 	public static <D> void copy(List<D> src, int srcPos, D[] dest, int destPos, int length) {
 		copy(src, srcPos, Arrays.asList(dest), destPos, length);
 	}
 
+	/**
+	 **Check {@link System#arraycopy(array, int, array, int, int)} for more detail
+	 * */
 	public static <D> void copy(D[] src, int srcPos, List<D> dest, int destPos, int length) {
 		copy(Arrays.asList(src), srcPos, dest, destPos, length);
 	}
