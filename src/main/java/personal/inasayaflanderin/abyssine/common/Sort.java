@@ -93,4 +93,50 @@ public final class Sort {
 			list.set(endSearch, datum);
 		}
 	}
+
+	public static <D> void bubble(D[] array, Comparator<D> comparator, int start, int end) {
+		bubble(Arrays.asList(array), comparator, start, end);
+	}
+
+	public static <D> void bubble(List<D> list, Comparator<D> comparator, int start, int end) {
+		while(end > start + 1) {
+			var temporaryEnd = start;
+
+			for(var i = start + 1; i < end; i++) if(comparator.compare(list.get(i - 1), list.get(i)) > 0) {
+				swap(list, i, i - 1);
+				temporaryEnd = i;
+			}
+
+			end = temporaryEnd;
+		}
+	}
+
+	public static <D> void shaker(D[] array, Comparator<D> comparator, int start, int end) {
+		shaker(Arrays.asList(array), comparator, start, end);
+	}
+
+	public static <D> void shaker(List<D> list, Comparator<D> comparator, int start, int end) {
+		while(start < end) {
+			var temporaryEnd = start;
+
+			for(var i = start + 1; i < end; i++) {
+				if(comparator.compare(list.get(i - 1), list.get(i)) > 0) {
+					temporaryEnd = i;
+					swap(list, i, i - 1);
+				}
+			}
+
+			end = temporaryEnd;
+			var temporaryStart = end;
+
+			for(var i = end - 1; i > start; i--) {
+				if(comparator.compare(list.get(i - 1), list.get(i)) > 0) {
+					temporaryStart = i;
+					swap(list, i, i - 1);
+				}
+			}
+
+			start = temporaryStart;
+		}
+	}
 }

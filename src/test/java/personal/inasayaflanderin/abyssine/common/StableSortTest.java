@@ -51,4 +51,16 @@ public class StableSortTest {
 		Sort.binaryInsertion(array, sortingComparator, 0, array.length);
 		assertTrue(isSort(array, checkingComparator, 0, array.length));
 	}
+
+	@Property(tries = 1000000)
+	void bubble(@ForAll("generator") Pair<Integer, Integer>[] array) {
+		Sort.bubble(array, sortingComparator, 0, array.length);
+		assertTrue(isSort(array, checkingComparator, 0, array.length));
+	}
+
+	@Property(tries = 1000000)
+	void shaker(@ForAll("generator") Pair<Integer, Integer>[] array) {
+		Sort.shaker(array, sortingComparator, 0, array.length);
+		assertTrue(isSort(array, checkingComparator, 0, array.length));
+	}
 }

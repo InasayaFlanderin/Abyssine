@@ -52,21 +52,31 @@ public class SortTest {
 
 	@Property(tries = 1000000)
 	void selection(@ForAll("generator") Pair<Double, Integer>[] array) {
-		assertTrue(verify(array, arr -> Sort.selection(arr, comparator, 0, array.length)), "Selection sort has problems");
+		assertTrue(verify(array, arr -> Sort.selection(arr, comparator, 0, array.length)));
 	}
 
 	@Property(tries = 1000000)
 	void doubleSelection(@ForAll("generator") Pair<Double, Integer>[] array) {
-		assertTrue(verify(array, arr -> Sort.doubleSelection(arr, comparator, 0, array.length)), "Double selection sort has problems");
+		assertTrue(verify(array, arr -> Sort.doubleSelection(arr, comparator, 0, array.length)));
 	}
 
 	@Property(tries = 1000000)
 	void insertion(@ForAll("generator") Pair<Double, Integer>[] array) {
-		assertTrue(verify(array, arr -> Sort.insertion(arr, comparator, 0, array.length)), "Double selection sort has problems");
+		assertTrue(verify(array, arr -> Sort.insertion(arr, comparator, 0, array.length)));
 	}
 
 	@Property(tries = 1000000)
 	void binaryInsertion(@ForAll("generator") Pair<Double, Integer>[] array) {
-		assertTrue(verify(array, arr -> Sort.binaryInsertion(arr, comparator, 0, array.length)), "Double selection sort has problems");
+		assertTrue(verify(array, arr -> Sort.binaryInsertion(arr, comparator, 0, array.length)));
+	}
+
+	@Property(tries = 1000000)
+	void bubble(@ForAll("generator") Pair<Double, Integer>[] array) {
+		assertTrue(verify(array, arr -> Sort.bubble(arr, comparator, 0, array.length)));
+	}
+
+	@Property(tries = 1000000)
+	void shaker(@ForAll("generator") Pair<Double, Integer>[] array) {
+		assertTrue(verify(array, arr -> Sort.shaker(arr, comparator, 0, array.length)));
 	}
 }
