@@ -79,4 +79,24 @@ public class SortTest {
 	void shaker(@ForAll("generator") Pair<Double, Integer>[] array) {
 		assertTrue(verify(array, arr -> Sort.shaker(arr, comparator, 0, array.length)));
 	}
+
+	@Property(tries = 1000000)
+	void quickIterative(@ForAll("generator") Pair<Double, Integer>[] array) {
+		assertTrue(verify(array, arr -> Sort.quickIterative(arr, comparator, 0, array.length)));
+	}
+
+	@Property(tries = 1000000)
+	void quickParallelIterative(@ForAll("generator") Pair<Double, Integer>[] array) {
+		assertTrue(verify(array, arr -> Sort.quickParallelIterative(arr, comparator, 0, array.length)));
+	}
+
+	@Property(tries = 1000000)
+	void quickRecursion(@ForAll("generator") Pair<Double, Integer>[] array) {
+		assertTrue(verify(array, arr -> Sort.quickRecursion(arr, comparator, 0, array.length)));
+	}
+
+	@Property(tries = 1000000)
+	void quickParallelRecursion(@ForAll("generator") Pair<Double, Integer>[] array) {
+		assertTrue(verify(array, arr -> Sort.quickParallelRecursion(arr, comparator, 0, array.length)));
+	}
 }

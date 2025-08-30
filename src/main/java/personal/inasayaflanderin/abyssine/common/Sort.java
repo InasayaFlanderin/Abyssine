@@ -8,7 +8,12 @@ package personal.inasayaflanderin.abyssine.common;
 import java.util.List;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
+import personal.inasayaflanderin.abyssine.primitives.Pair;
 import static personal.inasayaflanderin.abyssine.common.RandomAccessUtils.*;
 
 //NOTE: passing array through Arrays.asList will cause extra overhead but prevent reimplementation
@@ -31,12 +36,10 @@ public final class Sort {
 		doubleSelection(Arrays.asList(array), comparator, start, end);
 	}
 
-	//PERF:the trade-off of being faster by implicitly pre-incrementing and pre-decrementing directly on while check is decrement start at first
-	//NOTE:while loop is much easier since we can keep track of both beginning of the end without hard calculating
 	public static <D> void doubleSelection(List<D> list, Comparator<D> comparator, int start, int end) {
-		start--;
+		end--;
 
-		while(++start < --end) {
+		while(start < end) {
 			var min = start;
 			var max = start;
 
@@ -49,7 +52,8 @@ public final class Sort {
 
 			if(max == start) max = min;
 
-			swap(list, max, end);
+			swap(list, max, end--);
+			start++;
 		}
 	}
 
@@ -119,24 +123,125 @@ public final class Sort {
 		while(start < end) {
 			var temporaryEnd = start;
 
-			for(var i = start + 1; i < end; i++) {
-				if(comparator.compare(list.get(i - 1), list.get(i)) > 0) {
+			for(var i = start + 1; i < end; i++) if(comparator.compare(list.get(i - 1), list.get(i)) > 0) {
 					temporaryEnd = i;
 					swap(list, i, i - 1);
-				}
 			}
 
 			end = temporaryEnd;
 			var temporaryStart = end;
 
-			for(var i = end - 1; i > start; i--) {
-				if(comparator.compare(list.get(i - 1), list.get(i)) > 0) {
+			for(var i = end - 1; i > start; i--) if(comparator.compare(list.get(i - 1), list.get(i)) > 0) {
 					temporaryStart = i;
 					swap(list, i, i - 1);
-				}
 			}
 
 			start = temporaryStart;
 		}
+	}
+
+	public static <D> void quickIterative(D[] array, Comparator<D> comparator, int start, int end) {
+		quickIterative(Arrays.asList(array), comparator, start, end);
+	}
+
+	public static <D> void quickIterative(List<D> list, Comparator<D> comparator, int start, int end) {
+		var range = new LinkedList<Integer>();
+		range.add(start);
+		range.add(end);
+
+		while(!range.isEmpty()) {
+			var startPosition = range.removeFirst();
+			var endPosition = range.removeFirst();
+
+			if(startPosition >= endPosition) continue;
+
+			var pivotIndex = partition(list, comparator, startPosition, endPosition);
+			range.add(startPosition);
+			range.add(pivotIndex);
+			range.add(pivotIndex + 1);
+			range.add(endPosition);
+		}
+	}
+
+	public static <D> void quickParallelIterative(D[] array, Comparator<D> comparator, int start, int end) {
+		quickParallelIterative(Arrays.asList(array), comparator, start, end);
+	}
+
+	public static <D> void quickParallelIterative(List<D> list, Comparator<D> comparator, int start, int end) {
+		var ranges = new ConcurrentLinkedQueue<Pair<Integer,Integer>>();
+		ranges.add(new Pair<Integer, Integer>(start, end));
+
+		try(var fjp = ForkJoinPool.commonPool()) {
+			while(!ranges.isEmpty()) {
+				var parallelTasks = new LinkedList<Callable<Void>>();
+				var range = ranges.poll();
+				var startPosition = range.first();
+				var endPosition = range.second();
+
+				if(startPosition >= endPosition) continue;
+
+				parallelTasks.add(() -> {
+					var pivotIndex = partition(list, comparator, startPosition, endPosition);
+					ranges.add(new Pair<Integer, Integer>(startPosition, pivotIndex));
+					ranges.add(new Pair<Integer, Integer>(pivotIndex + 1, endPosition));
+
+					return null;
+				});
+
+				fjp.invokeAll(parallelTasks);
+			}
+		} catch(InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static <D> void quickRecursion(D[] array, Comparator<D> comparator, int start, int end) {
+		quickRecursion(Arrays.asList(array), comparator, start, end);
+	}
+
+	public static <D> void quickRecursion(List<D> list, Comparator<D> comparator, int start, int end) {
+		if(start < end) {
+			var pivotIndex = partition(list, comparator, start, end);
+			quickRecursion(list, comparator, start, pivotIndex);
+			quickRecursion(list, comparator, pivotIndex + 1, end);
+		}
+	}
+
+	public static <D> void quickParallelRecursion(D[] array, Comparator<D> comparator, int start, int end) {
+		quickParallelRecursion(Arrays.asList(array), comparator, start, end);
+	}
+
+	public static <D> void quickParallelRecursion(List<D> list, Comparator<D> comparator, int start, int end) {
+		if(start < end) {
+			var pivotIndex = partition(list, comparator, start, end);
+			
+			try (var fjp = ForkJoinPool.commonPool()) {
+				fjp.invokeAll(List.<Callable<Void>>of(
+					() -> {
+						quickParallelRecursion(list, comparator, start, pivotIndex);
+
+						return null;
+					},
+					() -> {
+						quickParallelRecursion(list, comparator, pivotIndex + 1, end);
+
+						return null;
+					}
+				));
+			} catch(InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private static <D> int partition(List<D> list, Comparator<D> comparator, int start, int end) {
+		var pivot = list.get(end - 1);
+		var pivotIndex = start;
+
+		for(var i = start; i < end; i++) if(comparator.compare(list.get(i), pivot) < 0) swap(list, pivotIndex++, i);
+
+		swap(list, pivotIndex, end - 1);
+
+		return pivotIndex;
 	}
 }
